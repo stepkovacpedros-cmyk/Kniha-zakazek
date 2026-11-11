@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Štěpkovač</title>
+<meta name="theme-color" content="#2F6B3A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Štěpkovač">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{
+  --g:#2F6B3A; --g2:#1F4A27; --gl:#E6F0E4;
+  --bg:#F4F5F1; --card:#fff; --line:#E3E6DF; --chip:#EEF0EC;
+  --tx:#1B1F1A; --mut:#5A6157;
+  --am:#D98A0B; --ambg:#FFF8EC; --amln:#F0DFC0; --amtx:#6B5326;
+  --red:#C2362F;
+  --sat:env(safe-area-inset-top,0px); --sab:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--tx);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;font-size:16px;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+#app{max-width:560px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
+#view{flex:1;padding:calc(18px + var(--sat)) 18px calc(150px + var(--sab))}
+h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.02em}
+h2{margin:0;font-size:16px;font-weight:600}
+.sub{font-size:13px;color:var(--mut);font-weight:500}
+.row{display:flex;align-items:center;gap:10px}
+.between{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.icon-btn{width:44px;height:44px;border-radius:12px;border:1px solid #D6D9D2;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.icon-btn svg{width:20px;height:20px}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0 18px}
+.tile{background:#fff;border-radius:12px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
+.tile b{font-size:18px}
+.tile span{font-size:11px;color:var(--mut)}
+.label{font-size:12px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin:4px 0 8px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;width:100%;text-align:left}
+.list{display:flex;flex-direction:column;gap:10px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-size:12px;background:var(--chip);color:#3A4037;padding:4px 8px;border-radius:999px}
+.chip.g{background:var(--gl);color:var(--g2);font-weight:600}
+.card.fuel{background:var(--ambg);border-color:var(--amln);flex-direction:row;align-items:center;gap:12px}
+.fuel-ic{width:40px;height:40px;border-radius:10px;background:#F6E3BF;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fuel-ic svg{width:20px;height:20px}
+.empty{color:var(--mut);text-align:center;padding:28px 10px;font-size:15px;background:#fff;border-radius:14px;border:1px dashed #D6D9D2}
+.actions{position:fixed;left:0;right:0;bottom:calc(64px + var(--sab));padding:10px 18px;display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:560px;margin:0 auto;background:linear-gradient(rgba(244,245,241,0),var(--bg) 30%)}
+.btn{height:52px;border-radius:14px;border:none;background:var(--g);color:#fff;font-size:16px;font-weight:600;padding:0 16px}
+.btn.o{background:#fff;color:var(--g);border:1px solid var(--g)}
+.btn.red{background:#fff;color:var(--red);border:1px solid #E7B9B5}
+.btn.full{width:100%}
+.btn:disabled{opacity:.5}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:6px 0 calc(6px + var(--sab));z-index:5}
+nav.tabs button{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;color:var(--mut);min-height:48px;justify-content:center}
+nav.tabs button svg{width:22px;height:22px}
+nav.tabs button.on{color:var(--g);font-weight:600}
+/* Dny */
+.legend{display:flex;gap:12px;font-size:12px;color:#3A4037}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--g);vertical-align:-1px;margin-right:5px}
+.legend i.f{border-radius:999px;background:var(--am)}
+.axis{display:flex;justify-content:space-between;font-size:11px;color:var(--mut);padding:0 2px;margin:12px 0 6px;font-variant-numeric:tabular-nums}
+.day{display:flex;flex-direction:column;gap:8px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 12px 14px;width:100%;text-align:left}
+.day.today{border-color:var(--g);box-shadow:0 0 0 1px var(--g) inset}
+.bar{position:relative;height:30px;border-radius:8px;background:var(--chip);overflow:hidden}
+.bar .grid{position:absolute;inset:0;display:flex}
+.bar .grid span{flex:1;border-right:1px solid #E0E3DC}
+.bar .grid span:last-child{border-right:none}
+.blk{position:absolute;top:3px;bottom:3px;background:var(--g);color:#fff;border-radius:6px;font-size:11px;font-weight:600;display:flex;align-items:center;padding:0 6px;white-space:nowrap;overflow:hidden;min-width:4px}
+.dot{position:absolute;top:8px;width:14px;height:14px;margin-left:-7px;border-radius:999px;background:var(--am);border:2px solid #fff}
+.bar .none{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--mut)}
+.sumbar{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:12px}
+/* Přehled */
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}
+.kpi{background:#fff;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.kpi span{font-size:12px;color:var(--mut)}
+.kpi b{font-size:28px;font-weight:700;letter-spacing:-.02em}
+.kpi.hl{background:var(--g);color:#fff}
+.kpi.hl span{color:#D5E6D2}
+.box{background:#fff;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.tr{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:10px;padding:10px 0;border-top:1px solid #EEECE6;align-items:center;background:none;border-left:none;border-right:none;border-bottom:none;text-align:left;width:100%}
+.tr small{display:block;font-size:12px;color:var(--mut);margin-top:2px}
+/* Formuláře */
+.overlay{position:fixed;inset:0;background:rgba(20,24,20,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:#fff;width:100%;max-width:560px;max-height:92vh;border-radius:20px 20px 0 0;display:flex;flex-direction:column}
+.sheet-h{padding:16px 18px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.sheet-b{padding:16px 18px;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:14px}
+.sheet-f{padding:12px 18px calc(14px + var(--sab));border-top:1px solid var(--line);display:flex;gap:10px}
+.sheet-f .btn{flex:1}
+.f{display:flex;flex-direction:column;gap:6px;min-width:0}
+.f label,.f .lb{font-size:13px;font-weight:600;color:#4A5059}
+.in{height:48px;border:1px solid #C9CDD3;border-radius:12px;padding:0 12px;font-size:16px;background:#fff;width:100%;min-width:0;-webkit-appearance:none;appearance:none}
+textarea.in{height:76px;padding:10px 12px;resize:vertical}
+.in:focus{outline:2px solid var(--g);outline-offset:0;border-color:var(--g)}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.inrow{display:flex;gap:8px}
+.inrow .in{flex:1}
+.calc{background:#F5F6F8;border-radius:12px;padding:10px 14px;font-size:14px;color:#4A5059;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.calc strong{color:var(--tx)}
+.status{font-size:13px;color:var(--mut);min-height:18px}
+.status.err{color:var(--red)}
+.status.ok{color:var(--g2)}
+.quick{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.quick button{height:44px;border-radius:10px;border:1px solid #C9CDD3;background:#fff;font-size:15px}
+.quick button.on{border:2px solid var(--g);background:var(--gl);color:var(--g2);font-weight:700}
+.stepper{display:flex;align-items:center;justify-content:space-between;background:#F5F6F8;border-radius:12px;padding:8px}
+.stepper button{width:52px;height:52px;border-radius:12px;border:none;background:#fff;font-size:26px;font-weight:600}
+.stepper button.plus{background:var(--g);color:#fff}
+.stepper .v{display:flex;flex-direction:column;align-items:center}
+.stepper .v b{font-size:28px}
+.stepper .v span{font-size:13px;color:var(--mut)}
+.toast{position:fixed;left:50%;top:calc(14px + var(--sat));transform:translateX(-50%);background:#1B1F1A;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:40;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+.setting{background:#fff;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;margin-top:14px}
+.note{font-size:13px;color:var(--mut);line-height:1.45}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div id="app">
+  <main id="view"></main>
+  <div class="actions" id="actions">
+    <button class="btn" data-act="new-job">+ Zakázka</button>
+    <button class="btn o" data-act="new-fuel">+ Tankování</button>
+  </div>
+  <nav class="tabs" aria-label="Hlavní menu">
+    <button data-tab="denik"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>Deník</button>
+    <button data-tab="dny"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18"/><path d="M7 4v4M13 10v4M10 16v4"/></svg>Dny</button>
+    <button data-tab="prehled"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Přehled</button>
+    <button data-tab="nastaveni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Nastavení</button>
+  </nav>
+</div>
+<div id="sheet-root"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="import-file" accept="application/json,.json" class="hidden">
+
+<script>
+'use strict';
+/* ===== Úložiště ===== */
+const KEY = 'stepkovac.v1';
+const DEFAULT_SETTINGS = { startAddress: 'Na Horce 278, Doubravice nad Svitavou', startLat: null, startLon: null, loadM3: 15 };
+function loadData() {
+  try {
+    const d = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (d && Array.isArray(d.jobs) && Array.isArray(d.fuel)) {
+      d.settings = Object.assign({}, DEFAULT_SETTINGS, d.settings || {});
+      return d;
+    }
+  } catch (e) {}
+  return { jobs: [], fuel: [], settings: Object.assign({}, DEFAULT_SETTINGS) };
+}
+let DB = loadData();
+function saveData() {
+  try { localStorage.setItem(KEY, JSON.stringify(DB)); }
+  catch (e) { toast('Uložení selhalo – plné úložiště?'); }
+}
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+/* ===== Pomocné funkce ===== */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pad = (n) => String(n).padStart(2, '0');
+const iso = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const parseIso = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (s, n) => { const d = parseIso(s); d.setDate(d.getDate() + n); return iso(d); };
+const todayIso = () => iso(new Date());
+const weekStart = (s) => { const d = parseIso(s); const wd = (d.getDay() + 6) % 7; d.setDate(d.getDate() - wd); return iso(d); };
+const DAYS = ['Ne', 'Po', 'Út', 'St', 'Čt', 'Pá', 'So'];
+const MONTHS = ['leden', 'únor', 'březen', 'duben', 'květen', 'červen', 'červenec', 'srpen', 'září', 'říjen', 'listopad', 'prosinec'];
+const MONTHS_GEN = ['ledna', 'února', 'března', 'dubna', 'května', 'června', 'července', 'srpna', 'září', 'října', 'listopadu', 'prosince'];
+const DAYS_LONG = ['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota'];
+const longDate = (s) => { const d = parseIso(s); return DAYS_LONG[d.getDay()] + ' ' + d.getDate() + '. ' + MONTHS_GEN[d.getMonth()] + (d.getFullYear() !== new Date().getFullYear() ? ' ' + d.getFullYear() : ''); };
+const shortDate = (s) => { const d = parseIso(s); return d.getDate() + '. ' + (d.getMonth() + 1) + '.'; };
+const num = (x, dec = 1) => (Math.round((+x || 0) * 10 ** dec) / 10 ** dec).toLocaleString('cs-CZ', { maximumFractionDigits: dec });
+const money = (x) => Math.round(+x || 0).toLocaleString('cs-CZ') + ' Kč';
+const toMin = (t) => { if (!t) return null; const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+function jobMinutes(j) {
+  const a = toMin(j.from), b = toMin(j.to);
+  if (a == null || b == null) return 0;
+  return b >= a ? b - a : b + 1440 - a;
+}
+function fmtDur(min) {
+  min = Math.round(min);
+  const h = Math.floor(min / 60), m = min % 60;
+  if (!h) return m + ' min';
+  return m ? h + ' h ' + m + ' min' : h + ' h';
+}
+function fmtLoads(x) {
+  x = +x || 0;
+  const w = Math.floor(x + 1e-9), f = Math.round((x - w) * 100) / 100;
+  const fr = { 0: '', 0.25: '¼', 0.5: '½', 0.75: '¾' }[f];
+  if (fr === undefined) return num(x, 2);
+  if (!w && fr) return fr;
+  return w + fr;
+}
+const loadsWord = (x) => (x > 0 && x <= 1 ? 'fůra' : x > 1 && x < 5 ? 'fůry' : 'fůr');
+const m3 = (loads) => (+loads || 0) * (+DB.settings.loadM3 || 15);
+const kmRound = (j) => (j.kmOneWay != null && j.kmOneWay !== '' ? (+j.kmOneWay) * 2 : 0);
+const jobsOn = (d) => DB.jobs.filter(j => j.date === d).sort((a, b) => (a.from || '').localeCompare(b.from || ''));
+const fuelOn = (d) => DB.fuel.filter(f => f.date === d).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+function sumJobs(list) {
+  return list.reduce((s, j) => { s.n++; s.min += jobMinutes(j); s.loads += +j.loads || 0; s.km += kmRound(j); return s; }, { n: 0, min: 0, loads: 0, km: 0 });
+}
+let toastT;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2200); }
+
+const ICON = {
+  left: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>',
+  right: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>',
+  fuel: '<svg viewBox="0 0 24 24" fill="none" stroke="#7A4E05" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16M3 21h13M15 9h2a2 2 0 0 1 2 2v6a1.5 1.5 0 0 0 3 0V8l-3-3"/><path d="M7 8h5"/></svg>',
+  pin: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>',
+  close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+};
+
+/* ===== Stav a navigace ===== */
+const UI = { tab: 'denik', day: todayIso(), week: weekStart(todayIso()), month: todayIso().slice(0, 7) };
+function go(tab) { UI.tab = tab; render(); window.scrollTo(0, 0); }
+
+function render() {
+  document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === UI.tab));
+  $('#actions').classList.toggle('hidden', !(UI.tab === 'denik' || UI.tab === 'dny'));
+  const v = $('#view');
+  if (UI.tab === 'denik') v.innerHTML = viewDenik();
+  else if (UI.tab === 'dny') v.innerHTML = viewDny();
+  else if (UI.tab === 'prehled') v.innerHTML = viewPrehled();
+  else v.innerHTML = viewNastaveni();
+}
+
+/* ===== Deník ===== */
+function jobCard(j) {
+  const km = kmRound(j);
+  return `<button class="card" data-act="edit-job" data-id="${j.id}">
+    <div class="between" style="align-items:baseline"><span style="font-size:16px;font-weight:600">${esc(j.place) || 'Bez místa'}</span><span class="sub">${esc(j.from || '?')}–${esc(j.to || '?')}</span></div>
+    <div class="chips">
+      <span class="chip g">${fmtLoads(j.loads)} ${loadsWord(+j.loads)} · ${num(m3(j.loads))} m³</span>
+      <span class="chip">${fmtDur(jobMinutes(j))}</span>
+      ${km ? `<span class="chip">${num(km)} km tam i zpět</span>` : ''}
+    </div>
+    ${j.note ? `<div class="sub" style="font-weight:400">${esc(j.note)}</div>` : ''}
+  </button>`;
+}
+function fuelCard(f) {
+  return `<button class="card fuel" data-act="edit-fuel" data-id="${f.id}">
+    <span class="fuel-ic">${ICON.fuel}</span>
+    <span style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0">
+      <span style="font-size:15px;font-weight:600">Tankování${f.place ? ' · ' + esc(f.place) : ''}</span>
+      <span style="font-size:13px;color:var(--amtx)">${f.time ? esc(f.time) + ' · ' : ''}${num(f.liters)} l · ${money(f.price)}</span>
+    </span>
+  </button>`;
+}
+function viewDenik() {
+  const d = UI.day, jobs = jobsOn(d), fuel = fuelOn(d), s = sumJobs(jobs);
+  const items = [...jobs.map(j => ({ t: j.from || '', h: jobCard(j) })), ...fuel.map(f => ({ t: f.time || '', h: fuelCard(f) }))].sort((a, b) => a.t.localeCompare(b.t));
+  return `
+  <div class="between">
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <span class="sub">${d === todayIso() ? 'Dnes · ' : ''}${longDate(d)}</span>
+      <h1>Deník</h1>
+    </div>
+    <div class="row" style="gap:6px">
+      <button class="icon-btn" aria-label="Předchozí den" data-act="day" data-n="-1">${ICON.left}</button>
+      <label class="icon-btn" style="position:relative;overflow:hidden"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><input type="date" id="day-pick" value="${d}" aria-label="Vybrat datum" style="position:absolute;inset:0;width:100%;height:100%;opacity:0;border:0;padding:0;margin:0"></label>
+      <button class="icon-btn" aria-label="Další den" data-act="day" data-n="1">${ICON.right}</button>
+    </div>
+  </div>
+  <div class="tiles">
+    <div class="tile"><b>${s.n}</b><span>${s.n === 1 ? 'zakázka' : s.n > 1 && s.n < 5 ? 'zakázky' : 'zakázek'}</span></div>
+    <div class="tile"><b>${num(s.min / 60)} h</b><span>práce</span></div>
+    <div class="tile"><b>${num(m3(s.loads))}</b><span>m³</span></div>
+    <div class="tile"><b>${num(s.km, 0)}</b><span>km</span></div>
+  </div>
+  <div class="label">Záznamy</div>
+  <div class="list">${items.length ? items.map(i => i.h).join('') : '<div class="empty">Na tento den zatím nic není.<br>Přidejte zakázku nebo tankování.</div>'}</div>
+  ${d !== todayIso() ? '<div style="text-align:center;margin-top:16px"><button class="btn o" data-act="today" style="height:44px">Zpět na dnešek</button></div>' : ''}`;
+}
+
+/* ===== Dny – časová osa ===== */
+function viewDny() {
+  const ws = UI.week, days = [...Array(7)].map((_, i) => addDays(ws, i));
+  let minH = 6, maxH = 18;
+  days.forEach(d => {
+    jobsOn(d).forEach(j => {
+      const a = toMin(j.from), b = toMin(j.to);
+      if (a != null) minH = Math.min(minH, Math.floor(a / 60));
+      if (b != null) maxH = Math.max(maxH, b < a ? 24 : Math.ceil(b / 60));
+    });
+    fuelOn(d).forEach(f => { const t = toMin(f.time); if (t != null) { minH = Math.min(minH, Math.floor(t / 60)); maxH = Math.max(maxH, Math.ceil(t / 60)); } });
+  });
+  if ((maxH - minH) % 2) maxH < 24 ? maxH++ : minH--;
+  const span = (maxH - minH) * 60, pos = (m) => Math.max(0, Math.min(100, (m - minH * 60) / span * 100));
+  const ticks = []; for (let h = minH; h <= maxH; h += 2) ticks.push(h);
+  const today = todayIso();
+  const rows = days.slice().reverse().map(d => {
+    const js = jobsOn(d), fs = fuelOn(d), s = sumJobs(js), dt = parseIso(d);
+    const blocks = js.map(j => {
+      const a = toMin(j.from), b = toMin(j.to); if (a == null || b == null) return '';
+      const end = b < a ? 24 * 60 : b, l = pos(a), w = Math.max(pos(end) - l, 1);
+      return `<span class="blk" style="left:${l}%;width:${w}%">${w > 9 ? esc((j.place || '').split(',')[0]) : ''}</span>`;
+    }).join('');
+    const dots = fs.map(f => { const t = toMin(f.time); return t == null ? '' : `<span class="dot" title="Tankování" style="left:${pos(t)}%"></span>`; }).join('');
+    const sum = s.n ? `${fmtDur(s.min)} · ${num(m3(s.loads))} m³ · ${num(s.km)} km` : (fs.length ? 'jen tankování' : '—');
+    return `<button class="day${d === today ? ' today' : ''}" data-act="open-day" data-d="${d}">
+      <div class="between" style="align-items:baseline"><span style="font-size:15px;font-weight:600">${DAYS[dt.getDay()]} ${shortDate(d)}</span><span class="sub" style="font-weight:400;font-size:12px">${sum}</span></div>
+      <div class="bar"><div class="grid">${ticks.slice(1).map(() => '<span></span>').join('')}</div>${blocks}${dots}${!js.length && !fs.length ? '<span class="none">bez záznamu</span>' : ''}</div>
+    </button>`;
+  }).join('');
+  const all = sumJobs(days.flatMap(jobsOn));
+  const we = addDays(ws, 6), a = parseIso(ws), b = parseIso(we);
+  const range = a.getMonth() === b.getMonth() ? `${a.getDate()}.–${b.getDate()}. ${MONTHS_GEN[b.getMonth()]}` : `${a.getDate()}. ${MONTHS_GEN[a.getMonth()]} – ${b.getDate()}. ${MONTHS_GEN[b.getMonth()]}`;
+  return `
+  <div class="between">
+    <div style="display:flex;flex-direction:column;gap:2px"><span class="sub">${range}</span><h1>Dny</h1></div>
+    <div class="row" style="gap:6px">
+      <button class="icon-btn" aria-label="Předchozí týden" data-act="week" data-n="-7">${ICON.left}</button>
+      <button class="icon-btn" aria-label="Další týden" data-act="week" data-n="7">${ICON.right}</button>
+    </div>
+  </div>
+  <div class="legend" style="margin-top:12px"><span><i></i>práce</span><span><i class="f"></i>tankování</span></div>
+  <div class="axis" aria-hidden="true">${ticks.map(h => `<span>${h}</span>`).join('')}</div>
+  <div class="list">${rows}</div>
+  <div class="sumbar"><span class="sub">Za týden</span><div style="font-size:15px;font-weight:700;margin-top:2px">${fmtDur(all.min)} · ${num(m3(all.loads))} m³ · ${num(all.km)} km</div></div>`;
+}
+
+/* ===== Přehled měsíce ===== */
+function viewPrehled() {
+  const ym = UI.month, [y, m] = ym.split('-').map(Number);
+  const jobs = DB.jobs.filter(j => j.date.startsWith(ym)).sort((a, b) => (b.date + b.from).localeCompare(a.date + a.from));
+  const fuel = DB.fuel.filter(f => f.date.startsWith(ym)).sort((a, b) => (b.date + (b.time || '')).localeCompare(a.date + (a.time || '')));
+  const s = sumJobs(jobs);
+  const lit = fuel.reduce((t, f) => t + (+f.liters || 0), 0), kc = fuel.reduce((t, f) => t + (+f.price || 0), 0);
+  const MN = MONTHS[m - 1];
+  return `
+  <div class="between">
+    <button class="icon-btn" aria-label="Předchozí měsíc" data-act="month" data-n="-1">${ICON.left}</button>
+    <h1 style="font-size:22px">${MN.charAt(0).toUpperCase() + MN.slice(1)} ${y}</h1>
+    <button class="icon-btn" aria-label="Další měsíc" data-act="month" data-n="1">${ICON.right}</button>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><span>Zakázky</span><b>${s.n}</b></div>
+    <div class="kpi"><span>Odpracováno</span><b>${num(s.min / 60)} h</b></div>
+    <div class="kpi hl"><span>Štěpka</span><b>${num(m3(s.loads))} m³</b><span>${fmtLoads(s.loads)} ${loadsWord(s.loads)}</span></div>
+    <div class="kpi"><span>Najeto (tam i zpět)</span><b>${num(s.km, 0)} km</b></div>
+  </div>
+  <div class="box">
+    <div class="between" style="align-items:baseline"><h2>Tankování</h2><span style="font-size:14px;font-weight:600">${num(lit)} l · ${money(kc)}</span></div>
+    ${lit ? `<div class="sub" style="font-weight:400">Průměrná cena ${num(kc / lit, 2)} Kč/l</div>` : ''}
+    <div>${fuel.length ? fuel.map(f => `<button class="tr" data-act="edit-fuel" data-id="${f.id}"><span class="sub" style="font-weight:400">${shortDate(f.date)}</span><span style="min-width:0"><span style="font-size:14px;font-weight:500">${esc(f.place) || 'Tankování'}</span><small>${num(f.liters)} l${+f.liters ? ' · ' + num(f.price / f.liters, 2) + ' Kč/l' : ''}</small></span><span style="font-size:14px;font-weight:600">${money(f.price)}</span></button>`).join('') : '<div class="sub" style="font-weight:400">Žádné tankování v tomto měsíci.</div>'}</div>
+  </div>
+  <div class="box">
+    <h2>Zakázky</h2>
+    <div>${jobs.length ? jobs.map(j => `<button class="tr" data-act="edit-job" data-id="${j.id}"><span class="sub" style="font-weight:400">${shortDate(j.date)}</span><span style="min-width:0"><span style="font-size:14px;font-weight:500">${esc(j.place) || 'Bez místa'}</span><small>${esc(j.from)}–${esc(j.to)} · ${fmtDur(jobMinutes(j))}${kmRound(j) ? ' · ' + num(kmRound(j)) + ' km' : ''}</small></span><span style="font-size:14px;font-weight:600">${num(m3(j.loads))} m³</span></button>`).join('') : '<div class="sub" style="font-weight:400">Žádné zakázky v tomto měsíci.</div>'}</div>
+  </div>
+  <div class="g2">
+    <button class="btn o" data-act="csv-jobs">Export zakázek</button>
+    <button class="btn o" data-act="csv-fuel">Export tankování</button>
+  </div>
+  <p class="note" style="margin-top:10px">CSV soubory otevřete v Excelu (oddělovač středník, čeština funguje).</p>`;
+}
+
+/* ===== Nastavení ===== */
+function viewNastaveni() {
+  const st = DB.settings;
+  return `
+  <h1>Nastavení</h1>
+  <div class="setting">
+    <div class="f"><label for="s-start">Startovní adresa (základna)</label>
+      <div class="inrow"><input class="in" id="s-start" value="${esc(st.startAddress)}"><button class="btn o" style="height:48px" data-act="verify-start">Ověřit</button></div>
+      <div class="status" id="s-start-st">${st.startLat ? 'Poloha nalezena: ' + num(st.startLat, 5) + ', ' + num(st.startLon, 5) : 'Poloha zatím neověřena – ověří se při prvním výpočtu.'}</div>
+    </div>
+    <div class="f"><label for="s-load">Objem jedné plné fůry (m³)</label><input class="in" id="s-load" type="number" inputmode="decimal" step="0.5" min="1" value="${esc(st.loadM3)}"></div>
+    <button class="btn" data-act="save-settings">Uložit nastavení</button>
+  </div>
+  <div class="setting">
+    <h2>Záloha dat</h2>
+    <p class="note" style="margin:0">Data jsou uložená jen v tomto telefonu. Občas si stáhněte zálohu – při smazání dat Safari nebo výměně telefonu se dají obnovit.</p>
+    <div class="g2"><button class="btn o" data-act="backup">Stáhnout zálohu</button><button class="btn o" data-act="restore">Obnovit ze zálohy</button></div>
+    <div class="sub" style="font-weight:400">V úložišti: ${DB.jobs.length} zakázek, ${DB.fuel.length} tankování.</div>
+  </div>
+  <div class="setting">
+    <h2>Výpočet vzdálenosti</h2>
+    <p class="note" style="margin:0">Trasa se počítá po silnicích přes OpenStreetMap (vyhledání adresy Nominatim, trasa OSRM). Výsledná vzdálenost se ukládá jako jedna cesta a ve všech součtech se počítá tam i zpět. Když výpočet selže nebo nesedí, zadejte km ručně.</p>
+  </div>
+  <div class="setting">
+    <button class="btn red" data-act="wipe">Smazat všechna data</button>
+  </div>
+  <p class="note" style="text-align:center">Štěpkovač · verze 1.0</p>`;
+}
+
+/* ===== Výpočet trasy ===== */
+async function geocode(q) {
+  const r = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=cz&accept-language=cs&q=' + encodeURIComponent(q));
+  if (!r.ok) throw new Error('geocode');
+  const a = await r.json();
+  if (!a.length) throw new Error('notfound');
+  return { lat: +a[0].lat, lon: +a[0].lon };
+}
+async function reverseGeocode(lat, lon) {
+  const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=cs&zoom=17&lat=${lat}&lon=${lon}`);
+  if (!r.ok) throw new Error('reverse');
+  const a = await r.json(), ad = a.address || {};
+  const town = ad.village || ad.town || ad.city || ad.municipality || ad.hamlet || '';
+  const street = ad.road ? ad.road + (ad.house_number ? ' ' + ad.house_number : '') : '';
+  return [town, street].filter(Boolean).join(', ') || a.display_name || '';
+}
+async function routeKm(a, b) {
+  const r = await fetch(`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=false`);
+  if (!r.ok) throw new Error('route');
+  const j = await r.json();
+  if (!j.routes || !j.routes.length) throw new Error('noroute');
+  return j.routes[0].distance / 1000;
+}
+async function getStart() {
+  const st = DB.settings;
+  if (st.startLat != null && st.startLon != null) return { lat: st.startLat, lon: st.startLon };
+  const p = await geocode(st.startAddress);
+  st.startLat = p.lat; st.startLon = p.lon; saveData();
+  return p;
+}
+
+/* ===== Formuláře (spodní panel) ===== */
+function openSheet(title, body, foot) {
+  $('#sheet-root').innerHTML = `<div class="overlay" data-act="overlay"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+    <div class="sheet-h"><h2 style="font-size:18px">${esc(title)}</h2><button class="icon-btn" style="border:none" aria-label="Zavřít" data-act="close">${ICON.close}</button></div>
+    <div class="sheet-b">${body}</div><div class="sheet-f">${foot}</div></div></div>`;
+  document.body.style.overflow = 'hidden';
+}
+function closeSheet() { $('#sheet-root').innerHTML = ''; document.body.style.overflow = ''; FORM = null; }
+let FORM = null;
+
+function nowRounded() { const d = new Date(); let m = Math.round((d.getHours() * 60 + d.getMinutes()) / 15) * 15; m = Math.min(m, 23 * 60 + 45); return pad(Math.floor(m / 60)) + ':' + pad(m % 60); }
+
+function openJob(id) {
+  const ex = id ? DB.jobs.find(j => j.id === id) : null;
+  let from = '', to = '';
+  if (!ex) {
+    const prev = jobsOn(UI.day); const last = prev[prev.length - 1];
+    from = last && last.to ? last.to : (UI.day === todayIso() ? nowRounded() : '07:00');
+  }
+  const j = ex ? Object.assign({}, ex) : { id: null, date: UI.day, from, to, place: '', kmOneWay: '', loads: 1, note: '' };
+  FORM = { kind: 'job', j, coords: null };
+  openSheet(ex ? 'Upravit zakázku' : 'Nová zakázka', `
+    <div class="f"><label for="j-place">Místo práce</label>
+      <div class="inrow"><input class="in" id="j-place" value="${esc(j.place)}" placeholder="obec, ulice" autocomplete="off">
+      <button class="icon-btn" style="height:48px;width:48px" aria-label="Použít moji polohu" data-act="geo">${ICON.pin}</button></div>
+    </div>
+    <div class="f"><label for="j-km">Vzdálenost od základny – jedna cesta (km)</label>
+      <div class="inrow"><input class="in" id="j-km" type="number" inputmode="decimal" step="0.1" min="0" value="${esc(j.kmOneWay)}" placeholder="0">
+      <button class="btn o" style="height:48px" data-act="calc-km">Spočítat</button></div>
+      <div class="status" id="j-km-st"></div>
+      <div class="calc"><span>Tam i zpět</span><strong id="j-km-rt">–</strong></div>
+    </div>
+    <div class="g3">
+      <div class="f"><label for="j-date">Datum</label><input class="in" id="j-date" type="date" value="${esc(j.date)}"></div>
+      <div class="f"><label for="j-from">Od</label><input class="in" id="j-from" type="time" step="300" value="${esc(j.from)}"></div>
+      <div class="f"><label for="j-to">Do</label><input class="in" id="j-to" type="time" step="300" value="${esc(j.to)}"></div>
+    </div>
+    <div class="calc"><span>Doba práce</span><strong id="j-dur">–</strong></div>
+    <div class="f"><span class="lb">Množství štěpky (1 fůra = ${num(DB.settings.loadM3)} m³)</span>
+      <div class="quick">${[0.25, 0.5, 0.75, 1, 1.5, 2].map(v => `<button type="button" data-act="q-load" data-v="${v}">${fmtLoads(v)}</button>`).join('')}</div>
+      <div class="stepper">
+        <button type="button" aria-label="Ubrat čtvrt fůry" data-act="load" data-n="-0.25">−</button>
+        <div class="v"><b id="j-loads"></b><span id="j-m3"></span></div>
+        <button type="button" class="plus" aria-label="Přidat čtvrt fůry" data-act="load" data-n="0.25">+</button>
+      </div>
+    </div>
+    <div class="f"><label for="j-note">Poznámka</label><textarea class="in" id="j-note" placeholder="zákazník, druh dřeva…">${esc(j.note)}</textarea></div>
+  `, `${ex ? '<button class="btn red" data-act="del-job" style="flex:0 0 auto">Smazat</button>' : ''}<button class="btn" data-act="save-job">Uložit zakázku</button>`);
+  updJobCalc();
+}
+function updJobCalc() {
+  if (!FORM || FORM.kind !== 'job') return;
+  const km = parseFloat(($('#j-km').value || '').replace(',', '.'));
+  $('#j-km-rt').textContent = km > 0 ? num(km * 2) + ' km' : '–';
+  const min = jobMinutes({ from: $('#j-from').value, to: $('#j-to').value });
+  $('#j-dur').textContent = $('#j-from').value && $('#j-to').value ? fmtDur(min) : '–';
+  const L = FORM.j.loads;
+  $('#j-loads').textContent = fmtLoads(L) + ' ' + loadsWord(L);
+  $('#j-m3').textContent = '= ' + num(m3(L)) + ' m³';
+  document.querySelectorAll('[data-act="q-load"]').forEach(b => b.classList.toggle('on', +b.dataset.v === L));
+}
+async function calcKm() {
+  const st = $('#j-km-st'), place = $('#j-place').value.trim();
+  if (!FORM.coords && !place) { st.className = 'status err'; st.textContent = 'Nejdřív vyplňte místo práce.'; return; }
+  st.className = 'status'; st.textContent = 'Počítám trasu…';
+  try {
+    const a = await getStart();
+    const b = FORM.coords || await geocode(place);
+    const km = await routeKm(a, b);
+    $('#j-km').value = (Math.round(km * 10) / 10).toString();
+    st.className = 'status ok'; st.textContent = 'Trasa po silnici: ' + num(km) + ' km jedna cesta.';
+    updJobCalc();
+  } catch (e) {
+    st.className = 'status err';
+    st.textContent = e.message === 'notfound' ? 'Adresu se nepodařilo najít – zkuste přesnější název, nebo zadejte km ručně.' : 'Výpočet se nepovedl (bez signálu?). Zadejte km ručně.';
+  }
+}
+function useGeo() {
+  const st = $('#j-km-st');
+  if (!navigator.geolocation) { st.className = 'status err'; st.textContent = 'Poloha není dostupná.'; return; }
+  st.className = 'status'; st.textContent = 'Zjišťuji polohu…';
+  navigator.geolocation.getCurrentPosition(async (p) => {
+    if (!FORM) return;
+    FORM.coords = { lat: p.coords.latitude, lon: p.coords.longitude };
+    try { const name = await reverseGeocode(FORM.coords.lat, FORM.coords.lon); if (name && FORM) $('#j-place').value = name; } catch (e) {}
+    if (FORM) calcKm();
+  }, () => { st.className = 'status err'; st.textContent = 'Polohu se nepodařilo zjistit (povolte ji v nastavení Safari).'; }, { enableHighAccuracy: true, timeout: 15000 });
+}
+function saveJob() {
+  const j = FORM.j;
+  j.place = $('#j-place').value.trim();
+  const km = parseFloat(($('#j-km').value || '').replace(',', '.'));
+  j.kmOneWay = km > 0 ? Math.round(km * 10) / 10 : null;
+  j.date = $('#j-date').value || UI.day;
+  j.from = $('#j-from').value; j.to = $('#j-to').value;
+  j.note = $('#j-note').value.trim();
+  if (!j.from || !j.to) { toast('Vyplňte čas od a do'); return; }
+  if (!(j.loads >= 0)) j.loads = 0;
+  if (j.id) { const i = DB.jobs.findIndex(x => x.id === j.id); DB.jobs[i] = j; }
+  else { j.id = uid(); j.created = Date.now(); DB.jobs.push(j); }
+  saveData(); UI.day = j.date; closeSheet(); render(); toast('Zakázka uložena');
+}
+
+function openFuel(id) {
+  const ex = id ? DB.fuel.find(f => f.id === id) : null;
+  const last = DB.fuel.slice().sort((a, b) => (b.date + (b.time || '')).localeCompare(a.date + (a.time || '')))[0];
+  const f = ex ? Object.assign({}, ex) : { id: null, date: UI.day, time: UI.day === todayIso() ? nowRounded() : '', place: last ? last.place : '', liters: '', price: '', note: '' };
+  FORM = { kind: 'fuel', f };
+  openSheet(ex ? 'Upravit tankování' : 'Tankování', `
+    <div class="g2">
+      <div class="f"><label for="f-date">Kdy – datum</label><input class="in" id="f-date" type="date" value="${esc(f.date)}"></div>
+      <div class="f"><label for="f-time">Čas</label><input class="in" id="f-time" type="time" value="${esc(f.time)}"></div>
+    </div>
+    <div class="f"><label for="f-place">Kde (čerpací stanice)</label><input class="in" id="f-place" value="${esc(f.place)}" placeholder="např. OMV Boskovice"></div>
+    <div class="g2">
+      <div class="f"><label for="f-l">Kolik (litrů)</label><input class="in" id="f-l" type="number" inputmode="decimal" step="0.01" min="0" value="${esc(f.liters)}"></div>
+      <div class="f"><label for="f-p">Za kolik (Kč celkem)</label><input class="in" id="f-p" type="number" inputmode="decimal" step="0.01" min="0" value="${esc(f.price)}"></div>
+    </div>
+    <div class="calc"><span>Cena za litr</span><strong id="f-ppl">–</strong></div>
+    <div class="f"><label for="f-note">Poznámka</label><input class="in" id="f-note" value="${esc(f.note)}" placeholder="např. stav km, karta…"></div>
+  `, `${ex ? '<button class="btn red" data-act="del-fuel" style="flex:0 0 auto">Smazat</button>' : ''}<button class="btn" data-act="save-fuel">Uložit tankování</button>`);
+  updFuelCalc();
+}
+function updFuelCalc() {
+  const l = parseFloat(($('#f-l').value || '').replace(',', '.')), p = parseFloat(($('#f-p').value || '').replace(',', '.'));
+  $('#f-ppl').textContent = l > 0 && p > 0 ? num(p / l, 2) + ' Kč/l' : '–';
+}
+function saveFuel() {
+  const f = FORM.f;
+  f.date = $('#f-date').value || UI.day; f.time = $('#f-time').value;
+  f.place = $('#f-place').value.trim(); f.note = $('#f-note').value.trim();
+  f.liters = parseFloat(($('#f-l').value || '').replace(',', '.')) || 0;
+  f.price = parseFloat(($('#f-p').value || '').replace(',', '.')) || 0;
+  if (!f.liters) { toast('Vyplňte počet litrů'); return; }
+  if (f.id) { const i = DB.fuel.findIndex(x => x.id === f.id); DB.fuel[i] = f; }
+  else { f.id = uid(); f.created = Date.now(); DB.fuel.push(f); }
+  saveData(); UI.day = f.date; closeSheet(); render(); toast('Tankování uloženo');
+}
+
+/* ===== Export / záloha ===== */
+function download(name, text, type) {
+  const blob = new Blob([text], { type }), url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+}
+const csvCell = (v) => { const s = String(v ?? ''); return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+const csvDate = (s) => { const d = parseIso(s); return d.getDate() + '.' + (d.getMonth() + 1) + '.' + d.getFullYear(); };
+const dec = (x, d = 2) => (Math.round((+x || 0) * 10 ** d) / 10 ** d).toString().replace('.', ',');
+function csvJobs() {
+  const ym = UI.month, rows = DB.jobs.filter(j => j.date.startsWith(ym)).sort((a, b) => (a.date + a.from).localeCompare(b.date + b.from));
+  const out = [['Datum', 'Místo', 'Od', 'Do', 'Hodin', 'Fůry', 'm3', 'km jedna cesta', 'km tam i zpět', 'Poznámka']];
+  rows.forEach(j => out.push([csvDate(j.date), j.place, j.from, j.to, dec(jobMinutes(j) / 60), dec(j.loads), dec(m3(j.loads)), dec(j.kmOneWay || 0, 1), dec(kmRound(j), 1), j.note]));
+  download(`zakazky-${ym}.csv`, '﻿' + out.map(r => r.map(csvCell).join(';')).join('\r\n'), 'text/csv;charset=utf-8');
+}
+function csvFuel() {
+  const ym = UI.month, rows = DB.fuel.filter(f => f.date.startsWith(ym)).sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+  const out = [['Datum', 'Čas', 'Místo', 'Litry', 'Kč celkem', 'Kč/l', 'Poznámka']];
+  rows.forEach(f => out.push([csvDate(f.date), f.time, f.place, dec(f.liters), dec(f.price), f.liters ? dec(f.price / f.liters) : '', f.note]));
+  download(`tankovani-${ym}.csv`, '﻿' + out.map(r => r.map(csvCell).join(';')).join('\r\n'), 'text/csv;charset=utf-8');
+}
+
+/* ===== Události ===== */
+document.addEventListener('click', (e) => {
+  const tab = e.target.closest('[data-tab]');
+  if (tab) { go(tab.dataset.tab); return; }
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act;
+  if (act === 'overlay' && e.target !== el) return;
+  switch (act) {
+    case 'new-job': openJob(); break;
+    case 'new-fuel': openFuel(); break;
+    case 'edit-job': openJob(el.dataset.id); break;
+    case 'edit-fuel': openFuel(el.dataset.id); break;
+    case 'overlay': case 'close': closeSheet(); break;
+    case 'day': UI.day = addDays(UI.day, +el.dataset.n); render(); break;
+    case 'today': UI.day = todayIso(); render(); break;
+    case 'week': UI.week = addDays(UI.week, +el.dataset.n); render(); break;
+    case 'open-day': UI.day = el.dataset.d; go('denik'); break;
+    case 'month': { let [y, m] = UI.month.split('-').map(Number); m += +el.dataset.n; if (m < 1) { m = 12; y--; } if (m > 12) { m = 1; y++; } UI.month = y + '-' + pad(m); render(); break; }
+    case 'q-load': FORM.j.loads = +el.dataset.v; updJobCalc(); break;
+    case 'load': FORM.j.loads = Math.max(0, Math.round((FORM.j.loads + +el.dataset.n) * 4) / 4); updJobCalc(); break;
+    case 'calc-km': calcKm(); break;
+    case 'geo': useGeo(); break;
+    case 'save-job': saveJob(); break;
+    case 'del-job': if (confirm('Opravdu smazat tuto zakázku?')) { DB.jobs = DB.jobs.filter(j => j.id !== FORM.j.id); saveData(); closeSheet(); render(); toast('Smazáno'); } break;
+    case 'save-fuel': saveFuel(); break;
+    case 'del-fuel': if (confirm('Opravdu smazat toto tankování?')) { DB.fuel = DB.fuel.filter(f => f.id !== FORM.f.id); saveData(); closeSheet(); render(); toast('Smazáno'); } break;
+    case 'csv-jobs': csvJobs(); break;
+    case 'csv-fuel': csvFuel(); break;
+    case 'verify-start': {
+      const st = $('#s-start-st'), addr = $('#s-start').value.trim();
+      st.className = 'status'; st.textContent = 'Hledám adresu…';
+      geocode(addr).then(p => { DB.settings.startAddress = addr; DB.settings.startLat = p.lat; DB.settings.startLon = p.lon; saveData(); st.className = 'status ok'; st.textContent = 'Nalezeno: ' + num(p.lat, 5) + ', ' + num(p.lon, 5); })
+        .catch(() => { st.className = 'status err'; st.textContent = 'Adresu se nepodařilo najít nebo chybí signál.'; });
+      break;
+    }
+    case 'save-settings': {
+      const addr = $('#s-start').value.trim(), load = parseFloat(($('#s-load').value || '').replace(',', '.'));
+      if (addr !== DB.settings.startAddress) { DB.settings.startAddress = addr; DB.settings.startLat = null; DB.settings.startLon = null; }
+      if (load > 0) DB.settings.loadM3 = load;
+      saveData(); render(); toast('Nastavení uloženo'); break;
+    }
+    case 'backup': download(`stepkovac-zaloha-${todayIso()}.json`, JSON.stringify(DB, null, 1), 'application/json'); break;
+    case 'restore': $('#import-file').click(); break;
+    case 'wipe': if (confirm('Smazat všechny zakázky a tankování? Tohle nejde vrátit.') && confirm('Opravdu? Doporučuji nejdřív stáhnout zálohu.')) { DB.jobs = []; DB.fuel = []; saveData(); render(); toast('Data smazána'); } break;
+  }
+});
+document.addEventListener('input', (e) => {
+  if (!FORM) return;
+  if (FORM.kind === 'job') { if (e.target.id === 'j-place') FORM.coords = null; updJobCalc(); }
+  else updFuelCalc();
+});
+document.addEventListener('change', (e) => {
+  if (e.target.id === 'day-pick' && e.target.value) { UI.day = e.target.value; render(); }
+});
+$('#import-file').addEventListener('change', async (e) => {
+  const file = e.target.files[0]; e.target.value = '';
+  if (!file) return;
+  try {
+    const d = JSON.parse(await file.text());
+    if (!Array.isArray(d.jobs) || !Array.isArray(d.fuel)) throw 0;
+    if (!confirm(`Záloha obsahuje ${d.jobs.length} zakázek a ${d.fuel.length} tankování. Nahradit současná data?`)) return;
+    d.settings = Object.assign({}, DEFAULT_SETTINGS, d.settings || {});
+    DB = d; saveData(); render(); toast('Data obnovena');
+  } catch (er) { toast('Soubor není platná záloha'); }
+});
+
+render();
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+</script>
+</body>
+</html>
