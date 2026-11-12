@@ -60,7 +60,7 @@ nav.tabs button{background:none;border:none;display:flex;flex-direction:column;a
 nav.tabs button svg{width:22px;height:22px}
 nav.tabs button.on{color:var(--g);font-weight:600}
 /* Dny */
-.legend{display:flex;gap:12px;font-size:12px;color:#3A4037}
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:#3A4037}
 .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;background:var(--g);vertical-align:-1px;margin-right:5px}
 .legend i.f{border-radius:999px;background:var(--am)}
 .axis{display:flex;justify-content:space-between;font-size:11px;color:var(--mut);padding:0 2px;margin:12px 0 6px;font-variant-numeric:tabular-nums}
@@ -81,6 +81,14 @@ body{transition:background-color .2s}
 .bar .grid span:last-child{border-right:none}
 .blk{position:absolute;top:3px;bottom:3px;background:var(--g);color:#fff;border-radius:6px;font-size:11px;font-weight:600;display:flex;align-items:center;padding:0 6px;white-space:nowrap;overflow:hidden;min-width:4px}
 .dot{position:absolute;top:8px;width:14px;height:14px;margin-left:-7px;border-radius:999px;background:var(--am);border:2px solid #fff}
+.dot.s{background:#7A4A1E}
+.legend i.s{border-radius:999px;background:#7A4A1E}
+.card.fuel.s{background:#F6EFE8;border-color:#E6D5C3}
+.card.fuel.s .fuel-ic{background:#EADBCB}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#F5F6F8;border-radius:12px;padding:4px}
+.seg button{height:44px;border-radius:9px;border:none;background:transparent;font-size:16px;font-weight:500;color:#4A5059}
+.seg button.on{background:#fff;color:var(--tx);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.sheet{will-change:transform}
 .bar .none{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--mut)}
 .sumbar{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:14px}
 /* Swipe animace */
@@ -216,6 +224,8 @@ function fmtLoads(x) {
 const loadsWord = (x) => (x > 0 && x <= 1 ? 'fůra' : x > 1 && x < 5 ? 'fůry' : 'fůr');
 const m3 = (loads) => (+loads || 0) * (+DB.settings.loadM3 || 15);
 const kmRound = (j) => (j.kmOneWay != null && j.kmOneWay !== '' ? (+j.kmOneWay) * 2 : 0);
+const VEH = { auto: 'Auto', stepkovac: 'Štěpkovač' };
+const veh = (f) => (f.vehicle === 'stepkovac' ? 'stepkovac' : 'auto');
 const jobsOn = (d) => DB.jobs.filter(j => j.date === d).sort((a, b) => (a.from || '').localeCompare(b.from || ''));
 const fuelOn = (d) => DB.fuel.filter(f => f.date === d).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
 function sumJobs(list) {
@@ -277,10 +287,10 @@ function jobCard(j) {
   </button>`;
 }
 function fuelCard(f) {
-  return `<button class="card fuel" data-act="edit-fuel" data-id="${f.id}">
+  return `<button class="card fuel${veh(f) === 'stepkovac' ? ' s' : ''}" data-act="edit-fuel" data-id="${f.id}">
     <span class="fuel-ic">${ICON.fuel}</span>
     <span style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0">
-      <span style="font-size:15px;font-weight:600">Tankování${f.place ? ' · ' + esc(f.place) : ''}</span>
+      <span style="font-size:15px;font-weight:600">Tankování ${VEH[veh(f)].toLowerCase()}${f.place ? ' · ' + esc(f.place) : ''}</span>
       <span style="font-size:13px;color:var(--amtx)">${f.time ? esc(f.time) + ' · ' : ''}${num(f.liters)} l · ${money(f.price)}</span>
     </span>
   </button>`;
@@ -335,7 +345,7 @@ function viewDny() {
       const end = b < a ? 24 * 60 : b, l = pos(a), w = Math.max(pos(end) - l, 1);
       return `<span class="blk" style="left:${l}%;width:${w}%">${w > 9 ? esc(j.customer || (j.place || '').split(',')[0]) : ''}</span>`;
     }).join('');
-    const dots = fs.map(f => { const t = toMin(f.time); return t == null ? '' : `<span class="dot" title="Tankování" style="left:${pos(t)}%"></span>`; }).join('');
+    const dots = fs.map(f => { const t = toMin(f.time); return t == null ? '' : `<span class="dot${veh(f) === 'stepkovac' ? ' s' : ''}" title="Tankování ${VEH[veh(f)].toLowerCase()}" style="left:${pos(t)}%"></span>`; }).join('');
     const sum = s.n ? `${fmtDur(s.min)} · ${num(m3(s.loads))} m³ · ${num(s.km)} km` : (fs.length ? 'jen tankování' : '—');
     return `<button class="day${d === today ? ' today' : d < today ? ' past' : ''}" data-act="open-day" data-d="${d}">
       <div class="between" style="align-items:baseline"><span style="font-size:15px;font-weight:600">${DAYS[dt.getDay()]} ${shortDate(d)}</span><span class="sub" style="font-weight:400;font-size:12px">${sum}</span></div>
@@ -354,7 +364,7 @@ function viewDny() {
     </div>
   </div>
   <div class="sumbar"><span class="sub">Za týden · ${all.n} ${all.n === 1 ? 'zakázka' : all.n > 1 && all.n < 5 ? 'zakázky' : 'zakázek'}</span><div style="font-size:15px;font-weight:700;margin-top:2px">${fmtDur(all.min)} · ${num(m3(all.loads))} m³ · ${num(all.km)} km</div></div>
-  <div class="legend" style="margin-top:12px"><span><i></i>práce</span><span><i class="f"></i>tankování</span></div>
+  <div class="legend" style="margin-top:12px"><span><i></i>práce</span><span><i class="f"></i>tankování auto</span><span><i class="s"></i>tankování štěpkovač</span></div>
   <div class="axis" aria-hidden="true">${ticks.map(h => `<span>${h}</span>`).join('')}</div>
   <div class="list">${rows}</div>`;
 }
@@ -381,8 +391,9 @@ function viewPrehled() {
   </div>
   <div class="box">
     <div class="between" style="align-items:baseline"><h2>Tankování</h2><span style="font-size:14px;font-weight:600">${num(lit)} l · ${money(kc)}</span></div>
-    ${lit ? `<div class="sub" style="font-weight:400">Průměrná cena ${num(kc / lit, 2)} Kč/l</div>` : ''}
-    <div>${fuel.length ? fuel.map(f => `<button class="tr" data-act="edit-fuel" data-id="${f.id}"><span class="sub" style="font-weight:400">${shortDate(f.date)}</span><span style="min-width:0"><span style="font-size:14px;font-weight:500">${esc(f.place) || 'Tankování'}</span><small>${num(f.liters)} l${+f.liters ? ' · ' + num(f.price / f.liters, 2) + ' Kč/l' : ''}</small></span><span style="font-size:14px;font-weight:600">${money(f.price)}</span></button>`).join('') : '<div class="sub" style="font-weight:400">Žádné tankování v tomto měsíci.</div>'}</div>
+    ${['auto', 'stepkovac'].map(v => { const fv = fuel.filter(f => veh(f) === v), l = fv.reduce((t, f) => t + (+f.liters || 0), 0), k = fv.reduce((t, f) => t + (+f.price || 0), 0);
+      return `<div class="between" style="font-size:14px"><span><i style="display:inline-block;width:10px;height:10px;border-radius:999px;margin-right:6px;background:${v === 'auto' ? 'var(--am)' : '#7A4A1E'}"></i>${VEH[v]}</span><span>${num(l)} l · ${money(k)}${l ? ' · ' + num(k / l, 2) + ' Kč/l' : ''}</span></div>`; }).join('')}
+    <div>${fuel.length ? fuel.map(f => `<button class="tr" data-act="edit-fuel" data-id="${f.id}"><span class="sub" style="font-weight:400">${shortDate(f.date)}</span><span style="min-width:0"><span style="font-size:14px;font-weight:500">${VEH[veh(f)]}${f.place ? ' · ' + esc(f.place) : ''}</span><small>${num(f.liters)} l${+f.liters ? ' · ' + num(f.price / f.liters, 2) + ' Kč/l' : ''}</small></span><span style="font-size:14px;font-weight:600">${money(f.price)}</span></button>`).join('') : '<div class="sub" style="font-weight:400">Žádné tankování v tomto měsíci.</div>'}</div>
   </div>
   <div class="box">
     <h2>Zakázky</h2>
@@ -423,7 +434,7 @@ function viewNastaveni() {
   <div class="setting">
     <button class="btn red" data-act="wipe">Smazat všechna data</button>
   </div>
-  <p class="note" style="text-align:center">Štěpkovač · verze 1.2.1</p>`;
+  <p class="note" style="text-align:center">Štěpkovač · verze 1.3</p>`;
 }
 
 /* ===== Mapy.com (s API klíčem) / OpenStreetMap (bez klíče) ===== */
@@ -627,9 +638,12 @@ function saveJob() {
 function openFuel(id) {
   const ex = id ? DB.fuel.find(f => f.id === id) : null;
   const last = DB.fuel.slice().sort((a, b) => (b.date + (b.time || '')).localeCompare(a.date + (a.time || '')))[0];
-  const f = ex ? Object.assign({}, ex) : { id: null, date: UI.day, time: UI.day === todayIso() ? nowRounded() : '', place: last ? last.place : '', liters: '', price: '', note: '' };
+  const f = ex ? Object.assign({}, ex, { vehicle: veh(ex) }) : { id: null, vehicle: 'auto', date: UI.day, time: UI.day === todayIso() ? nowRounded() : '', place: last ? last.place : '', liters: '', price: '', note: '' };
   FORM = { kind: 'fuel', f };
   openSheet(ex ? 'Upravit tankování' : 'Tankování', `
+    <div class="f"><span class="lb">Co se tankovalo</span>
+      <div class="seg" role="group" aria-label="Co se tankovalo">${Object.keys(VEH).map(v => `<button type="button" data-act="veh" data-v="${v}" aria-pressed="${f.vehicle === v}" class="${f.vehicle === v ? 'on' : ''}">${VEH[v]}</button>`).join('')}</div>
+    </div>
     <div class="g2">
       <div class="f"><label for="f-date">Kdy – datum</label><input class="in" id="f-date" type="date" value="${esc(f.date)}"></div>
       <div class="f"><label for="f-time">Čas</label><input class="in" id="f-time" type="time" value="${esc(f.time)}"></div>
@@ -677,8 +691,8 @@ function csvJobs() {
 }
 function csvFuel() {
   const ym = UI.month, rows = DB.fuel.filter(f => f.date.startsWith(ym)).sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
-  const out = [['Datum', 'Čas', 'Místo', 'Litry', 'Kč celkem', 'Kč/l', 'Poznámka']];
-  rows.forEach(f => out.push([csvDate(f.date), f.time, f.place, dec(f.liters), dec(f.price), f.liters ? dec(f.price / f.liters) : '', f.note]));
+  const out = [['Datum', 'Čas', 'Stroj', 'Místo', 'Litry', 'Kč celkem', 'Kč/l', 'Poznámka']];
+  rows.forEach(f => out.push([csvDate(f.date), f.time, VEH[veh(f)], f.place, dec(f.liters), dec(f.price), f.liters ? dec(f.price / f.liters) : '', f.note]));
   download(`tankovani-${ym}.csv`, '﻿' + out.map(r => r.map(csvCell).join(';')).join('\r\n'), 'text/csv;charset=utf-8');
 }
 
@@ -710,6 +724,7 @@ document.addEventListener('click', (e) => {
     case 'save-job': saveJob(); break;
     case 'del-job': if (confirm('Opravdu smazat tuto zakázku?')) { DB.jobs = DB.jobs.filter(j => j.id !== FORM.j.id); saveData(); closeSheet(); render(); toast('Smazáno'); } break;
     case 'save-fuel': saveFuel(); break;
+    case 'veh': FORM.f.vehicle = el.dataset.v; document.querySelectorAll('[data-act="veh"]').forEach(b => { const on = b.dataset.v === FORM.f.vehicle; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }); break;
     case 'del-fuel': if (confirm('Opravdu smazat toto tankování?')) { DB.fuel = DB.fuel.filter(f => f.id !== FORM.f.id); saveData(); closeSheet(); render(); toast('Smazáno'); } break;
     case 'csv-jobs': csvJobs(); break;
     case 'csv-fuel': csvFuel(); break;
@@ -781,6 +796,41 @@ function shift(n) {
     }
   });
   v.addEventListener('animationend', () => v.classList.remove('inL', 'inR'));
+})();
+
+/* ===== Zavření okna swipem od levého okraje ===== */
+(function edgeClose() {
+  let g = null;
+  document.addEventListener('touchstart', (e) => {
+    const sh = $('.sheet');
+    if (!FORM || !sh || e.touches.length !== 1) return;
+    const x = e.touches[0].clientX;
+    if (x > 32) return;
+    g = { x, y: e.touches[0].clientY, dx: 0, lock: null, sh, ov: $('.overlay') };
+    sh.style.transition = 'none';
+  }, { passive: true });
+  document.addEventListener('touchmove', (e) => {
+    if (!g) return;
+    const t = e.touches[0], dx = t.clientX - g.x, dy = t.clientY - g.y;
+    if (g.lock === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) g.lock = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+    if (g.lock !== 'x') { if (g.lock === 'y') g = null; return; }
+    e.preventDefault();
+    g.dx = Math.max(0, dx);
+    g.sh.style.transform = `translateX(${g.dx}px)`;
+    g.ov.style.backgroundColor = `rgba(20,24,20,${0.45 * Math.max(0, 1 - g.dx / window.innerWidth)})`;
+  }, { passive: false });
+  document.addEventListener('touchend', () => {
+    if (!g) return;
+    const { sh, ov, dx } = g; g = null;
+    sh.style.transition = 'transform .2s ease-out';
+    if (dx > Math.min(100, window.innerWidth * 0.25)) {
+      sh.style.transform = 'translateX(100%)';
+      ov.style.transition = 'background-color .2s'; ov.style.backgroundColor = 'rgba(20,24,20,0)';
+      setTimeout(closeSheet, 200);
+    } else {
+      sh.style.transform = ''; ov.style.backgroundColor = '';
+    }
+  });
 })();
 
 render();
