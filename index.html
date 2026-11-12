@@ -73,7 +73,13 @@ nav.tabs button.on{color:var(--g);font-weight:600}
 .blk{position:absolute;top:3px;bottom:3px;background:var(--g);color:#fff;border-radius:6px;font-size:11px;font-weight:600;display:flex;align-items:center;padding:0 6px;white-space:nowrap;overflow:hidden;min-width:4px}
 .dot{position:absolute;top:8px;width:14px;height:14px;margin-left:-7px;border-radius:999px;background:var(--am);border:2px solid #fff}
 .bar .none{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--mut)}
-.sumbar{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:12px}
+.sumbar{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:14px}
+/* Swipe animace */
+@keyframes inL{from{transform:translateX(40px);opacity:.3}to{transform:none;opacity:1}}
+@keyframes inR{from{transform:translateX(-40px);opacity:.3}to{transform:none;opacity:1}}
+#view.inL{animation:inL .22s ease-out}
+#view.inR{animation:inR .22s ease-out}
+#view{touch-action:pan-y}
 /* Přehled */
 .kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}
 .kpi{background:#fff;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
@@ -219,7 +225,7 @@ const ICON = {
 
 /* ===== Stav a navigace ===== */
 const UI = { tab: 'denik', day: todayIso(), week: weekStart(todayIso()), month: todayIso().slice(0, 7) };
-function go(tab) { UI.tab = tab; render(); window.scrollTo(0, 0); }
+function go(tab) { UI.tab = tab; $('#view').classList.remove('inL', 'inR'); render(); window.scrollTo(0, 0); }
 
 function render() {
   document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === UI.tab));
@@ -295,7 +301,7 @@ function viewDny() {
   const span = (maxH - minH) * 60, pos = (m) => Math.max(0, Math.min(100, (m - minH * 60) / span * 100));
   const ticks = []; for (let h = minH; h <= maxH; h += 2) ticks.push(h);
   const today = todayIso();
-  const rows = days.slice().reverse().map(d => {
+  const rows = days.map(d => {
     const js = jobsOn(d), fs = fuelOn(d), s = sumJobs(js), dt = parseIso(d);
     const blocks = js.map(j => {
       const a = toMin(j.from), b = toMin(j.to); if (a == null || b == null) return '';
@@ -320,17 +326,17 @@ function viewDny() {
       <button class="icon-btn" aria-label="Další týden" data-act="week" data-n="7">${ICON.right}</button>
     </div>
   </div>
+  <div class="sumbar"><span class="sub">Za týden · ${all.n} ${all.n === 1 ? 'zakázka' : all.n > 1 && all.n < 5 ? 'zakázky' : 'zakázek'}</span><div style="font-size:15px;font-weight:700;margin-top:2px">${fmtDur(all.min)} · ${num(m3(all.loads))} m³ · ${num(all.km)} km</div></div>
   <div class="legend" style="margin-top:12px"><span><i></i>práce</span><span><i class="f"></i>tankování</span></div>
   <div class="axis" aria-hidden="true">${ticks.map(h => `<span>${h}</span>`).join('')}</div>
-  <div class="list">${rows}</div>
-  <div class="sumbar"><span class="sub">Za týden</span><div style="font-size:15px;font-weight:700;margin-top:2px">${fmtDur(all.min)} · ${num(m3(all.loads))} m³ · ${num(all.km)} km</div></div>`;
+  <div class="list">${rows}</div>`;
 }
 
 /* ===== Přehled měsíce ===== */
 function viewPrehled() {
   const ym = UI.month, [y, m] = ym.split('-').map(Number);
-  const jobs = DB.jobs.filter(j => j.date.startsWith(ym)).sort((a, b) => (b.date + b.from).localeCompare(a.date + a.from));
-  const fuel = DB.fuel.filter(f => f.date.startsWith(ym)).sort((a, b) => (b.date + (b.time || '')).localeCompare(a.date + (a.time || '')));
+  const jobs = DB.jobs.filter(j => j.date.startsWith(ym)).sort((a, b) => (a.date + a.from).localeCompare(b.date + b.from));
+  const fuel = DB.fuel.filter(f => f.date.startsWith(ym)).sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
   const s = sumJobs(jobs);
   const lit = fuel.reduce((t, f) => t + (+f.liters || 0), 0), kc = fuel.reduce((t, f) => t + (+f.price || 0), 0);
   const MN = MONTHS[m - 1];
@@ -388,7 +394,7 @@ function viewNastaveni() {
   <div class="setting">
     <button class="btn red" data-act="wipe">Smazat všechna data</button>
   </div>
-  <p class="note" style="text-align:center">Štěpkovač · verze 1.0</p>`;
+  <p class="note" style="text-align:center">Štěpkovač · verze 1.1</p>`;
 }
 
 /* ===== Výpočet trasy ===== */
@@ -597,11 +603,11 @@ document.addEventListener('click', (e) => {
     case 'edit-job': openJob(el.dataset.id); break;
     case 'edit-fuel': openFuel(el.dataset.id); break;
     case 'overlay': case 'close': closeSheet(); break;
-    case 'day': UI.day = addDays(UI.day, +el.dataset.n); render(); break;
+    case 'day': shift(+el.dataset.n); break;
     case 'today': UI.day = todayIso(); render(); break;
-    case 'week': UI.week = addDays(UI.week, +el.dataset.n); render(); break;
+    case 'week': shift(+el.dataset.n / 7); break;
     case 'open-day': UI.day = el.dataset.d; go('denik'); break;
-    case 'month': { let [y, m] = UI.month.split('-').map(Number); m += +el.dataset.n; if (m < 1) { m = 12; y--; } if (m > 12) { m = 1; y++; } UI.month = y + '-' + pad(m); render(); break; }
+    case 'month': shift(+el.dataset.n); break;
     case 'q-load': FORM.j.loads = +el.dataset.v; updJobCalc(); break;
     case 'load': FORM.j.loads = Math.max(0, Math.round((FORM.j.loads + +el.dataset.n) * 4) / 4); updJobCalc(); break;
     case 'calc-km': calcKm(); break;
@@ -649,6 +655,37 @@ $('#import-file').addEventListener('change', async (e) => {
     DB = d; saveData(); render(); toast('Data obnovena');
   } catch (er) { toast('Soubor není platná záloha'); }
 });
+
+/* ===== Posun den / týden / měsíc (tlačítka i swipe) ===== */
+function shift(n) {
+  if (UI.tab === 'denik') UI.day = addDays(UI.day, n);
+  else if (UI.tab === 'dny') UI.week = addDays(UI.week, n * 7);
+  else if (UI.tab === 'prehled') { let [y, m] = UI.month.split('-').map(Number); m += n; while (m < 1) { m += 12; y--; } while (m > 12) { m -= 12; y++; } UI.month = y + '-' + pad(m); }
+  else return;
+  render();
+  const v = $('#view');
+  v.classList.remove('inL', 'inR'); void v.offsetWidth; v.classList.add(n > 0 ? 'inL' : 'inR');
+}
+(function swipe() {
+  let sx = null, sy = 0, st = 0;
+  const v = $('#view');
+  v.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1 || FORM || e.target.closest('input,textarea,select')) { sx = null; return; }
+    sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = Date.now();
+    if (sx < 24 || sx > window.innerWidth - 24) sx = null;
+  }, { passive: true });
+  v.addEventListener('touchend', (e) => {
+    if (sx == null) return;
+    const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+    sx = null;
+    // ignorovat start u levého okraje (gesto Safari "zpět")
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5 && Date.now() - st < 800) {
+      e.preventDefault();
+      shift(dx < 0 ? 1 : -1);
+    }
+  });
+  v.addEventListener('animationend', () => v.classList.remove('inL', 'inR'));
+})();
 
 render();
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
