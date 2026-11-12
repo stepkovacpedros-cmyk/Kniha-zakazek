@@ -125,6 +125,7 @@ textarea.in{height:76px;padding:10px 12px;resize:vertical}
 .inrow .in{flex:1}
 .calc{background:#F5F6F8;border-radius:12px;padding:10px 14px;font-size:14px;color:#4A5059;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .calc strong{color:var(--tx)}
+.in.auto{background:#F0F7EE;border-color:#B9D6B2}
 .status{font-size:13px;color:var(--mut);min-height:18px}
 .status.err{color:var(--red)}
 .status.ok{color:var(--g2)}
@@ -434,7 +435,7 @@ function viewNastaveni() {
   <div class="setting">
     <button class="btn red" data-act="wipe">Smazat všechna data</button>
   </div>
-  <p class="note" style="text-align:center">Štěpkovač · verze 1.3</p>`;
+  <p class="note" style="text-align:center">Štěpkovač · verze 1.5</p>`;
 }
 
 /* ===== Mapy.com (s API klíčem) / OpenStreetMap (bez klíče) ===== */
@@ -639,7 +640,7 @@ function openFuel(id) {
   const ex = id ? DB.fuel.find(f => f.id === id) : null;
   const last = DB.fuel.slice().sort((a, b) => (b.date + (b.time || '')).localeCompare(a.date + (a.time || '')))[0];
   const f = ex ? Object.assign({}, ex, { vehicle: veh(ex) }) : { id: null, vehicle: 'auto', date: UI.day, time: UI.day === todayIso() ? nowRounded() : '', place: last ? last.place : '', liters: '', price: '', note: '' };
-  FORM = { kind: 'fuel', f };
+  FORM = { kind: 'fuel', f, edits: ex ? ['f-l', 'f-p'] : [] };
   openSheet(ex ? 'Upravit tankování' : 'Tankování', `
     <div class="f"><span class="lb">Co se tankovalo</span>
       <div class="seg" role="group" aria-label="Co se tankovalo">${Object.keys(VEH).map(v => `<button type="button" data-act="veh" data-v="${v}" aria-pressed="${f.vehicle === v}" class="${f.vehicle === v ? 'on' : ''}">${VEH[v]}</button>`).join('')}</div>
@@ -648,26 +649,110 @@ function openFuel(id) {
       <div class="f"><label for="f-date">Kdy – datum</label><input class="in" id="f-date" type="date" value="${esc(f.date)}"></div>
       <div class="f"><label for="f-time">Čas</label><input class="in" id="f-time" type="time" value="${esc(f.time)}"></div>
     </div>
-    <div class="f"><label for="f-place">Kde (čerpací stanice)</label><input class="in" id="f-place" value="${esc(f.place)}" placeholder="např. OMV Boskovice"></div>
-    <div class="g2">
-      <div class="f"><label for="f-l">Kolik (litrů)</label><input class="in" id="f-l" type="number" inputmode="decimal" step="0.01" min="0" value="${esc(f.liters)}"></div>
-      <div class="f"><label for="f-p">Za kolik (Kč celkem)</label><input class="in" id="f-p" type="number" inputmode="decimal" step="0.01" min="0" value="${esc(f.price)}"></div>
+    <div class="f"><label for="f-place">Kde (čerpací stanice)</label>
+      <div class="inrow"><div class="sugg" style="flex:1"><input class="in" id="f-place" value="${esc(f.place)}" placeholder="např. OMV Boskovice" autocomplete="off"><div class="sugg-list hidden" id="f-sugg"></div></div>
+      <button class="icon-btn" style="height:48px;width:48px" aria-label="Najít benzinku podle polohy" data-act="near-fuel">${ICON.pin}</button></div>
+      <div class="status" id="f-st"></div>
     </div>
-    <div class="calc"><span>Cena za litr</span><strong id="f-ppl">–</strong></div>
+    <div class="g3">
+      <div class="f"><label for="f-l">Litrů</label><input class="in" id="f-l" type="text" inputmode="decimal" value="${f.liters ? String(f.liters).replace('.', ',') : ''}"></div>
+      <div class="f"><label for="f-ppl">Kč/litr</label><input class="in" id="f-ppl" type="text" inputmode="decimal" value="${f.liters && f.price ? String(Math.round(f.price / f.liters * 100) / 100).replace('.', ',') : ''}"></div>
+      <div class="f"><label for="f-p">Kč celkem</label><input class="in" id="f-p" type="text" inputmode="decimal" value="${f.price ? String(f.price).replace('.', ',') : ''}"></div>
+    </div>
+    <div class="note" id="f-hint">Vyplňte dvě pole, třetí se dopočítá.</div>
     <div class="f"><label for="f-note">Poznámka</label><input class="in" id="f-note" value="${esc(f.note)}" placeholder="např. stav km, karta…"></div>
   `, `${ex ? '<button class="btn red" data-act="del-fuel" style="flex:0 0 auto">Smazat</button>' : ''}<button class="btn" data-act="save-fuel">Uložit tankování</button>`);
   updFuelCalc();
+  if (!ex) nearFuel(true);
 }
-function updFuelCalc() {
-  const l = parseFloat(($('#f-l').value || '').replace(',', '.')), p = parseFloat(($('#f-p').value || '').replace(',', '.'));
-  $('#f-ppl').textContent = l > 0 && p > 0 ? num(p / l, 2) + ' Kč/l' : '–';
+
+/* ===== Benzinky podle polohy ===== */
+function distM(a, b) {
+  const R = 6371000, toR = Math.PI / 180, dLa = (b.lat - a.lat) * toR, dLo = (b.lon - a.lon) * toR;
+  const h = Math.sin(dLa / 2) ** 2 + Math.cos(a.lat * toR) * Math.cos(b.lat * toR) * Math.sin(dLo / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+const fmtDist = (m) => m < 1000 ? Math.round(m / 10) * 10 + ' m' : num(m / 1000) + ' km';
+async function stationsOsm(pos) {
+  const q = `[out:json][timeout:15];nwr(around:5000,${pos.lat},${pos.lon})[amenity=fuel];out center tags;`;
+  const r = await fetch('https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(q));
+  if (!r.ok) throw new Error('osm');
+  const j = await r.json();
+  return (j.elements || []).map(e => {
+    const t = e.tags || {}, lat = e.lat ?? (e.center && e.center.lat), lon = e.lon ?? (e.center && e.center.lon);
+    const brand = t.brand || t.name || t.operator || 'Čerpací stanice';
+    return { brand, name: t.name || '', city: t['addr:city'] || '', street: t['addr:street'] || '', lat, lon };
+  }).filter(x => x.lat != null);
+}
+async function stationsMapy(pos) {
+  const r = await fetch(`${MAPY}/geocode?lang=cs&limit=8&type=poi&query=${encodeURIComponent('čerpací stanice')}&preferNear=${pos.lon},${pos.lat}&preferNearPrecision=2000` + mapyQ());
+  if (!r.ok) throw new Error('mapy');
+  const j = await r.json();
+  return (j.items || []).filter(i => i.position).map(i => ({ brand: i.name, name: i.name, city: (i.location || '').split(',')[0].trim(), street: '', lat: i.position.lat, lon: i.position.lon }));
+}
+function getPos() {
+  return new Promise((res, rej) => {
+    if (!navigator.geolocation) return rej(new Error('nogeo'));
+    navigator.geolocation.getCurrentPosition(p => res({ lat: p.coords.latitude, lon: p.coords.longitude }), () => rej(new Error('nogeo')), { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+  });
+}
+async function nearFuel(auto) {
+  const st = $('#f-st'); if (!st) return;
+  st.className = 'status'; st.textContent = 'Hledám benzinky v okolí…';
+  try {
+    const pos = await getPos();
+    if (!FORM || FORM.kind !== 'fuel') return;
+    let list = [];
+    try { list = await stationsOsm(pos); } catch (e) {}
+    if (!list.length && mapyKey()) { try { list = await stationsMapy(pos); } catch (e) {} }
+    if (!FORM || FORM.kind !== 'fuel') return;
+    list.forEach(x => x.d = distM(pos, x));
+    list = list.filter(x => x.d < 10000).sort((a, b) => a.d - b.d).slice(0, 6);
+    if (!list.length) { st.className = 'status err'; st.textContent = 'V okolí jsem žádnou benzinku nenašel – napište ji ručně.'; return; }
+    // město doplnit podle polohy, pokud ho benzinka nemá v datech
+    let town = '';
+    if (list.some(x => !x.city)) { try { town = (await reverseGeocode(pos.lat, pos.lon)).split(',').pop().trim(); } catch (e) {} }
+    list.forEach(x => { const c = x.city || town; x.label = c && !x.brand.includes(c) ? x.brand + ' ' + c : x.brand; });
+    FORM.stations = list;
+    if (list[0].d < 400) {
+      $('#f-place').value = list[0].label;
+      st.className = 'status ok'; st.textContent = `Jste u: ${list[0].label} (${fmtDist(list[0].d)}). Jiná? Klepněte na špendlík.`;
+      if (auto) return;
+    } else {
+      st.className = 'status'; st.textContent = 'Vyberte benzinku:';
+    }
+    const l = $('#f-sugg');
+    l.innerHTML = list.map((x, i) => `<button type="button" data-act="pick-station" data-i="${i}"><b>${esc(x.label)}</b><small>${fmtDist(x.d)}${x.street ? ' · ' + esc(x.street) : ''}</small></button>`).join('') + '<div class="src">Data © OpenStreetMap / Mapy.com</div>';
+    l.classList.remove('hidden');
+  } catch (e) {
+    st.className = 'status' + (auto ? '' : ' err');
+    st.textContent = auto ? '' : 'Polohu se nepodařilo zjistit (povolte ji v nastavení Safari).';
+  }
+}
+const pnum = (id) => { const v = parseFloat(($('#' + id).value || '').replace(/\s/g, '').replace(',', '.')); return v > 0 ? v : 0; };
+const setNum = (id, v) => { const el = $('#' + id); el.value = v > 0 ? String(Math.round(v * 100) / 100).replace('.', ',') : ''; };
+// dopočítá to pole, které uživatel upravoval nejdéle zpátky
+function updFuelCalc(changedId) {
+  const ids = ['f-l', 'f-ppl', 'f-p'];
+  if (changedId && ids.includes(changedId)) {
+    FORM.edits = [changedId, ...FORM.edits.filter(x => x !== changedId)].slice(0, 2);
+  }
+  ids.forEach(id => $('#' + id).classList.remove('auto'));
+  if (FORM.edits.length < 2) return;
+  const target = ids.find(id => !FORM.edits.includes(id));
+  const l = pnum('f-l'), c = pnum('f-ppl'), p = pnum('f-p');
+  if (target === 'f-p' && l && c) setNum('f-p', l * c);
+  else if (target === 'f-ppl' && l && p) setNum('f-ppl', p / l);
+  else if (target === 'f-l' && c && p) setNum('f-l', p / c);
+  else return;
+  $('#' + target).classList.add('auto');
 }
 function saveFuel() {
   const f = FORM.f;
   f.date = $('#f-date').value || UI.day; f.time = $('#f-time').value;
   f.place = $('#f-place').value.trim(); f.note = $('#f-note').value.trim();
-  f.liters = parseFloat(($('#f-l').value || '').replace(',', '.')) || 0;
-  f.price = parseFloat(($('#f-p').value || '').replace(',', '.')) || 0;
+  f.liters = pnum('f-l');
+  f.price = pnum('f-p') || Math.round(pnum('f-l') * pnum('f-ppl') * 100) / 100;
   if (!f.liters) { toast('Vyplňte počet litrů'); return; }
   if (f.id) { const i = DB.fuel.findIndex(x => x.id === f.id); DB.fuel[i] = f; }
   else { f.id = uid(); f.created = Date.now(); DB.fuel.push(f); }
@@ -702,6 +787,7 @@ document.addEventListener('click', (e) => {
   if (tab) { go(tab.dataset.tab); return; }
   const el = e.target.closest('[data-act]');
   if (FORM && FORM.kind === 'job' && !(el && el.dataset.act === 'pick-sugg') && e.target.id !== 'j-place') hideSugg();
+  if (FORM && FORM.kind === 'fuel' && !(el && (el.dataset.act === 'pick-station' || el.dataset.act === 'near-fuel'))) { const l = $('#f-sugg'); if (l) { l.innerHTML = ''; l.classList.add('hidden'); } }
   if (!el) return;
   const act = el.dataset.act;
   if (act === 'overlay' && e.target !== el) return;
@@ -724,6 +810,8 @@ document.addEventListener('click', (e) => {
     case 'save-job': saveJob(); break;
     case 'del-job': if (confirm('Opravdu smazat tuto zakázku?')) { DB.jobs = DB.jobs.filter(j => j.id !== FORM.j.id); saveData(); closeSheet(); render(); toast('Smazáno'); } break;
     case 'save-fuel': saveFuel(); break;
+    case 'near-fuel': nearFuel(false); break;
+    case 'pick-station': { const x = FORM.stations[+el.dataset.i]; if (x) { $('#f-place').value = x.label; $('#f-st').className = 'status ok'; $('#f-st').textContent = 'Vybráno: ' + x.label; } const l = $('#f-sugg'); l.innerHTML = ''; l.classList.add('hidden'); break; }
     case 'veh': FORM.f.vehicle = el.dataset.v; document.querySelectorAll('[data-act="veh"]').forEach(b => { const on = b.dataset.v === FORM.f.vehicle; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }); break;
     case 'del-fuel': if (confirm('Opravdu smazat toto tankování?')) { DB.fuel = DB.fuel.filter(f => f.id !== FORM.f.id); saveData(); closeSheet(); render(); toast('Smazáno'); } break;
     case 'csv-jobs': csvJobs(); break;
@@ -750,7 +838,7 @@ document.addEventListener('click', (e) => {
 document.addEventListener('input', (e) => {
   if (!FORM) return;
   if (FORM.kind === 'job') { if (e.target.id === 'j-place') { FORM.coords = null; onPlaceInput(); } updJobCalc(); }
-  else updFuelCalc();
+  else updFuelCalc(e.target.id);
 });
 document.addEventListener('change', (e) => {
   if (e.target.id === 'day-pick' && e.target.value) { UI.day = e.target.value; render(); }
