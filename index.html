@@ -150,6 +150,35 @@ textarea.in{height:76px;padding:10px 12px;resize:vertical}
 .map{height:190px;border-radius:12px;overflow:hidden;border:1px solid var(--line);margin-top:4px;background:#EAF0E6;z-index:0}
 .map .leaflet-control-attribution{font-size:9px}
 .hidden{display:none!important}
+/* úvodní obrazovka – přehraje se jednou (cca 3 s) */
+.splash{position:fixed;inset:0;z-index:100;background:#2F6B3A;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;transition:opacity .35s;overflow:hidden}
+.splash.out{opacity:0;pointer-events:none}
+.splash svg{max-width:85vw;height:auto}
+.sp-log{animation:sp-log 1.6s ease-in .1s both}
+@keyframes sp-log{0%{transform:translateX(0);opacity:1}88%{transform:translateX(118px);opacity:1}100%{transform:translateX(130px);opacity:0}}
+.sp-body{animation:sp-shake .12s linear 12 .5s}
+@keyframes sp-shake{0%{transform:translate(0,0)}50%{transform:translate(.7px,-.7px)}100%{transform:translate(0,0)}}
+.sp-chip{opacity:0;transform-box:fill-box;animation:sp-fly 1s ease-out both}
+@keyframes sp-fly{0%{opacity:0;transform:translate(0,0) rotate(0)}6%{opacity:1}40%{transform:translate(26px,-24px) rotate(180deg);opacity:1}94%{transform:translate(44px,128px) rotate(420deg);opacity:1}100%{opacity:0;transform:translate(44px,128px)}}
+.sp-pile{transform-box:fill-box;transform-origin:50% 100%;animation:sp-pile 2.2s ease-out .8s both}
+@keyframes sp-pile{0%{transform:scaleY(0)}100%{transform:scaleY(1)}}
+.sp-title{display:flex;flex-direction:column;align-items:center;gap:6px;animation:sp-up .6s ease-out .7s both}
+.sp-title span{font-size:38px;font-weight:800;letter-spacing:-.02em}
+.sp-title small{font-size:16px;font-weight:500;color:#D5E6D2}
+@keyframes sp-up{0%{opacity:0;transform:translateY(14px)}100%{opacity:1;transform:none}}
+.sp-track{width:160px;height:6px;border-radius:3px;background:rgba(255,255,255,.22);overflow:hidden}
+.sp-bar{width:100%;height:100%;background:#F2B33D;border-radius:3px;transform-origin:0 50%;animation:sp-bar 3s linear both}
+@keyframes sp-bar{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
+@media (prefers-reduced-motion: reduce){.splash *{animation-duration:.01s!important;animation-delay:0s!important}}
+/* přihlášení */
+.login{position:fixed;inset:0;z-index:90;background:#2F6B3A;display:flex;align-items:center;justify-content:center;padding:24px calc(20px + var(--sab))}
+.login-box{background:#fff;border-radius:20px;padding:24px 20px;width:100%;max-width:400px;display:flex;flex-direction:column;gap:14px}
+.login-title{font-size:28px;font-weight:800;color:#2F6B3A;letter-spacing:-.02em}
+.login-sub{font-size:14px;color:var(--mut);margin-top:-10px}
+.linkbtn{background:none;border:none;color:var(--g);font-size:15px;font-weight:600;min-height:44px}
+.sync{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--mut)}
+.sync i{width:8px;height:8px;border-radius:4px;background:#9AA39A}
+.sync.on i{background:#2F6B3A}
 .chart{background:#fff;border-radius:16px;padding:14px 14px 10px;margin-bottom:12px;position:relative}
 .chart h2{font-size:15px}
 .chart .csub{font-size:12px;color:var(--mut);margin:2px 0 8px}
@@ -184,13 +213,54 @@ textarea.in{height:76px;padding:10px 12px;resize:vertical}
   </nav>
 </div>
 <div id="sheet-root"></div>
+<div id="login" class="login hidden" role="dialog" aria-modal="true" aria-label="Přihlášení">
+  <form class="login-box" id="login-form" novalidate>
+    <span class="login-title">Štěpkovač</span>
+    <span class="login-sub">Přihlaste se firemním účtem</span>
+    <div class="f"><label for="l-email">E-mail</label><input class="in" id="l-email" type="email" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false" required></div>
+    <div class="f"><label for="l-pass">Heslo</label><input class="in" id="l-pass" type="password" autocomplete="current-password" required></div>
+    <div class="status err" id="l-err" role="alert"></div>
+    <button class="btn full" type="submit" id="l-btn">Přihlásit</button>
+    <button class="linkbtn" type="button" data-act="reset-pass">Zapomenuté heslo</button>
+  </form>
+</div>
+<div id="splash" class="splash" aria-hidden="true">
+  <svg width="330" height="242" viewBox="0 0 300 220">
+    <line x1="0" y1="191" x2="300" y2="191" stroke="#5E9A66" stroke-width="2"/>
+    <g class="sp-log"><rect x="-96" y="113" width="96" height="22" rx="11" fill="#A0682E"/><circle cx="-85" cy="124" r="9" fill="#E8C48A"/><circle cx="-85" cy="124" r="4" fill="none" stroke="#B98A4E" stroke-width="1.5"/></g>
+    <g class="sp-body">
+      <path d="M26 90 L104 106 L104 148 L42 142 Z" fill="#fff"/>
+      <rect x="98" y="104" width="114" height="50" rx="9" fill="#fff"/>
+      <path d="M178 110 L178 62 Q178 46 194 42 L232 33 L236 50 L200 58 Q195 59 195 65 L195 110 Z" fill="#fff"/>
+      <rect x="118" y="116" width="40" height="8" rx="4" fill="#2F6B3A" opacity=".35"/>
+    </g>
+    <rect x="34" y="152" width="214" height="11" rx="5.5" fill="#fff"/>
+    <line x1="36" y1="158" x2="6" y2="164" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="150" cy="171" r="20" fill="#fff"/><circle cx="150" cy="171" r="8" fill="#2F6B3A"/>
+    <path class="sp-pile" d="M246 191 Q262 160 276 166 Q286 158 300 168 L300 191 Z" fill="#F2B33D"/>
+    <rect class="sp-chip" x="232" y="36" width="14" height="9" rx="2" fill="#F2B33D" style="animation-delay:.75s"/>
+    <rect class="sp-chip" x="232" y="38" width="11" height="8" rx="2" fill="#FFE2A3" style="animation-delay:.95s"/>
+    <rect class="sp-chip" x="233" y="36" width="12" height="9" rx="2" fill="#F2B33D" style="animation-delay:1.15s"/>
+    <rect class="sp-chip" x="231" y="37" width="10" height="7" rx="2" fill="#FFE2A3" style="animation-delay:1.35s"/>
+    <rect class="sp-chip" x="232" y="36" width="14" height="9" rx="2" fill="#F2B33D" style="animation-delay:1.55s"/>
+    <rect class="sp-chip" x="233" y="38" width="11" height="8" rx="2" fill="#FFE2A3" style="animation-delay:1.75s"/>
+    <rect class="sp-chip" x="232" y="36" width="12" height="9" rx="2" fill="#F2B33D" style="animation-delay:1.95s"/>
+    <rect class="sp-chip" x="231" y="37" width="10" height="7" rx="2" fill="#FFE2A3" style="animation-delay:2.15s"/>
+  </svg>
+  <div class="sp-title"><span>Štěpkovač</span><small>Kniha zakázek</small></div>
+  <div class="sp-track"><div class="sp-bar"></div></div>
+</div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <input type="file" id="import-file" accept="application/json,.json" class="hidden">
 
+<script src="config.js"></script>
 <script>
 'use strict';
 /* ===== Úložiště ===== */
-const KEY = 'stepkovac.v1';
+const LOCAL_KEY = 'stepkovac.v1';            // data jen v telefonu (bez Firebase)
+const CACHE_KEY = 'stepkovac.cloudcache.v1';  // mezipaměť dat z Firebase
+const CLOUD_ON = !!(window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.projectId);
+const KEY = CLOUD_ON ? CACHE_KEY : LOCAL_KEY;
 const DEFAULT_SETTINGS = { startAddress: 'Na Horce 278, Doubravice nad Svitavou', startLat: null, startLon: null, loadM3: 15 };
 function loadData() {
   try {
@@ -600,6 +670,11 @@ function viewNastaveni() {
   return `
   <h1>Nastavení</h1>
   <div class="setting">
+    <h2>Účet a data</h2>
+    ${CLOUD_ON ? (CLOUD.user ? `<div class="between"><div style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="font-size:15px;font-weight:600;overflow:hidden;text-overflow:ellipsis">${esc(CLOUD.user.email)}</span><span class="sync${CLOUD.online ? ' on' : ''}"><i></i>${CLOUD.online ? (CLOUD.synced ? 'Synchronizováno s Firebase' : 'Připojuji…') : 'Offline – změny se odešlou po připojení'}</span></div><button class="btn o" style="height:44px;flex-shrink:0" data-act="logout">Odhlásit</button></div>` : '<span class="note">Nepřihlášeno.</span>')
+      : '<span class="note">Data jsou uložená jen v tomto telefonu. Firebase zatím není nastavený (soubor config.js).</span>'}
+  </div>
+  <div class="setting">
     <div class="f"><label for="s-start">Startovní adresa (základna)</label>
       <div class="inrow"><input class="in" id="s-start" value="${esc(st.startAddress)}"><button class="btn o" style="height:48px" data-act="verify-start">Ověřit</button></div>
       <div class="status" id="s-start-st">${st.startLat ? 'Poloha nalezena: ' + num(st.startLat, 5) + ', ' + num(st.startLon, 5) : 'Poloha zatím neověřena – ověří se při prvním výpočtu.'}</div>
@@ -611,7 +686,7 @@ function viewNastaveni() {
   </div>
   <div class="setting">
     <h2>Záloha dat</h2>
-    <p class="note" style="margin:0">Data jsou uložená jen v tomto telefonu. Občas si stáhněte zálohu – při smazání dat Safari nebo výměně telefonu se dají obnovit.</p>
+    <p class="note" style="margin:0">${CLOUD_ON ? 'Data jsou ve Firebase, záloha je navíc kopie do souboru. Obnova ze zálohy nahraje záznamy do společné databáze.' : 'Data jsou uložená jen v tomto telefonu. Občas si stáhněte zálohu – při smazání dat Safari nebo výměně telefonu se dají obnovit.'}</p>
     <div class="g2"><button class="btn o" data-act="backup">Stáhnout zálohu</button><button class="btn o" data-act="restore">Obnovit ze zálohy</button></div>
     <div class="sub" style="font-weight:400">V úložišti: ${DB.jobs.length} zakázek, ${DB.fuel.length} tankování.</div>
   </div>
@@ -620,9 +695,9 @@ function viewNastaveni() {
     <p class="note" style="margin:0">S API klíčem se adresy i trasy hledají přes Mapy.com, bez něj přes OpenStreetMap. Výsledná vzdálenost se ukládá jako jedna cesta. V součtech se každá započatá fůra počítá jako jedna cesta tam a zpět (odvoz na vysypání na základnu). Když výpočet selže nebo nesedí, zadejte km ručně.</p>
   </div>
   <div class="setting">
-    <button class="btn red" data-act="wipe">Smazat všechna data</button>
+    ${CLOUD_ON ? '<p class="note" style="margin:0">Smazat celou společnou databázi jde jen ve Firebase konzoli.</p>' : '<button class="btn red" data-act="wipe">Smazat všechna data</button>'}
   </div>
-  <p class="note" style="text-align:center">Štěpkovač · verze 1.12</p>`;
+  <p class="note" style="text-align:center">Štěpkovač · verze 2.0</p>`;
 }
 
 /* ===== Mapy.com (s API klíčem) / OpenStreetMap (bez klíče) ===== */
@@ -771,7 +846,7 @@ async function getStart() {
   const st = DB.settings;
   if (st.startLat != null && st.startLon != null) return { lat: st.startLat, lon: st.startLon };
   const p = await geocode(st.startAddress);
-  st.startLat = p.lat; st.startLon = p.lon; saveData();
+  st.startLat = p.lat; st.startLon = p.lon; saveData(); cloudSettings();
   return p;
 }
 
@@ -968,7 +1043,7 @@ function saveJob() {
   if (!(j.loads >= 0)) j.loads = 0;
   if (j.id) { const i = DB.jobs.findIndex(x => x.id === j.id); DB.jobs[i] = j; }
   else { j.id = uid(); j.created = Date.now(); DB.jobs.push(j); }
-  saveData(); UI.day = j.date; closeSheet(); render(); toast('Zakázka uložena');
+  saveData(); cloudPut('jobs', j); UI.day = j.date; closeSheet(); render(); toast('Zakázka uložena');
 }
 
 function openFuel(id) {
@@ -1109,7 +1184,7 @@ function saveFuel() {
   if (!f.liters) { toast('Vyplňte počet litrů'); return; }
   if (f.id) { const i = DB.fuel.findIndex(x => x.id === f.id); DB.fuel[i] = f; }
   else { f.id = uid(); f.created = Date.now(); DB.fuel.push(f); }
-  saveData(); UI.day = f.date; closeSheet(); render(); toast('Tankování uloženo');
+  saveData(); cloudPut('fuel', f); UI.day = f.date; closeSheet(); render(); toast('Tankování uloženo');
 }
 
 /* ===== Export / záloha ===== */
@@ -1164,13 +1239,13 @@ document.addEventListener('click', (e) => {
     case 'pick-sugg': { const it = FORM.sugg[+el.dataset.i]; if (!it) break; $('#j-place').value = it.label; FORM.coords = { lat: it.lat, lon: it.lon }; hideSugg(); calcKm(); break; }
     case 'geo': useGeo(); break;
     case 'save-job': saveJob(); break;
-    case 'del-job': if (confirm('Opravdu smazat tuto zakázku?')) { DB.jobs = DB.jobs.filter(j => j.id !== FORM.j.id); saveData(); closeSheet(); render(); toast('Smazáno'); } break;
+    case 'del-job': if (confirm('Opravdu smazat tuto zakázku?')) { cloudDel('jobs', FORM.j.id); DB.jobs = DB.jobs.filter(j => j.id !== FORM.j.id); saveData(); closeSheet(); render(); toast('Smazáno'); } break;
     case 'save-fuel': saveFuel(); break;
     case 'near-fuel': nearFuel(false); break;
     case 'pick-station': { const x = FORM.stations[+el.dataset.i]; if (x) { $('#f-place').value = x.label; $('#f-st').className = 'status ok'; $('#f-st').textContent = 'Vybráno: ' + x.label; } const l = $('#f-sugg'); l.innerHTML = ''; l.classList.add('hidden'); break; }
     case 'veh': FORM.f.vehicle = el.dataset.v; document.querySelectorAll('[data-act="veh"]').forEach(b => { const on = b.dataset.v === FORM.f.vehicle; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
       { const o = ODO[FORM.f.vehicle]; $('#f-odo-box').classList.toggle('hidden', !o); if (o) { $('#f-odo-lb').textContent = o.lb; $('#f-odo').placeholder = FORM.f.vehicle === 'auto' ? 'např. 152 340' : 'např. 1 250,5'; } } updOdo(); break;
-    case 'del-fuel': if (confirm('Opravdu smazat toto tankování?')) { DB.fuel = DB.fuel.filter(f => f.id !== FORM.f.id); saveData(); closeSheet(); render(); toast('Smazáno'); } break;
+    case 'del-fuel': if (confirm('Opravdu smazat toto tankování?')) { cloudDel('fuel', FORM.f.id); DB.fuel = DB.fuel.filter(f => f.id !== FORM.f.id); saveData(); closeSheet(); render(); toast('Smazáno'); } break;
     case 'csv-jobs': csvJobs(); break;
     case 'stat-mode': UI.statMode = el.dataset.v; UI.statOff = 0; render(); break;
     case 'stat-nav': shift(+el.dataset.n); break;
@@ -1188,10 +1263,12 @@ document.addEventListener('click', (e) => {
       if (addr !== DB.settings.startAddress) { DB.settings.startAddress = addr; DB.settings.startLat = null; DB.settings.startLon = null; }
       if (load > 0) DB.settings.loadM3 = load;
       DB.settings.mapyKey = $('#s-key').value.trim();
-      saveData(); render(); toast('Nastavení uloženo'); break;
+      saveData(); cloudSettings(); render(); toast('Nastavení uloženo'); break;
     }
     case 'backup': download(`stepkovac-zaloha-${todayIso()}.json`, JSON.stringify(DB, null, 1), 'application/json'); break;
     case 'restore': $('#import-file').click(); break;
+    case 'logout': if (confirm('Odhlásit se?')) { stopSync(); CLOUD.m.auth.signOut(CLOUD.auth); DB = { jobs: [], fuel: [], settings: Object.assign({}, DEFAULT_SETTINGS) }; localStorage.removeItem(CACHE_KEY); go('denik'); } break;
+    case 'reset-pass': { const em = $('#l-email').value.trim(); if (!em) { $('#l-err').textContent = 'Nejdřív vyplňte e-mail.'; break; } if (!CLOUD.m) break; CLOUD.m.auth.sendPasswordResetEmail(CLOUD.auth, em).then(() => { $('#l-err').className = 'status ok'; $('#l-err').textContent = 'Odkaz pro nové heslo byl odeslán na ' + em + '.'; }).catch(x => { $('#l-err').className = 'status err'; $('#l-err').textContent = AUTH_ERR[x.code] || 'Odeslání selhalo.'; }); break; }
     case 'wipe': if (confirm('Smazat všechny zakázky a tankování? Tohle nejde vrátit.') && confirm('Opravdu? Doporučuji nejdřív stáhnout zálohu.')) { DB.jobs = []; DB.fuel = []; saveData(); render(); toast('Data smazána'); } break;
   }
 });
@@ -1211,9 +1288,109 @@ $('#import-file').addEventListener('change', async (e) => {
     if (!Array.isArray(d.jobs) || !Array.isArray(d.fuel)) throw 0;
     if (!confirm(`Záloha obsahuje ${d.jobs.length} zakázek a ${d.fuel.length} tankování. Nahradit současná data?`)) return;
     d.settings = Object.assign({}, DEFAULT_SETTINGS, d.settings || {});
+    if (cloudReady()) { await cloudUploadAll(d.jobs, d.fuel); toast('Záloha nahrána do cloudu'); return; }
     DB = d; saveData(); render(); toast('Data obnovena');
   } catch (er) { toast('Soubor není platná záloha'); }
 });
+
+
+/* ===== Firebase: přihlášení a společná data ===== */
+const FB_VER = '12.19.0';
+const CLOUD = { user: null, auth: null, db: null, m: null, unsubs: [], online: navigator.onLine, synced: false };
+const COL = { jobs: 'zakazky', fuel: 'tankovani' };
+const clean = (o) => JSON.parse(JSON.stringify(o)); // Firestore nesnese undefined
+const cloudReady = () => CLOUD_ON && CLOUD.user && CLOUD.db;
+function cloudPut(kind, obj) {
+  if (!cloudReady()) return;
+  const { fs } = CLOUD.m;
+  fs.setDoc(fs.doc(CLOUD.db, COL[kind], obj.id), clean({ ...obj, upravil: CLOUD.user.email, upraveno: Date.now() }))
+    .catch(e => toast('Uložení do cloudu selhalo: ' + (e.code || e.message)));
+}
+function cloudDel(kind, id) {
+  if (!cloudReady()) return;
+  const { fs } = CLOUD.m;
+  fs.deleteDoc(fs.doc(CLOUD.db, COL[kind], id)).catch(e => toast('Smazání v cloudu selhalo: ' + (e.code || e.message)));
+}
+function cloudSettings() {
+  if (!cloudReady()) return;
+  const { fs } = CLOUD.m, st = DB.settings;
+  fs.setDoc(fs.doc(CLOUD.db, 'nastaveni', 'firma'), clean({ startAddress: st.startAddress, startLat: st.startLat, startLon: st.startLon, loadM3: st.loadM3, mapyKey: st.mapyKey || '', upravil: CLOUD.user.email, upraveno: Date.now() }), { merge: true }).catch(() => {});
+}
+async function cloudUploadAll(jobs, fuel) {
+  const { fs } = CLOUD.m, ops = [...jobs.map(o => ['jobs', o]), ...fuel.map(o => ['fuel', o])];
+  for (let i = 0; i < ops.length; i += 400) {
+    const b = fs.writeBatch(CLOUD.db);
+    ops.slice(i, i + 400).forEach(([k, o]) => b.set(fs.doc(CLOUD.db, COL[k], o.id), clean({ ...o, upravil: CLOUD.user.email, upraveno: Date.now() })));
+    await b.commit();
+  }
+}
+let renderT = null;
+function softRender() { clearTimeout(renderT); renderT = setTimeout(() => { saveData(); render(); }, 60); }
+function startSync() {
+  const { fs } = CLOUD.m;
+  stopSync();
+  const strip = (d) => { const o = d.data(); delete o.upravil; delete o.upraveno; o.id = d.id; return o; };
+  CLOUD.unsubs.push(fs.onSnapshot(fs.collection(CLOUD.db, COL.jobs), { includeMetadataChanges: true }, (snap) => {
+    DB.jobs = snap.docs.map(strip); CLOUD.synced = !snap.metadata.fromCache; softRender();
+  }, (e) => toast('Načtení zakázek selhalo: ' + (e.code || e.message))));
+  CLOUD.unsubs.push(fs.onSnapshot(fs.collection(CLOUD.db, COL.fuel), (snap) => { DB.fuel = snap.docs.map(strip); softRender(); },
+    (e) => toast('Načtení tankování selhalo: ' + (e.code || e.message))));
+  CLOUD.unsubs.push(fs.onSnapshot(fs.doc(CLOUD.db, 'nastaveni', 'firma'), (d) => {
+    if (d.exists()) { const x = d.data(); delete x.upravil; delete x.upraveno; DB.settings = Object.assign({}, DEFAULT_SETTINGS, DB.settings, x); softRender(); }
+  }, () => {}));
+}
+function stopSync() { CLOUD.unsubs.forEach(u => { try { u(); } catch (e) {} }); CLOUD.unsubs = []; }
+// jednorázově nabídne nahrání dat, která byla v telefonu před zapnutím Firebase
+async function offerMigration() {
+  if (localStorage.getItem('stepkovac.migrated')) return;
+  let old = null; try { old = JSON.parse(localStorage.getItem(LOCAL_KEY) || 'null'); } catch (e) {}
+  if (!old || (!(old.jobs || []).length && !(old.fuel || []).length)) { localStorage.setItem('stepkovac.migrated', '1'); return; }
+  const pl = (n, a, b, c) => n + ' ' + (n === 1 ? a : n > 1 && n < 5 ? b : c);
+  if (!confirm(`V tomto telefonu je ${pl(old.jobs.length, 'zakázka', 'zakázky', 'zakázek')} a ${pl(old.fuel.length, 'tankování', 'tankování', 'tankování')} z doby před přihlášením.\n\nNahrát je do společné databáze?`)) { localStorage.setItem('stepkovac.migrated', 'odmitnuto'); return; }
+  try {
+    await cloudUploadAll(old.jobs || [], old.fuel || []);
+    if (old.settings && old.settings.startAddress) { DB.settings = Object.assign({}, DEFAULT_SETTINGS, old.settings, DB.settings); cloudSettings(); }
+    localStorage.setItem('stepkovac.migrated', '1');
+    toast('Data nahrána do cloudu');
+  } catch (e) { toast('Nahrání selhalo: ' + (e.code || e.message)); }
+}
+const AUTH_ERR = {
+  'auth/invalid-credential': 'Špatný e-mail nebo heslo.', 'auth/wrong-password': 'Špatný e-mail nebo heslo.', 'auth/user-not-found': 'Účet s tímto e-mailem neexistuje.',
+  'auth/invalid-email': 'Neplatný e-mail.', 'auth/too-many-requests': 'Příliš mnoho pokusů, zkuste to za chvíli.', 'auth/network-request-failed': 'Bez připojení k internetu.',
+  'auth/user-disabled': 'Účet je zablokovaný.', 'auth/missing-password': 'Zadejte heslo.'
+};
+function showLogin(on) {
+  $('#login').classList.toggle('hidden', !on);
+  if (on) { $('#l-err').textContent = ''; setTimeout(() => { const e = $('#l-email'); if (e && !e.value) e.focus(); }, 400); }
+}
+async function cloudInit() {
+  const base = `https://www.gstatic.com/firebasejs/${FB_VER}/`;
+  const [app, auth, fs] = await Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-auth.js'), import(base + 'firebase-firestore.js')]);
+  CLOUD.m = { app, auth, fs };
+  const a = app.initializeApp(window.FIREBASE_CONFIG);
+  CLOUD.auth = auth.getAuth(a);
+  try { CLOUD.db = fs.initializeFirestore(a, { localCache: fs.persistentLocalCache({ tabManager: fs.persistentSingleTabManager() }) }); }
+  catch (e) { CLOUD.db = fs.getFirestore(a); }
+  return new Promise((res) => {
+    auth.onAuthStateChanged(CLOUD.auth, async (u) => {
+      CLOUD.user = u;
+      if (u) { showLogin(false); startSync(); render(); offerMigration(); }
+      else { stopSync(); showLogin(true); }
+      res();
+    });
+  });
+}
+$('#login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const em = $('#l-email').value.trim(), pw = $('#l-pass').value, btn = $('#l-btn'), err = $('#l-err');
+  if (!CLOUD.m) { err.textContent = 'Firebase se nenačetl – zkontrolujte připojení.'; return; }
+  btn.disabled = true; btn.textContent = 'Přihlašuji…'; err.className = 'status err'; err.textContent = '';
+  try { await CLOUD.m.auth.signInWithEmailAndPassword(CLOUD.auth, em, pw); $('#l-pass').value = ''; }
+  catch (x) { err.textContent = AUTH_ERR[x.code] || ('Přihlášení selhalo (' + (x.code || x.message) + ').'); }
+  btn.disabled = false; btn.textContent = 'Přihlásit';
+});
+window.addEventListener('online', () => { CLOUD.online = true; if (UI.tab === 'nastaveni') render(); });
+window.addEventListener('offline', () => { CLOUD.online = false; if (UI.tab === 'nastaveni') render(); });
 
 /* ===== Posun den / týden / měsíc (tlačítka i swipe) ===== */
 function shift(n) {
@@ -1283,6 +1460,17 @@ function shift(n) {
 })();
 
 render();
+/* ===== Start: úvodní obrazovka min. 3 s, mezitím přihlášení ===== */
+(function boot() {
+  const sp = $('#splash'), t0 = Date.now();
+  const minShow = matchMedia('(prefers-reduced-motion: reduce)').matches ? 600 : 3000;
+  const ready = CLOUD_ON ? cloudInit().catch(() => { toast('Firebase se nepodařilo načíst – zobrazuji uložená data'); }) : Promise.resolve();
+  let gone = false;
+  const hide = () => { if (gone) return; gone = true; sp.classList.add('out'); setTimeout(() => sp.remove(), 400); };
+  ready.then(() => setTimeout(hide, Math.max(0, minShow - (Date.now() - t0))));
+  setTimeout(hide, 8000);             // pojistka při pomalém připojení
+  sp.addEventListener('click', () => { if (Date.now() - t0 > 800) hide(); });
+})();
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   navigator.serviceWorker.register('sw.js').catch(() => {});
 }
