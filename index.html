@@ -147,6 +147,8 @@ textarea.in{height:76px;padding:10px 12px;resize:vertical}
 .toast.on{opacity:1}
 .setting{background:#fff;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;margin-top:14px}
 .note{font-size:13px;color:var(--mut);line-height:1.45}
+.map{height:190px;border-radius:12px;overflow:hidden;border:1px solid var(--line);margin-top:4px;background:#EAF0E6;z-index:0}
+.map .leaflet-control-attribution{font-size:9px}
 .hidden{display:none!important}
 .chart{background:#fff;border-radius:16px;padding:14px 14px 10px;margin-bottom:12px;position:relative}
 .chart h2{font-size:15px}
@@ -620,7 +622,7 @@ function viewNastaveni() {
   <div class="setting">
     <button class="btn red" data-act="wipe">Smazat všechna data</button>
   </div>
-  <p class="note" style="text-align:center">Štěpkovač · verze 1.10</p>`;
+  <p class="note" style="text-align:center">Štěpkovač · verze 1.11</p>`;
 }
 
 /* ===== Mapy.com (s API klíčem) / OpenStreetMap (bez klíče) ===== */
@@ -691,18 +693,58 @@ async function townAt(lat, lon) {
   const ad = (await r.json()).address || {};
   return ad.village || ad.town || ad.city || ad.municipality || '';
 }
-async function routeKm(a, b) {
+async function routeInfo(a, b) {
   if (mapyKey()) {
     try {
-      const r = await fetch(`${MAPY}/routing/route?lang=cs&routeType=car_fast&start=${a.lon},${a.lat}&end=${b.lon},${b.lat}` + mapyQ());
-      if (r.ok) { const j = await r.json(); if (j.length > 0) return j.length / 1000; }
+      const r = await fetch(`${MAPY}/routing/route?lang=cs&routeType=car_fast&format=geojson&start=${a.lon},${a.lat}&end=${b.lon},${b.lat}` + mapyQ());
+      if (r.ok) { const j = await r.json(); if (j.length > 0) return { km: j.length / 1000, geom: j.geometry || null }; }
     } catch (e) {}
   }
-  const r = await fetch(`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=false`);
+  const r = await fetch(`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=full&geometries=geojson`);
   if (!r.ok) throw new Error('route');
   const j = await r.json();
   if (!j.routes || !j.routes.length) throw new Error('noroute');
-  return j.routes[0].distance / 1000;
+  return { km: j.routes[0].distance / 1000, geom: j.routes[0].geometry || null };
+}
+async function routeKm(a, b) { return (await routeInfo(a, b)).km; }
+
+/* ===== Mapa trasy (Leaflet + dlaždice Mapy.com) ===== */
+let leafletP = null;
+function loadLeaflet() {
+  if (window.L) return Promise.resolve();
+  if (leafletP) return leafletP;
+  leafletP = new Promise((res, rej) => {
+    const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'; document.head.appendChild(css);
+    const js = document.createElement('script'); js.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    js.onload = () => res(); js.onerror = () => { leafletP = null; rej(new Error('leaflet')); };
+    document.head.appendChild(js);
+  });
+  return leafletP;
+}
+async function showRouteMap(a, b, geom) {
+  const box = $('#j-map'); if (!box || !FORM) return;
+  try { await loadLeaflet(); } catch (e) { return; }
+  if (!FORM || FORM.kind !== 'job' || !$('#j-map')) return;
+  box.classList.remove('hidden');
+  if (FORM.map) { FORM.map.remove(); FORM.map = null; }
+  const map = L.map(box, { zoomControl: false, attributionControl: true, scrollWheelZoom: false });
+  FORM.map = map;
+  if (mapyKey()) {
+    L.tileLayer(`${MAPY}/maptiles/basic/256/{z}/{x}/{y}?apikey=${encodeURIComponent(mapyKey())}`, { minZoom: 0, maxZoom: 19, attribution: '<a href="https://api.mapy.com/copyright" target="_blank" rel="noopener">© Seznam.cz a.s. a další</a>' }).addTo(map);
+    const Logo = L.Control.extend({ options: { position: 'bottomleft' }, onAdd() { const d = L.DomUtil.create('div'); d.innerHTML = '<a href="https://mapy.com/" target="_blank" rel="noopener"><img src="https://api.mapy.com/img/api/logo-small.svg" alt="Mapy.com" style="height:16px;display:block"></a>'; return d; } });
+    new Logo().addTo(map);
+  } else {
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+  }
+  let bounds = L.latLngBounds([[a.lat, a.lon], [b.lat, b.lon]]);
+  if (geom) {
+    const layer = L.geoJSON(geom, { style: { color: '#2F6B3A', weight: 5, opacity: 0.9, lineCap: 'round', lineJoin: 'round' } }).addTo(map);
+    try { bounds = layer.getBounds().extend([a.lat, a.lon]).extend([b.lat, b.lon]); } catch (e) {}
+  }
+  L.circleMarker([a.lat, a.lon], { radius: 7, color: '#fff', weight: 2, fillColor: '#1B1F1A', fillOpacity: 1 }).addTo(map).bindTooltip('Základna');
+  L.circleMarker([b.lat, b.lon], { radius: 8, color: '#fff', weight: 2, fillColor: '#2F6B3A', fillOpacity: 1 }).addTo(map).bindTooltip('Místo práce');
+  map.fitBounds(bounds, { padding: [24, 24] });
+  setTimeout(() => map.invalidateSize(), 50);
 }
 async function getStart() {
   const st = DB.settings;
@@ -789,7 +831,7 @@ function openSheet(title, body, foot) {
     <div class="sheet-b">${body}</div><div class="sheet-f">${foot}</div></div></div>`;
   document.body.style.overflow = 'hidden';
 }
-function closeSheet() { $('#sheet-root').innerHTML = ''; document.body.style.overflow = ''; FORM = null; }
+function closeSheet() { if (FORM && FORM.map) { try { FORM.map.remove(); } catch (e) {} } $('#sheet-root').innerHTML = ''; document.body.style.overflow = ''; FORM = null; }
 let FORM = null;
 
 function nowRounded() { const d = new Date(); let m = Math.round((d.getHours() * 60 + d.getMinutes()) / 15) * 15; m = Math.min(m, 23 * 60 + 45); return pad(Math.floor(m / 60)) + ':' + pad(m % 60); }
@@ -813,6 +855,7 @@ function openJob(id) {
       <button class="btn o" style="height:48px" data-act="calc-km">Spočítat</button></div>
       <div class="status" id="j-km-st"></div>
       <div class="calc"><span id="j-km-lb">Najeto celkem</span><strong id="j-km-rt">–</strong></div>
+      <div id="j-map" class="map hidden" aria-label="Mapa trasy ze základny na místo práce"></div>
     </div>
     <div class="g3">
       <div class="f"><label for="j-date">Datum</label><input class="in" id="j-date" type="date" value="${esc(j.date)}"></div>
@@ -831,6 +874,19 @@ function openJob(id) {
     <div class="f"><label for="j-note">Poznámka</label><textarea class="in" id="j-note" placeholder="druh dřeva, poznámky…">${esc(j.note)}</textarea></div>
   `, `${ex ? '<button class="btn red" data-act="del-job" style="flex:0 0 auto">Smazat</button>' : ''}<button class="btn" data-act="save-job">Uložit zakázku</button>`);
   updJobCalc();
+  // u uložené zakázky rovnou ukázat trasu
+  if (ex) {
+    (async () => {
+      try {
+        const a = await getStart();
+        let b = ex.lat != null ? { lat: ex.lat, lon: ex.lon } : (ex.place ? await geocode(ex.place) : null);
+        if (!b || !FORM || FORM.j.id !== ex.id) return;
+        if (!FORM.coords) FORM.coords = b;
+        const { geom } = await routeInfo(a, b);
+        if (FORM && FORM.j.id === ex.id) showRouteMap(a, b, geom);
+      } catch (e) {}
+    })();
+  }
 }
 function updJobCalc() {
   if (!FORM || FORM.kind !== 'job') return;
@@ -852,10 +908,12 @@ async function calcKm() {
   try {
     const a = await getStart();
     const b = FORM.coords || await geocode(place);
-    const km = await routeKm(a, b);
+    FORM.coords = b;
+    const { km, geom } = await routeInfo(a, b);
     $('#j-km').value = (Math.round(km * 10) / 10).toString();
     st.className = 'status ok'; st.textContent = 'Trasa po silnici: ' + num(km) + ' km jedna cesta.';
     updJobCalc();
+    showRouteMap(a, b, geom);
   } catch (e) {
     st.className = 'status err';
     st.textContent = e.message === 'notfound' ? 'Adresu se nepodařilo najít – zkuste přesnější název, nebo zadejte km ručně.' : 'Výpočet se nepovedl (bez signálu?). Zadejte km ručně.';
@@ -876,6 +934,7 @@ function saveJob() {
   const j = FORM.j;
   j.place = $('#j-place').value.trim();
   j.customer = $('#j-cust').value.trim();
+  if (FORM.coords) { j.lat = FORM.coords.lat; j.lon = FORM.coords.lon; } else if (j.place !== (DB.jobs.find(x => x.id === j.id) || {}).place) { delete j.lat; delete j.lon; }
   if (!j.customer) j.customerIco = '';
   const km = parseFloat(($('#j-km').value || '').replace(',', '.'));
   j.kmOneWay = km > 0 ? Math.round(km * 10) / 10 : null;
