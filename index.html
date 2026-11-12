@@ -622,7 +622,7 @@ function viewNastaveni() {
   <div class="setting">
     <button class="btn red" data-act="wipe">Smazat všechna data</button>
   </div>
-  <p class="note" style="text-align:center">Štěpkovač · verze 1.11</p>`;
+  <p class="note" style="text-align:center">Štěpkovač · verze 1.12</p>`;
 }
 
 /* ===== Mapy.com (s API klíčem) / OpenStreetMap (bez klíče) ===== */
@@ -727,7 +727,7 @@ async function showRouteMap(a, b, geom) {
   if (!FORM || FORM.kind !== 'job' || !$('#j-map')) return;
   box.classList.remove('hidden');
   if (FORM.map) { FORM.map.remove(); FORM.map = null; }
-  const map = L.map(box, { zoomControl: false, attributionControl: true, scrollWheelZoom: false });
+  const map = L.map(box, { zoomControl: false, attributionControl: true, scrollWheelZoom: false, renderer: L.svg({ padding: 0.5 }) });
   FORM.map = map;
   if (mapyKey()) {
     L.tileLayer(`${MAPY}/maptiles/basic/256/{z}/{x}/{y}?apikey=${encodeURIComponent(mapyKey())}`, { minZoom: 0, maxZoom: 19, attribution: '<a href="https://api.mapy.com/copyright" target="_blank" rel="noopener">© Seznam.cz a.s. a další</a>' }).addTo(map);
@@ -736,15 +736,36 @@ async function showRouteMap(a, b, geom) {
   } else {
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
   }
+  // nejdřív nastavit výřez (mapa už má rozměr), pak kreslit trasu
+  map.invalidateSize();
   let bounds = L.latLngBounds([[a.lat, a.lon], [b.lat, b.lon]]);
-  if (geom) {
-    const layer = L.geoJSON(geom, { style: { color: '#2F6B3A', weight: 5, opacity: 0.9, lineCap: 'round', lineJoin: 'round' } }).addTo(map);
-    try { bounds = layer.getBounds().extend([a.lat, a.lon]).extend([b.lat, b.lon]); } catch (e) {}
+  map.fitBounds(bounds, { padding: [28, 28] });
+  const line = routeLatLngs(geom);
+  if (line.length > 1) {
+    L.polyline(line, { color: '#FFFFFF', weight: 9, opacity: 0.9, lineCap: 'round', lineJoin: 'round' }).addTo(map);
+    const pl = L.polyline(line, { color: '#2F6B3A', weight: 5, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(map);
+    bounds = pl.getBounds().extend([a.lat, a.lon]).extend([b.lat, b.lon]);
+  } else {
+    L.polyline([[a.lat, a.lon], [b.lat, b.lon]], { color: '#2F6B3A', weight: 3, dashArray: '6 8' }).addTo(map);
   }
-  L.circleMarker([a.lat, a.lon], { radius: 7, color: '#fff', weight: 2, fillColor: '#1B1F1A', fillOpacity: 1 }).addTo(map).bindTooltip('Základna');
-  L.circleMarker([b.lat, b.lon], { radius: 8, color: '#fff', weight: 2, fillColor: '#2F6B3A', fillOpacity: 1 }).addTo(map).bindTooltip('Místo práce');
-  map.fitBounds(bounds, { padding: [24, 24] });
-  setTimeout(() => map.invalidateSize(), 50);
+  L.circleMarker([a.lat, a.lon], { radius: 8, color: '#fff', weight: 3, fillColor: '#1B1F1A', fillOpacity: 1 }).addTo(map).bindTooltip('Základna');
+  L.circleMarker([b.lat, b.lon], { radius: 9, color: '#fff', weight: 3, fillColor: '#2F6B3A', fillOpacity: 1 }).addTo(map).bindTooltip('Místo práce');
+  const refit = () => { if (FORM && FORM.map === map) { map.invalidateSize(); map.fitBounds(bounds, { padding: [28, 28] }); } };
+  refit(); setTimeout(refit, 120); setTimeout(refit, 450);
+  // tlačítko navigace
+  const nav = $('#j-nav');
+  if (nav) { nav.href = `https://www.google.com/maps/dir/?api=1&destination=${b.lat},${b.lon}&travelmode=driving&dir_action=navigate`; nav.classList.remove('hidden'); }
+}
+// geometrie trasy (GeoJSON Feature / FeatureCollection / LineString / MultiLineString) → body pro Leaflet
+function routeLatLngs(g) {
+  if (!g) return [];
+  if (typeof g === 'string') { try { g = JSON.parse(g); } catch (e) { return []; } }
+  if (g.type === 'FeatureCollection') return (g.features || []).flatMap(f => routeLatLngs(f));
+  if (g.type === 'Feature') return routeLatLngs(g.geometry);
+  if (g.type === 'LineString') return (g.coordinates || []).map(c => [c[1], c[0]]);
+  if (g.type === 'MultiLineString') return (g.coordinates || []).flat().map(c => [c[1], c[0]]);
+  if (g.geometry) return routeLatLngs(g.geometry);
+  return [];
 }
 async function getStart() {
   const st = DB.settings;
@@ -856,6 +877,8 @@ function openJob(id) {
       <div class="status" id="j-km-st"></div>
       <div class="calc"><span id="j-km-lb">Najeto celkem</span><strong id="j-km-rt">–</strong></div>
       <div id="j-map" class="map hidden" aria-label="Mapa trasy ze základny na místo práce"></div>
+      <a id="j-nav" class="btn o hidden" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;margin-top:4px">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>Navigovat (Google Maps)</a>
     </div>
     <div class="g3">
       <div class="f"><label for="j-date">Datum</label><input class="in" id="j-date" type="date" value="${esc(j.date)}"></div>
