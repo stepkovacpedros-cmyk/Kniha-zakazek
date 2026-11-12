@@ -463,7 +463,7 @@ function viewNastaveni() {
   <div class="setting">
     <button class="btn red" data-act="wipe">Smazat všechna data</button>
   </div>
-  <p class="note" style="text-align:center">Štěpkovač · verze 1.7</p>`;
+  <p class="note" style="text-align:center">Štěpkovač · verze 1.8</p>`;
 }
 
 /* ===== Mapy.com (s API klíčem) / OpenStreetMap (bez klíče) ===== */
@@ -555,6 +555,52 @@ async function getStart() {
   return p;
 }
 
+/* ===== Zákazníci: historie + ARES (obchodní rejstřík) ===== */
+const ARES = 'https://ares.gov.cz/ekonomicke-subjekty-v-be/rest/ekonomicke-subjekty';
+const fold = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+function aresItem(e) {
+  return { name: e.obchodniJmeno || '', ico: e.ico || '', addr: (e.sidlo && e.sidlo.textovaAdresa) || '', src: 'ares' };
+}
+async function aresSearch(q) {
+  if (/^\d{8}$/.test(q.replace(/\s/g, ''))) {
+    const r = await fetch(`${ARES}/${q.replace(/\s/g, '')}`, { headers: { Accept: 'application/json' } });
+    if (!r.ok) return [];
+    return [aresItem(await r.json())];
+  }
+  const r = await fetch(`${ARES}/vyhledat`, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ obchodniJmeno: q, start: 0, pocet: 8 }) });
+  if (!r.ok) return [];
+  const j = await r.json();
+  return (j.ekonomickeSubjekty || []).map(aresItem);
+}
+let custT = null, custSeq = 0;
+function hideCust() { const l = $('#j-csugg'); if (l) { l.innerHTML = ''; l.classList.add('hidden'); } }
+function renderCust(items, loading) {
+  const l = $('#j-csugg'); if (!l) return;
+  FORM.csugg = items;
+  if (!items.length && !loading) { hideCust(); return; }
+  l.innerHTML = items.map((it, i) => `<button type="button" data-act="pick-cust" data-i="${i}"><b>${esc(it.name)}</b><small>${it.src === 'hist' ? 'dřívější zákazník' : 'IČO ' + esc(it.ico) + (it.addr ? ' · ' + esc(it.addr) : '')}</small></button>`).join('')
+    + `<div class="src">${loading ? 'Hledám v ARES…' : items.some(x => x.src === 'ares') ? 'Firmy z ARES (obchodní rejstřík)' : 'Dřívější zákazníci'}</div>`;
+  l.classList.remove('hidden');
+}
+function onCustInput() {
+  clearTimeout(custT);
+  const q = $('#j-cust').value.trim();
+  FORM.j.customerIco = ''; $('#j-cico').textContent = '';
+  if (q.length < 2) { hideCust(); return; }
+  const seen = new Map();
+  DB.jobs.forEach(x => { if (x.customer && fold(x.customer).includes(fold(q)) && !seen.has(x.customer)) seen.set(x.customer, { name: x.customer, ico: x.customerIco || '', addr: '', src: 'hist' }); });
+  const hist = [...seen.values()].slice(0, 4);
+  renderCust(hist, q.length >= 3);
+  if (q.length < 3) return;
+  custT = setTimeout(async () => {
+    const seq = ++custSeq;
+    let ares = [];
+    try { ares = await aresSearch(q); } catch (e) {}
+    if (seq !== custSeq || !FORM || FORM.kind !== 'job') return;
+    renderCust([...hist, ...ares.filter(a => !hist.some(h => h.ico && h.ico === a.ico))], false);
+  }, 400);
+}
+
 /* našeptávač místa */
 let suggT = null, suggSeq = 0;
 function hideSugg() { const l = $('#j-sugg'); if (l) { l.innerHTML = ''; l.classList.add('hidden'); } }
@@ -594,12 +640,11 @@ function nowRounded() { const d = new Date(); let m = Math.round((d.getHours() *
 function openJob(id) {
   const ex = id ? DB.jobs.find(j => j.id === id) : null;
   const j = ex ? Object.assign({ customer: '' }, ex) : { id: null, date: UI.day, from: '07:00', to: '14:00', customer: '', place: '', kmOneWay: '', loads: 1, note: '' };
-  FORM = { kind: 'job', j, coords: null, sugg: [] };
-  const customers = [...new Set(DB.jobs.map(x => x.customer).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'cs'));
+  FORM = { kind: 'job', j, coords: null, sugg: [], csugg: [] };
   openSheet(ex ? 'Upravit zakázku' : 'Nová zakázka', `
     <div class="f"><label for="j-cust">Zákazník</label>
-      <input class="in" id="j-cust" value="${esc(j.customer)}" placeholder="jméno nebo firma" list="cust-list" autocomplete="off">
-      <datalist id="cust-list">${customers.map(c => `<option value="${esc(c)}"></option>`).join('')}</datalist>
+      <div class="sugg"><input class="in" id="j-cust" value="${esc(j.customer)}" placeholder="jméno, firma nebo IČO" autocomplete="off" autocorrect="off"><div class="sugg-list hidden" id="j-csugg"></div></div>
+      <div class="note" id="j-cico">${j.customerIco ? 'IČO ' + esc(j.customerIco) : ''}</div>
     </div>
     <div class="f"><label for="j-place">Místo práce</label>
       <div class="inrow"><div class="sugg" style="flex:1"><input class="in" id="j-place" value="${esc(j.place)}" placeholder="${mapyKey() ? 'začněte psát ulici nebo obec' : 'obec, ulice'}" autocomplete="off" autocorrect="off"><div class="sugg-list hidden" id="j-sugg"></div></div>
@@ -672,6 +717,7 @@ function saveJob() {
   const j = FORM.j;
   j.place = $('#j-place').value.trim();
   j.customer = $('#j-cust').value.trim();
+  if (!j.customer) j.customerIco = '';
   const km = parseFloat(($('#j-km').value || '').replace(',', '.'));
   j.kmOneWay = km > 0 ? Math.round(km * 10) / 10 : null;
   j.date = $('#j-date').value || UI.day;
@@ -836,8 +882,8 @@ const csvDate = (s) => { const d = parseIso(s); return d.getDate() + '.' + (d.ge
 const dec = (x, d = 2) => (Math.round((+x || 0) * 10 ** d) / 10 ** d).toString().replace('.', ',');
 function csvJobs() {
   const ym = UI.month, rows = DB.jobs.filter(j => j.date.startsWith(ym)).sort((a, b) => (a.date + a.from).localeCompare(b.date + b.from));
-  const out = [['Datum', 'Zákazník', 'Místo', 'Od', 'Do', 'Hodin', 'Fůry', 'm3', 'km jedna cesta', 'km tam i zpět', 'Poznámka']];
-  rows.forEach(j => out.push([csvDate(j.date), j.customer || '', j.place, j.from, j.to, dec(jobMinutes(j) / 60), dec(j.loads), dec(m3(j.loads)), dec(j.kmOneWay || 0, 1), dec(kmRound(j), 1), j.note]));
+  const out = [['Datum', 'Zákazník', 'IČO', 'Místo', 'Od', 'Do', 'Hodin', 'Fůry', 'm3', 'km jedna cesta', 'km tam i zpět', 'Poznámka']];
+  rows.forEach(j => out.push([csvDate(j.date), j.customer || '', j.customerIco || '', j.place, j.from, j.to, dec(jobMinutes(j) / 60), dec(j.loads), dec(m3(j.loads)), dec(j.kmOneWay || 0, 1), dec(kmRound(j), 1), j.note]));
   download(`zakazky-${ym}.csv`, '﻿' + out.map(r => r.map(csvCell).join(';')).join('\r\n'), 'text/csv;charset=utf-8');
 }
 function csvFuel() {
@@ -853,6 +899,7 @@ document.addEventListener('click', (e) => {
   if (tab) { go(tab.dataset.tab); return; }
   const el = e.target.closest('[data-act]');
   if (FORM && FORM.kind === 'job' && !(el && el.dataset.act === 'pick-sugg') && e.target.id !== 'j-place') hideSugg();
+  if (FORM && FORM.kind === 'job' && !(el && el.dataset.act === 'pick-cust') && e.target.id !== 'j-cust') hideCust();
   if (FORM && FORM.kind === 'fuel' && !(el && (el.dataset.act === 'pick-station' || el.dataset.act === 'near-fuel'))) { const l = $('#f-sugg'); if (l) { l.innerHTML = ''; l.classList.add('hidden'); } }
   if (!el) return;
   const act = el.dataset.act;
@@ -871,6 +918,7 @@ document.addEventListener('click', (e) => {
     case 'q-load': FORM.j.loads = +el.dataset.v; updJobCalc(); break;
     case 'load': FORM.j.loads = Math.max(0, Math.round((FORM.j.loads + +el.dataset.n) * 4) / 4); updJobCalc(); break;
     case 'calc-km': calcKm(); break;
+    case 'pick-cust': { const it = FORM.csugg[+el.dataset.i]; if (!it) break; $('#j-cust').value = it.name; FORM.j.customerIco = it.ico || ''; $('#j-cico').textContent = it.ico ? 'IČO ' + it.ico + (it.addr ? ' · sídlo ' + it.addr : '') : ''; hideCust(); break; }
     case 'pick-sugg': { const it = FORM.sugg[+el.dataset.i]; if (!it) break; $('#j-place').value = it.label; FORM.coords = { lat: it.lat, lon: it.lon }; hideSugg(); calcKm(); break; }
     case 'geo': useGeo(); break;
     case 'save-job': saveJob(); break;
@@ -904,7 +952,7 @@ document.addEventListener('click', (e) => {
 });
 document.addEventListener('input', (e) => {
   if (!FORM) return;
-  if (FORM.kind === 'job') { if (e.target.id === 'j-place') { FORM.coords = null; onPlaceInput(); } updJobCalc(); }
+  if (FORM.kind === 'job') { if (e.target.id === 'j-place') { FORM.coords = null; onPlaceInput(); } if (e.target.id === 'j-cust') onCustInput(); updJobCalc(); }
   else { updFuelCalc(e.target.id); updOdo(); }
 });
 document.addEventListener('change', (e) => {
