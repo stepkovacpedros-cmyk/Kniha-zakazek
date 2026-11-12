@@ -65,7 +65,16 @@ nav.tabs button.on{color:var(--g);font-weight:600}
 .legend i.f{border-radius:999px;background:var(--am)}
 .axis{display:flex;justify-content:space-between;font-size:11px;color:var(--mut);padding:0 2px;margin:12px 0 6px;font-variant-numeric:tabular-nums}
 .day{display:flex;flex-direction:column;gap:8px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 12px 14px;width:100%;text-align:left}
-.day.today{border-color:var(--g);box-shadow:0 0 0 1px var(--g) inset}
+.day.today{border-color:var(--g);box-shadow:0 0 0 1px var(--g) inset;background:#F3FAF0}
+.day.past{background:#FFF7F6;border-color:#F1DCD9}
+body{transition:background-color .2s}
+.sugg{position:relative}
+.sugg-list{position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #C9CDD3;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:30;overflow:hidden}
+.sugg-list button{display:block;width:100%;text-align:left;background:none;border:none;border-top:1px solid #EEF0EC;padding:10px 14px;min-height:48px}
+.sugg-list button:first-child{border-top:none}
+.sugg-list b{display:block;font-size:15px;font-weight:600}
+.sugg-list small{display:block;font-size:12px;color:var(--mut);margin-top:2px}
+.sugg-list .src{font-size:11px;color:var(--mut);padding:6px 14px;text-align:right;border-top:1px solid #EEF0EC}
 .bar{position:relative;height:30px;border-radius:8px;background:var(--chip);overflow:hidden}
 .bar .grid{position:absolute;inset:0;display:flex}
 .bar .grid span{flex:1;border-right:1px solid #E0E3DC}
@@ -235,13 +244,30 @@ function render() {
   else if (UI.tab === 'dny') v.innerHTML = viewDny();
   else if (UI.tab === 'prehled') v.innerHTML = viewPrehled();
   else v.innerHTML = viewNastaveni();
+  // podbarvení: aktuální = zelená, minulé = červená, budoucí = beze změny
+  const t = todayIso(); let st = 0;
+  if (UI.tab === 'denik') st = UI.day < t ? -1 : UI.day === t ? 0 : 1;
+  else if (UI.tab === 'dny') { const w = weekStart(t); st = UI.week < w ? -1 : UI.week === w ? 0 : 1; }
+  else if (UI.tab === 'prehled') { const m = t.slice(0, 7); st = UI.month < m ? -1 : UI.month === m ? 0 : 1; }
+  else st = 1;
+  document.body.style.setProperty('--bg', st === 0 ? '#E7F2E3' : st < 0 ? '#FBECEA' : '#F4F5F1');
+  const tc = document.querySelector('meta[name="theme-color"]');
+  if (tc) tc.content = st === 0 ? '#E7F2E3' : st < 0 ? '#FBECEA' : '#F4F5F1';
 }
+// číslo týdne podle ISO 8601
+function isoWeek(s) {
+  const d = parseIso(s); d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+  const w1 = new Date(d.getFullYear(), 0, 4);
+  return 1 + Math.round(((d - w1) / 864e5 - 3 + (w1.getDay() + 6) % 7) / 7);
+}
+const dmY = (s) => { const d = parseIso(s); return d.getDate() + '. ' + (d.getMonth() + 1) + '.' + (d.getFullYear() !== new Date().getFullYear() ? ' ' + d.getFullYear() : ''); };
 
 /* ===== Deník ===== */
 function jobCard(j) {
   const km = kmRound(j);
   return `<button class="card" data-act="edit-job" data-id="${j.id}">
-    <div class="between" style="align-items:baseline"><span style="font-size:16px;font-weight:600">${esc(j.place) || 'Bez místa'}</span><span class="sub">${esc(j.from || '?')}–${esc(j.to || '?')}</span></div>
+    <div class="between" style="align-items:baseline"><span style="font-size:16px;font-weight:600">${esc(j.customer || j.place) || 'Bez místa'}</span><span class="sub">${esc(j.from || '?')}–${esc(j.to || '?')}</span></div>
+    ${j.customer && j.place ? `<div class="sub" style="font-weight:400;margin-top:-4px">${esc(j.place)}</div>` : ''}
     <div class="chips">
       <span class="chip g">${fmtLoads(j.loads)} ${loadsWord(+j.loads)} · ${num(m3(j.loads))} m³</span>
       <span class="chip">${fmtDur(jobMinutes(j))}</span>
@@ -265,8 +291,9 @@ function viewDenik() {
   return `
   <div class="between">
     <div style="display:flex;flex-direction:column;gap:2px">
-      <span class="sub">${d === todayIso() ? 'Dnes · ' : ''}${longDate(d)}</span>
-      <h1>Deník</h1>
+      ${d === todayIso()
+        ? `<h1>Dnes</h1><span class="sub" style="font-size:15px">${DAYS_LONG[parseIso(d).getDay()].toLowerCase()} ${dmY(d)}</span>`
+        : `<h1>${DAYS_LONG[parseIso(d).getDay()]}</h1><span class="sub" style="font-size:15px">${dmY(d)}</span>`}
     </div>
     <div class="row" style="gap:6px">
       <button class="icon-btn" aria-label="Předchozí den" data-act="day" data-n="-1">${ICON.left}</button>
@@ -278,7 +305,7 @@ function viewDenik() {
     <div class="tile"><b>${s.n}</b><span>${s.n === 1 ? 'zakázka' : s.n > 1 && s.n < 5 ? 'zakázky' : 'zakázek'}</span></div>
     <div class="tile"><b>${num(s.min / 60)} h</b><span>práce</span></div>
     <div class="tile"><b>${num(m3(s.loads))}</b><span>m³</span></div>
-    <div class="tile"><b>${num(s.km, 0)}</b><span>km</span></div>
+    <div class="tile"><b>${num(s.km)}</b><span>km</span></div>
   </div>
   <div class="label">Záznamy</div>
   <div class="list">${items.length ? items.map(i => i.h).join('') : '<div class="empty">Na tento den zatím nic není.<br>Přidejte zakázku nebo tankování.</div>'}</div>
@@ -306,21 +333,21 @@ function viewDny() {
     const blocks = js.map(j => {
       const a = toMin(j.from), b = toMin(j.to); if (a == null || b == null) return '';
       const end = b < a ? 24 * 60 : b, l = pos(a), w = Math.max(pos(end) - l, 1);
-      return `<span class="blk" style="left:${l}%;width:${w}%">${w > 9 ? esc((j.place || '').split(',')[0]) : ''}</span>`;
+      return `<span class="blk" style="left:${l}%;width:${w}%">${w > 9 ? esc(j.customer || (j.place || '').split(',')[0]) : ''}</span>`;
     }).join('');
     const dots = fs.map(f => { const t = toMin(f.time); return t == null ? '' : `<span class="dot" title="Tankování" style="left:${pos(t)}%"></span>`; }).join('');
     const sum = s.n ? `${fmtDur(s.min)} · ${num(m3(s.loads))} m³ · ${num(s.km)} km` : (fs.length ? 'jen tankování' : '—');
-    return `<button class="day${d === today ? ' today' : ''}" data-act="open-day" data-d="${d}">
+    return `<button class="day${d === today ? ' today' : d < today ? ' past' : ''}" data-act="open-day" data-d="${d}">
       <div class="between" style="align-items:baseline"><span style="font-size:15px;font-weight:600">${DAYS[dt.getDay()]} ${shortDate(d)}</span><span class="sub" style="font-weight:400;font-size:12px">${sum}</span></div>
       <div class="bar"><div class="grid">${ticks.slice(1).map(() => '<span></span>').join('')}</div>${blocks}${dots}${!js.length && !fs.length ? '<span class="none">bez záznamu</span>' : ''}</div>
     </button>`;
   }).join('');
   const all = sumJobs(days.flatMap(jobsOn));
   const we = addDays(ws, 6), a = parseIso(ws), b = parseIso(we);
-  const range = a.getMonth() === b.getMonth() ? `${a.getDate()}.–${b.getDate()}. ${MONTHS_GEN[b.getMonth()]}` : `${a.getDate()}. ${MONTHS_GEN[a.getMonth()]} – ${b.getDate()}. ${MONTHS_GEN[b.getMonth()]}`;
+  const range = `${a.getDate()}. ${a.getMonth() + 1}. – ${b.getDate()}. ${b.getMonth() + 1}.${b.getFullYear() !== new Date().getFullYear() ? ' ' + b.getFullYear() : ''}`;
   return `
   <div class="between">
-    <div style="display:flex;flex-direction:column;gap:2px"><span class="sub">${range}</span><h1>Dny</h1></div>
+    <div style="display:flex;flex-direction:column;gap:2px"><h1>${isoWeek(ws)}. týden</h1><span class="sub" style="font-size:15px">${range}</span></div>
     <div class="row" style="gap:6px">
       <button class="icon-btn" aria-label="Předchozí týden" data-act="week" data-n="-7">${ICON.left}</button>
       <button class="icon-btn" aria-label="Další týden" data-act="week" data-n="7">${ICON.right}</button>
@@ -359,7 +386,7 @@ function viewPrehled() {
   </div>
   <div class="box">
     <h2>Zakázky</h2>
-    <div>${jobs.length ? jobs.map(j => `<button class="tr" data-act="edit-job" data-id="${j.id}"><span class="sub" style="font-weight:400">${shortDate(j.date)}</span><span style="min-width:0"><span style="font-size:14px;font-weight:500">${esc(j.place) || 'Bez místa'}</span><small>${esc(j.from)}–${esc(j.to)} · ${fmtDur(jobMinutes(j))}${kmRound(j) ? ' · ' + num(kmRound(j)) + ' km' : ''}</small></span><span style="font-size:14px;font-weight:600">${num(m3(j.loads))} m³</span></button>`).join('') : '<div class="sub" style="font-weight:400">Žádné zakázky v tomto měsíci.</div>'}</div>
+    <div>${jobs.length ? jobs.map(j => `<button class="tr" data-act="edit-job" data-id="${j.id}"><span class="sub" style="font-weight:400">${shortDate(j.date)}</span><span style="min-width:0"><span style="font-size:14px;font-weight:500">${esc([j.customer, j.place].filter(Boolean).join(' · ')) || 'Bez místa'}</span><small>${esc(j.from)}–${esc(j.to)} · ${fmtDur(jobMinutes(j))}${kmRound(j) ? ' · ' + num(kmRound(j)) + ' km' : ''}</small></span><span style="font-size:14px;font-weight:600">${num(m3(j.loads))} m³</span></button>`).join('') : '<div class="sub" style="font-weight:400">Žádné zakázky v tomto měsíci.</div>'}</div>
   </div>
   <div class="g2">
     <button class="btn o" data-act="csv-jobs">Export zakázek</button>
@@ -378,6 +405,8 @@ function viewNastaveni() {
       <div class="inrow"><input class="in" id="s-start" value="${esc(st.startAddress)}"><button class="btn o" style="height:48px" data-act="verify-start">Ověřit</button></div>
       <div class="status" id="s-start-st">${st.startLat ? 'Poloha nalezena: ' + num(st.startLat, 5) + ', ' + num(st.startLon, 5) : 'Poloha zatím neověřena – ověří se při prvním výpočtu.'}</div>
     </div>
+    <div class="f"><label for="s-key">API klíč Mapy.com (našeptávač adres)</label><input class="in" id="s-key" value="${esc(st.mapyKey || '')}" placeholder="vestavěný klíč (nechte prázdné)" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div class="note">${st.mapyKey ? 'Používá se váš vlastní klíč.' : 'Používá se klíč vestavěný v aplikaci. Pole nechte prázdné, pokud ho nechcete měnit.'}</div></div>
     <div class="f"><label for="s-load">Objem jedné plné fůry (m³)</label><input class="in" id="s-load" type="number" inputmode="decimal" step="0.5" min="1" value="${esc(st.loadM3)}"></div>
     <button class="btn" data-act="save-settings">Uložit nastavení</button>
   </div>
@@ -389,16 +418,42 @@ function viewNastaveni() {
   </div>
   <div class="setting">
     <h2>Výpočet vzdálenosti</h2>
-    <p class="note" style="margin:0">Trasa se počítá po silnicích přes OpenStreetMap (vyhledání adresy Nominatim, trasa OSRM). Výsledná vzdálenost se ukládá jako jedna cesta a ve všech součtech se počítá tam i zpět. Když výpočet selže nebo nesedí, zadejte km ručně.</p>
+    <p class="note" style="margin:0">S API klíčem se adresy i trasy hledají přes Mapy.com, bez něj přes OpenStreetMap. Výsledná vzdálenost se ukládá jako jedna cesta a ve všech součtech se počítá tam i zpět. Když výpočet selže nebo nesedí, zadejte km ručně.</p>
   </div>
   <div class="setting">
     <button class="btn red" data-act="wipe">Smazat všechna data</button>
   </div>
-  <p class="note" style="text-align:center">Štěpkovač · verze 1.1</p>`;
+  <p class="note" style="text-align:center">Štěpkovač · verze 1.2.1</p>`;
 }
 
-/* ===== Výpočet trasy ===== */
+/* ===== Mapy.com (s API klíčem) / OpenStreetMap (bez klíče) ===== */
+const MAPY = 'https://api.mapy.com/v1';
+// Výchozí klíč Mapy.com – v Nastavení ho lze přepsat vlastním
+const MAPY_DEFAULT_KEY = 'nY-91216wSSQ5waRO4ABMmtDldTuDGTPzp8kd8WcsQM';
+const mapyKey = () => ((DB.settings.mapyKey || '').trim() || MAPY_DEFAULT_KEY);
+const mapyQ = () => '&apikey=' + encodeURIComponent(mapyKey());
+function mapyLabel(it) {
+  const loc = (it.location || '').split(',')[0].trim();
+  return loc && loc !== it.name ? it.name + ', ' + loc : it.name;
+}
+async function mapySuggest(q) {
+  let url = `${MAPY}/suggest?lang=cs&limit=6&type=regional.address&type=regional.street&type=regional.municipality&type=regional.municipality_part&type=poi&query=${encodeURIComponent(q)}`;
+  const st = DB.settings;
+  if (st.startLat != null) url += `&preferNear=${st.startLon},${st.startLat}&preferNearPrecision=10000`;
+  const r = await fetch(url + mapyQ());
+  if (!r.ok) throw new Error(r.status === 401 || r.status === 403 ? 'key' : 'suggest');
+  const j = await r.json();
+  return (j.items || []).filter(i => i.position).map(i => ({ label: mapyLabel(i), name: i.name, sub: i.location || '', lat: i.position.lat, lon: i.position.lon }));
+}
 async function geocode(q) {
+  if (mapyKey()) {
+    const r = await fetch(`${MAPY}/geocode?lang=cs&limit=1&query=${encodeURIComponent(q)}` + mapyQ());
+    if (r.ok) {
+      const j = await r.json();
+      if (j.items && j.items.length && j.items[0].position) return { lat: j.items[0].position.lat, lon: j.items[0].position.lon };
+      throw new Error('notfound');
+    }
+  }
   const r = await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=cz&accept-language=cs&q=' + encodeURIComponent(q));
   if (!r.ok) throw new Error('geocode');
   const a = await r.json();
@@ -406,14 +461,26 @@ async function geocode(q) {
   return { lat: +a[0].lat, lon: +a[0].lon };
 }
 async function reverseGeocode(lat, lon) {
+  if (mapyKey()) {
+    try {
+      const r = await fetch(`${MAPY}/rgeocode?lang=cs&lon=${lon}&lat=${lat}` + mapyQ());
+      if (r.ok) { const j = await r.json(); if (j.items && j.items.length) return mapyLabel(j.items[0]); }
+    } catch (e) {}
+  }
   const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&accept-language=cs&zoom=17&lat=${lat}&lon=${lon}`);
   if (!r.ok) throw new Error('reverse');
   const a = await r.json(), ad = a.address || {};
   const town = ad.village || ad.town || ad.city || ad.municipality || ad.hamlet || '';
   const street = ad.road ? ad.road + (ad.house_number ? ' ' + ad.house_number : '') : '';
-  return [town, street].filter(Boolean).join(', ') || a.display_name || '';
+  return [street, town].filter(Boolean).join(', ') || a.display_name || '';
 }
 async function routeKm(a, b) {
+  if (mapyKey()) {
+    try {
+      const r = await fetch(`${MAPY}/routing/route?lang=cs&routeType=car_fast&start=${a.lon},${a.lat}&end=${b.lon},${b.lat}` + mapyQ());
+      if (r.ok) { const j = await r.json(); if (j.length > 0) return j.length / 1000; }
+    } catch (e) {}
+  }
   const r = await fetch(`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=false`);
   if (!r.ok) throw new Error('route');
   const j = await r.json();
@@ -426,6 +493,30 @@ async function getStart() {
   const p = await geocode(st.startAddress);
   st.startLat = p.lat; st.startLon = p.lon; saveData();
   return p;
+}
+
+/* našeptávač místa */
+let suggT = null, suggSeq = 0;
+function hideSugg() { const l = $('#j-sugg'); if (l) { l.innerHTML = ''; l.classList.add('hidden'); } }
+function onPlaceInput() {
+  clearTimeout(suggT);
+  const q = $('#j-place').value.trim();
+  if (!mapyKey() || q.length < 2) { hideSugg(); return; }
+  suggT = setTimeout(async () => {
+    const seq = ++suggSeq;
+    try {
+      const items = await mapySuggest(q);
+      if (seq !== suggSeq || !FORM) return;
+      FORM.sugg = items;
+      const l = $('#j-sugg');
+      if (!items.length) { hideSugg(); return; }
+      l.innerHTML = items.map((it, i) => `<button type="button" data-act="pick-sugg" data-i="${i}"><b>${esc(it.name)}</b><small>${esc(it.sub)}</small></button>`).join('') + '<div class="src">Našeptává Mapy.com</div>';
+      l.classList.remove('hidden');
+    } catch (e) {
+      if (e.message === 'key') { const st = $('#j-km-st'); st.className = 'status err'; st.textContent = 'Neplatný API klíč Mapy.com – zkontrolujte ho v Nastavení.'; }
+      hideSugg();
+    }
+  }, 250);
 }
 
 /* ===== Formuláře (spodní panel) ===== */
@@ -442,17 +533,18 @@ function nowRounded() { const d = new Date(); let m = Math.round((d.getHours() *
 
 function openJob(id) {
   const ex = id ? DB.jobs.find(j => j.id === id) : null;
-  let from = '', to = '';
-  if (!ex) {
-    const prev = jobsOn(UI.day); const last = prev[prev.length - 1];
-    from = last && last.to ? last.to : (UI.day === todayIso() ? nowRounded() : '07:00');
-  }
-  const j = ex ? Object.assign({}, ex) : { id: null, date: UI.day, from, to, place: '', kmOneWay: '', loads: 1, note: '' };
-  FORM = { kind: 'job', j, coords: null };
+  const j = ex ? Object.assign({ customer: '' }, ex) : { id: null, date: UI.day, from: '07:00', to: '14:00', customer: '', place: '', kmOneWay: '', loads: 1, note: '' };
+  FORM = { kind: 'job', j, coords: null, sugg: [] };
+  const customers = [...new Set(DB.jobs.map(x => x.customer).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'cs'));
   openSheet(ex ? 'Upravit zakázku' : 'Nová zakázka', `
+    <div class="f"><label for="j-cust">Zákazník</label>
+      <input class="in" id="j-cust" value="${esc(j.customer)}" placeholder="jméno nebo firma" list="cust-list" autocomplete="off">
+      <datalist id="cust-list">${customers.map(c => `<option value="${esc(c)}"></option>`).join('')}</datalist>
+    </div>
     <div class="f"><label for="j-place">Místo práce</label>
-      <div class="inrow"><input class="in" id="j-place" value="${esc(j.place)}" placeholder="obec, ulice" autocomplete="off">
+      <div class="inrow"><div class="sugg" style="flex:1"><input class="in" id="j-place" value="${esc(j.place)}" placeholder="${mapyKey() ? 'začněte psát ulici nebo obec' : 'obec, ulice'}" autocomplete="off" autocorrect="off"><div class="sugg-list hidden" id="j-sugg"></div></div>
       <button class="icon-btn" style="height:48px;width:48px" aria-label="Použít moji polohu" data-act="geo">${ICON.pin}</button></div>
+      ${mapyKey() ? '' : '<div class="note">Našeptávač ulic zapnete vložením API klíče Mapy.com v Nastavení.</div>'}
     </div>
     <div class="f"><label for="j-km">Vzdálenost od základny – jedna cesta (km)</label>
       <div class="inrow"><input class="in" id="j-km" type="number" inputmode="decimal" step="0.1" min="0" value="${esc(j.kmOneWay)}" placeholder="0">
@@ -474,7 +566,7 @@ function openJob(id) {
         <button type="button" class="plus" aria-label="Přidat čtvrt fůry" data-act="load" data-n="0.25">+</button>
       </div>
     </div>
-    <div class="f"><label for="j-note">Poznámka</label><textarea class="in" id="j-note" placeholder="zákazník, druh dřeva…">${esc(j.note)}</textarea></div>
+    <div class="f"><label for="j-note">Poznámka</label><textarea class="in" id="j-note" placeholder="druh dřeva, poznámky…">${esc(j.note)}</textarea></div>
   `, `${ex ? '<button class="btn red" data-act="del-job" style="flex:0 0 auto">Smazat</button>' : ''}<button class="btn" data-act="save-job">Uložit zakázku</button>`);
   updJobCalc();
 }
@@ -519,6 +611,7 @@ function useGeo() {
 function saveJob() {
   const j = FORM.j;
   j.place = $('#j-place').value.trim();
+  j.customer = $('#j-cust').value.trim();
   const km = parseFloat(($('#j-km').value || '').replace(',', '.'));
   j.kmOneWay = km > 0 ? Math.round(km * 10) / 10 : null;
   j.date = $('#j-date').value || UI.day;
@@ -578,8 +671,8 @@ const csvDate = (s) => { const d = parseIso(s); return d.getDate() + '.' + (d.ge
 const dec = (x, d = 2) => (Math.round((+x || 0) * 10 ** d) / 10 ** d).toString().replace('.', ',');
 function csvJobs() {
   const ym = UI.month, rows = DB.jobs.filter(j => j.date.startsWith(ym)).sort((a, b) => (a.date + a.from).localeCompare(b.date + b.from));
-  const out = [['Datum', 'Místo', 'Od', 'Do', 'Hodin', 'Fůry', 'm3', 'km jedna cesta', 'km tam i zpět', 'Poznámka']];
-  rows.forEach(j => out.push([csvDate(j.date), j.place, j.from, j.to, dec(jobMinutes(j) / 60), dec(j.loads), dec(m3(j.loads)), dec(j.kmOneWay || 0, 1), dec(kmRound(j), 1), j.note]));
+  const out = [['Datum', 'Zákazník', 'Místo', 'Od', 'Do', 'Hodin', 'Fůry', 'm3', 'km jedna cesta', 'km tam i zpět', 'Poznámka']];
+  rows.forEach(j => out.push([csvDate(j.date), j.customer || '', j.place, j.from, j.to, dec(jobMinutes(j) / 60), dec(j.loads), dec(m3(j.loads)), dec(j.kmOneWay || 0, 1), dec(kmRound(j), 1), j.note]));
   download(`zakazky-${ym}.csv`, '﻿' + out.map(r => r.map(csvCell).join(';')).join('\r\n'), 'text/csv;charset=utf-8');
 }
 function csvFuel() {
@@ -594,6 +687,7 @@ document.addEventListener('click', (e) => {
   const tab = e.target.closest('[data-tab]');
   if (tab) { go(tab.dataset.tab); return; }
   const el = e.target.closest('[data-act]');
+  if (FORM && FORM.kind === 'job' && !(el && el.dataset.act === 'pick-sugg') && e.target.id !== 'j-place') hideSugg();
   if (!el) return;
   const act = el.dataset.act;
   if (act === 'overlay' && e.target !== el) return;
@@ -611,6 +705,7 @@ document.addEventListener('click', (e) => {
     case 'q-load': FORM.j.loads = +el.dataset.v; updJobCalc(); break;
     case 'load': FORM.j.loads = Math.max(0, Math.round((FORM.j.loads + +el.dataset.n) * 4) / 4); updJobCalc(); break;
     case 'calc-km': calcKm(); break;
+    case 'pick-sugg': { const it = FORM.sugg[+el.dataset.i]; if (!it) break; $('#j-place').value = it.label; FORM.coords = { lat: it.lat, lon: it.lon }; hideSugg(); calcKm(); break; }
     case 'geo': useGeo(); break;
     case 'save-job': saveJob(); break;
     case 'del-job': if (confirm('Opravdu smazat tuto zakázku?')) { DB.jobs = DB.jobs.filter(j => j.id !== FORM.j.id); saveData(); closeSheet(); render(); toast('Smazáno'); } break;
@@ -629,6 +724,7 @@ document.addEventListener('click', (e) => {
       const addr = $('#s-start').value.trim(), load = parseFloat(($('#s-load').value || '').replace(',', '.'));
       if (addr !== DB.settings.startAddress) { DB.settings.startAddress = addr; DB.settings.startLat = null; DB.settings.startLon = null; }
       if (load > 0) DB.settings.loadM3 = load;
+      DB.settings.mapyKey = $('#s-key').value.trim();
       saveData(); render(); toast('Nastavení uloženo'); break;
     }
     case 'backup': download(`stepkovac-zaloha-${todayIso()}.json`, JSON.stringify(DB, null, 1), 'application/json'); break;
@@ -638,7 +734,7 @@ document.addEventListener('click', (e) => {
 });
 document.addEventListener('input', (e) => {
   if (!FORM) return;
-  if (FORM.kind === 'job') { if (e.target.id === 'j-place') FORM.coords = null; updJobCalc(); }
+  if (FORM.kind === 'job') { if (e.target.id === 'j-place') { FORM.coords = null; onPlaceInput(); } updJobCalc(); }
   else updFuelCalc();
 });
 document.addEventListener('change', (e) => {
