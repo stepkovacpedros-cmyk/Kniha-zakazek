@@ -227,6 +227,23 @@ const m3 = (loads) => (+loads || 0) * (+DB.settings.loadM3 || 15);
 const kmRound = (j) => (j.kmOneWay != null && j.kmOneWay !== '' ? (+j.kmOneWay) * 2 : 0);
 const VEH = { auto: 'Auto', stepkovac: 'Štěpkovač' };
 const veh = (f) => (f.vehicle === 'stepkovac' ? 'stepkovac' : 'auto');
+const ODO = { auto: { lb: 'Stav km (tachometr)', u: 'km', per: 'l/100 km' }, stepkovac: { lb: 'Motohodiny', u: 'mth', per: 'l/mth' } };
+const fkey = (f) => f.date + ' ' + (f.time || '00:00') + ' ' + (f.created || 0);
+// předchozí tankování stejného stroje se stavem tachometru
+function prevOdo(f, vehicle, odoRef) {
+  const v = vehicle || veh(f), k = fkey(f);
+  return DB.fuel.filter(x => x.id !== f.id && veh(x) === v && +x.odo > 0 && fkey(x) < k && (odoRef == null || +x.odo < odoRef))
+    .sort((a, b) => fkey(b).localeCompare(fkey(a)))[0] || null;
+}
+// spotřeba metodou "plná nádrž": litry tohoto tankování / ujeto od minulého
+function consumption(f) {
+  if (!(+f.odo > 0) || !(+f.liters > 0)) return null;
+  const p = prevOdo(f);
+  if (!p || !(+f.odo > +p.odo)) return null;
+  const dist = f.odo - p.odo, v = veh(f);
+  return { dist, val: v === 'auto' ? f.liters / dist * 100 : f.liters / dist, per: ODO[v].per, u: ODO[v].u };
+}
+const consTxt = (c) => c ? num(c.val, 1) + ' ' + c.per : '';
 const jobsOn = (d) => DB.jobs.filter(j => j.date === d).sort((a, b) => (a.from || '').localeCompare(b.from || ''));
 const fuelOn = (d) => DB.fuel.filter(f => f.date === d).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
 function sumJobs(list) {
@@ -292,7 +309,7 @@ function fuelCard(f) {
     <span class="fuel-ic">${ICON.fuel}</span>
     <span style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0">
       <span style="font-size:15px;font-weight:600">Tankování ${VEH[veh(f)].toLowerCase()}${f.place ? ' · ' + esc(f.place) : ''}</span>
-      <span style="font-size:13px;color:var(--amtx)">${f.time ? esc(f.time) + ' · ' : ''}${num(f.liters)} l · ${money(f.price)}</span>
+      <span style="font-size:13px;color:var(--amtx)">${f.time ? esc(f.time) + ' · ' : ''}${num(f.liters)} l · ${money(f.price)}${(() => { const c = consumption(f); return c ? ' · ' + consTxt(c) : ''; })()}</span>
     </span>
   </button>`;
 }
@@ -393,8 +410,11 @@ function viewPrehled() {
   <div class="box">
     <div class="between" style="align-items:baseline"><h2>Tankování</h2><span style="font-size:14px;font-weight:600">${num(lit)} l · ${money(kc)}</span></div>
     ${['auto', 'stepkovac'].map(v => { const fv = fuel.filter(f => veh(f) === v), l = fv.reduce((t, f) => t + (+f.liters || 0), 0), k = fv.reduce((t, f) => t + (+f.price || 0), 0);
-      return `<div class="between" style="font-size:14px"><span><i style="display:inline-block;width:10px;height:10px;border-radius:999px;margin-right:6px;background:${v === 'auto' ? 'var(--am)' : '#7A4A1E'}"></i>${VEH[v]}</span><span>${num(l)} l · ${money(k)}${l ? ' · ' + num(k / l, 2) + ' Kč/l' : ''}</span></div>`; }).join('')}
-    <div>${fuel.length ? fuel.map(f => `<button class="tr" data-act="edit-fuel" data-id="${f.id}"><span class="sub" style="font-weight:400">${shortDate(f.date)}</span><span style="min-width:0"><span style="font-size:14px;font-weight:500">${VEH[veh(f)]}${f.place ? ' · ' + esc(f.place) : ''}</span><small>${num(f.liters)} l${+f.liters ? ' · ' + num(f.price / f.liters, 2) + ' Kč/l' : ''}</small></span><span style="font-size:14px;font-weight:600">${money(f.price)}</span></button>`).join('') : '<div class="sub" style="font-weight:400">Žádné tankování v tomto měsíci.</div>'}</div>
+      return `<div class="between" style="font-size:14px"><span><i style="display:inline-block;width:10px;height:10px;border-radius:999px;margin-right:6px;background:${v === 'auto' ? 'var(--am)' : '#7A4A1E'}"></i>${VEH[v]}</span><span>${num(l)} l · ${money(k)}${l ? ' · ' + num(k / l, 2) + ' Kč/l' : ''}</span></div>${(() => {
+        const cs = fv.map(consumption).filter(Boolean); if (!cs.length) return '';
+        const lit = fv.filter(f => consumption(f)).reduce((t, f) => t + +f.liters, 0), dist = cs.reduce((t, c) => t + c.dist, 0);
+        return `<div class="between sub" style="font-weight:400;margin-top:-6px"><span style="padding-left:16px">Průměrná spotřeba</span><span>${num(v === 'auto' ? lit / dist * 100 : lit / dist, 1)} ${ODO[v].per} (${num(dist, 1)} ${ODO[v].u})</span></div>`; })()}`; }).join('')}
+    <div>${fuel.length ? fuel.map(f => `<button class="tr" data-act="edit-fuel" data-id="${f.id}"><span class="sub" style="font-weight:400">${shortDate(f.date)}</span><span style="min-width:0"><span style="font-size:14px;font-weight:500">${VEH[veh(f)]}${f.place ? ' · ' + esc(f.place) : ''}</span><small>${num(f.liters)} l${+f.liters ? ' · ' + num(f.price / f.liters, 2) + ' Kč/l' : ''}${(() => { const c = consumption(f); return c ? ' · ' + consTxt(c) : ''; })()}</small></span><span style="font-size:14px;font-weight:600">${money(f.price)}</span></button>`).join('') : '<div class="sub" style="font-weight:400">Žádné tankování v tomto měsíci.</div>'}</div>
   </div>
   <div class="box">
     <h2>Zakázky</h2>
@@ -435,7 +455,7 @@ function viewNastaveni() {
   <div class="setting">
     <button class="btn red" data-act="wipe">Smazat všechna data</button>
   </div>
-  <p class="note" style="text-align:center">Štěpkovač · verze 1.5</p>`;
+  <p class="note" style="text-align:center">Štěpkovač · verze 1.6</p>`;
 }
 
 /* ===== Mapy.com (s API klíčem) / OpenStreetMap (bez klíče) ===== */
@@ -660,9 +680,13 @@ function openFuel(id) {
       <div class="f"><label for="f-p">Kč celkem</label><input class="in" id="f-p" type="text" inputmode="decimal" value="${f.price ? String(f.price).replace('.', ',') : ''}"></div>
     </div>
     <div class="note" id="f-hint">Vyplňte dvě pole, třetí se dopočítá.</div>
-    <div class="f"><label for="f-note">Poznámka</label><input class="in" id="f-note" value="${esc(f.note)}" placeholder="např. stav km, karta…"></div>
+    <div class="f"><label for="f-odo" id="f-odo-lb">${ODO[f.vehicle].lb}</label><input class="in" id="f-odo" type="text" inputmode="decimal" value="${+f.odo > 0 ? String(f.odo).replace('.', ',') : ''}" placeholder="${f.vehicle === 'auto' ? 'např. 152 340' : 'např. 1 250,5'}">
+      <div class="calc" id="f-cons"></div>
+    </div>
+    <div class="f"><label for="f-note">Poznámka</label><input class="in" id="f-note" value="${esc(f.note)}" placeholder="např. karta, faktura…"></div>
   `, `${ex ? '<button class="btn red" data-act="del-fuel" style="flex:0 0 auto">Smazat</button>' : ''}<button class="btn" data-act="save-fuel">Uložit tankování</button>`);
   updFuelCalc();
+  updOdo();
   if (!ex) nearFuel(true);
 }
 
@@ -732,6 +756,18 @@ async function nearFuel(auto) {
 const pnum = (id) => { const v = parseFloat(($('#' + id).value || '').replace(/\s/g, '').replace(',', '.')); return v > 0 ? v : 0; };
 const setNum = (id, v) => { const el = $('#' + id); el.value = v > 0 ? String(Math.round(v * 100) / 100).replace('.', ',') : ''; };
 // dopočítá to pole, které uživatel upravoval nejdéle zpátky
+function updOdo() {
+  const box = $('#f-cons'); if (!box) return;
+  const v = FORM.f.vehicle, odo = pnum('f-odo'), l = pnum('f-l');
+  const tmp = { id: FORM.f.id, date: $('#f-date').value || UI.day, time: $('#f-time').value, created: FORM.f.created || Date.now(), vehicle: v };
+  const p = prevOdo(tmp, v);
+  if (!p) { box.innerHTML = `<span>První záznam ${ODO[v].u} – spotřeba se spočítá od příštího tankování.</span>`; return; }
+  const last = `Minule: ${num(p.odo, 1)} ${ODO[v].u} (${shortDate(p.date)})`;
+  if (!odo) { box.innerHTML = `<span>${last}</span>`; return; }
+  if (odo <= +p.odo) { box.innerHTML = `<span style="color:var(--red)">Stav musí být vyšší než minule (${num(p.odo, 1)} ${ODO[v].u}).</span>`; return; }
+  const dist = odo - p.odo, c = l ? (v === 'auto' ? l / dist * 100 : l / dist) : 0;
+  box.innerHTML = `<span>Od minula ${num(dist, 1)} ${ODO[v].u}</span><strong>${c ? num(c, 1) + ' ' + ODO[v].per : '–'}</strong>`;
+}
 function updFuelCalc(changedId) {
   const ids = ['f-l', 'f-ppl', 'f-p'];
   if (changedId && ids.includes(changedId)) {
@@ -751,6 +787,7 @@ function saveFuel() {
   const f = FORM.f;
   f.date = $('#f-date').value || UI.day; f.time = $('#f-time').value;
   f.place = $('#f-place').value.trim(); f.note = $('#f-note').value.trim();
+  f.odo = pnum('f-odo') || null;
   f.liters = pnum('f-l');
   f.price = pnum('f-p') || Math.round(pnum('f-l') * pnum('f-ppl') * 100) / 100;
   if (!f.liters) { toast('Vyplňte počet litrů'); return; }
@@ -776,8 +813,8 @@ function csvJobs() {
 }
 function csvFuel() {
   const ym = UI.month, rows = DB.fuel.filter(f => f.date.startsWith(ym)).sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
-  const out = [['Datum', 'Čas', 'Stroj', 'Místo', 'Litry', 'Kč celkem', 'Kč/l', 'Poznámka']];
-  rows.forEach(f => out.push([csvDate(f.date), f.time, VEH[veh(f)], f.place, dec(f.liters), dec(f.price), f.liters ? dec(f.price / f.liters) : '', f.note]));
+  const out = [['Datum', 'Čas', 'Stroj', 'Místo', 'Litry', 'Kč celkem', 'Kč/l', 'Stav km / mth', 'Ujeto od minula', 'Spotřeba', 'Jednotka', 'Poznámka']];
+  rows.forEach(f => { const c = consumption(f); out.push([csvDate(f.date), f.time, VEH[veh(f)], f.place, dec(f.liters), dec(f.price), f.liters ? dec(f.price / f.liters) : '', +f.odo > 0 ? dec(f.odo, 1) : '', c ? dec(c.dist, 1) : '', c ? dec(c.val, 2) : '', c ? c.per : '', f.note]); });
   download(`tankovani-${ym}.csv`, '﻿' + out.map(r => r.map(csvCell).join(';')).join('\r\n'), 'text/csv;charset=utf-8');
 }
 
@@ -812,7 +849,8 @@ document.addEventListener('click', (e) => {
     case 'save-fuel': saveFuel(); break;
     case 'near-fuel': nearFuel(false); break;
     case 'pick-station': { const x = FORM.stations[+el.dataset.i]; if (x) { $('#f-place').value = x.label; $('#f-st').className = 'status ok'; $('#f-st').textContent = 'Vybráno: ' + x.label; } const l = $('#f-sugg'); l.innerHTML = ''; l.classList.add('hidden'); break; }
-    case 'veh': FORM.f.vehicle = el.dataset.v; document.querySelectorAll('[data-act="veh"]').forEach(b => { const on = b.dataset.v === FORM.f.vehicle; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); }); break;
+    case 'veh': FORM.f.vehicle = el.dataset.v; document.querySelectorAll('[data-act="veh"]').forEach(b => { const on = b.dataset.v === FORM.f.vehicle; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+      $('#f-odo-lb').textContent = ODO[FORM.f.vehicle].lb; $('#f-odo').placeholder = FORM.f.vehicle === 'auto' ? 'např. 152 340' : 'např. 1 250,5'; updOdo(); break;
     case 'del-fuel': if (confirm('Opravdu smazat toto tankování?')) { DB.fuel = DB.fuel.filter(f => f.id !== FORM.f.id); saveData(); closeSheet(); render(); toast('Smazáno'); } break;
     case 'csv-jobs': csvJobs(); break;
     case 'csv-fuel': csvFuel(); break;
@@ -838,7 +876,7 @@ document.addEventListener('click', (e) => {
 document.addEventListener('input', (e) => {
   if (!FORM) return;
   if (FORM.kind === 'job') { if (e.target.id === 'j-place') { FORM.coords = null; onPlaceInput(); } updJobCalc(); }
-  else updFuelCalc(e.target.id);
+  else { updFuelCalc(e.target.id); updOdo(); }
 });
 document.addEventListener('change', (e) => {
   if (e.target.id === 'day-pick' && e.target.value) { UI.day = e.target.value; render(); }
