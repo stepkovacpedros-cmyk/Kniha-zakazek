@@ -246,7 +246,9 @@ function fmtLoads(x) {
 }
 const loadsWord = (x) => (x > 0 && x <= 1 ? 'fůra' : x > 1 && x < 5 ? 'fůry' : 'fůr');
 const m3 = (loads) => (+loads || 0) * (+DB.settings.loadM3 || 15);
-const kmRound = (j) => (j.kmOneWay != null && j.kmOneWay !== '' ? (+j.kmOneWay) * 2 : 0);
+// každá započatá fůra = jedna cesta tam a zpět (vysypání na základně)
+const trips = (loads) => Math.max(1, Math.ceil((+loads || 0) - 1e-9));
+const kmRound = (j) => (j.kmOneWay != null && j.kmOneWay !== '' ? (+j.kmOneWay) * 2 * trips(j.loads) : 0);
 const VEH = { auto: 'Auto', stepkovac: 'Štěpkovač', pila: 'Pila' };
 const FUELT = { auto: 'nafta', stepkovac: 'nafta', pila: 'benzín' };
 const VCOL = { auto: '#C27A08', stepkovac: '#8E4A12', pila: '#2F6FB0' };
@@ -326,7 +328,7 @@ function jobCard(j) {
     <div class="chips">
       <span class="chip g">${fmtLoads(j.loads)} ${loadsWord(+j.loads)} · ${num(m3(j.loads))} m³</span>
       <span class="chip">${fmtDur(jobMinutes(j))}</span>
-      ${km ? `<span class="chip">${num(km)} km tam i zpět</span>` : ''}
+      ${km ? `<span class="chip">${num(km)} km${trips(j.loads) > 1 ? ' · ' + trips(j.loads) + '× tam a zpět' : ' tam i zpět'}</span>` : ''}
     </div>
     ${j.note ? `<div class="sub" style="font-weight:400">${esc(j.note)}</div>` : ''}
   </button>`;
@@ -432,7 +434,7 @@ function viewPrehled() {
     <div class="kpi"><span>Zakázky</span><b>${s.n}</b></div>
     <div class="kpi"><span>Odpracováno</span><b>${num(s.min / 60)} h</b></div>
     <div class="kpi hl"><span>Štěpka</span><b>${num(m3(s.loads))} m³</b><span>${fmtLoads(s.loads)} ${loadsWord(s.loads)}</span></div>
-    <div class="kpi"><span>Najeto (tam i zpět)</span><b>${num(s.km, 0)} km</b></div>
+    <div class="kpi"><span>Najeto k zakázkám</span><b>${num(s.km, 0)} km</b></div>
   </div>
   <div class="box">
     <div class="between" style="align-items:baseline"><h2>Tankování</h2><span style="font-size:14px;font-weight:600">${num(lit)} l · ${money(kc)}</span></div>
@@ -613,12 +615,12 @@ function viewNastaveni() {
   </div>
   <div class="setting">
     <h2>Výpočet vzdálenosti</h2>
-    <p class="note" style="margin:0">S API klíčem se adresy i trasy hledají přes Mapy.com, bez něj přes OpenStreetMap. Výsledná vzdálenost se ukládá jako jedna cesta a ve všech součtech se počítá tam i zpět. Když výpočet selže nebo nesedí, zadejte km ručně.</p>
+    <p class="note" style="margin:0">S API klíčem se adresy i trasy hledají přes Mapy.com, bez něj přes OpenStreetMap. Výsledná vzdálenost se ukládá jako jedna cesta. V součtech se každá započatá fůra počítá jako jedna cesta tam a zpět (odvoz na vysypání na základnu). Když výpočet selže nebo nesedí, zadejte km ručně.</p>
   </div>
   <div class="setting">
     <button class="btn red" data-act="wipe">Smazat všechna data</button>
   </div>
-  <p class="note" style="text-align:center">Štěpkovač · verze 1.9</p>`;
+  <p class="note" style="text-align:center">Štěpkovač · verze 1.10</p>`;
 }
 
 /* ===== Mapy.com (s API klíčem) / OpenStreetMap (bez klíče) ===== */
@@ -810,7 +812,7 @@ function openJob(id) {
       <div class="inrow"><input class="in" id="j-km" type="number" inputmode="decimal" step="0.1" min="0" value="${esc(j.kmOneWay)}" placeholder="0">
       <button class="btn o" style="height:48px" data-act="calc-km">Spočítat</button></div>
       <div class="status" id="j-km-st"></div>
-      <div class="calc"><span>Tam i zpět</span><strong id="j-km-rt">–</strong></div>
+      <div class="calc"><span id="j-km-lb">Najeto celkem</span><strong id="j-km-rt">–</strong></div>
     </div>
     <div class="g3">
       <div class="f"><label for="j-date">Datum</label><input class="in" id="j-date" type="date" value="${esc(j.date)}"></div>
@@ -833,7 +835,9 @@ function openJob(id) {
 function updJobCalc() {
   if (!FORM || FORM.kind !== 'job') return;
   const km = parseFloat(($('#j-km').value || '').replace(',', '.'));
-  $('#j-km-rt').textContent = km > 0 ? num(km * 2) + ' km' : '–';
+  const n = trips(FORM.j.loads);
+  $('#j-km-lb').textContent = n === 1 ? 'Najeto celkem · tam a zpět' : `Najeto celkem · ${n} ${loadsWord(n)} = ${n}× tam a zpět`;
+  $('#j-km-rt').textContent = km > 0 ? num(km * 2 * n) + ' km' : '–';
   const min = jobMinutes({ from: $('#j-from').value, to: $('#j-to').value });
   $('#j-dur').textContent = $('#j-from').value && $('#j-to').value ? fmtDur(min) : '–';
   const L = FORM.j.loads;
@@ -1037,8 +1041,8 @@ const csvDate = (s) => { const d = parseIso(s); return d.getDate() + '.' + (d.ge
 const dec = (x, d = 2) => (Math.round((+x || 0) * 10 ** d) / 10 ** d).toString().replace('.', ',');
 function csvJobs() {
   const ym = UI.month, rows = DB.jobs.filter(j => j.date.startsWith(ym)).sort((a, b) => (a.date + a.from).localeCompare(b.date + b.from));
-  const out = [['Datum', 'Zákazník', 'IČO', 'Místo', 'Od', 'Do', 'Hodin', 'Fůry', 'm3', 'km jedna cesta', 'km tam i zpět', 'Poznámka']];
-  rows.forEach(j => out.push([csvDate(j.date), j.customer || '', j.customerIco || '', j.place, j.from, j.to, dec(jobMinutes(j) / 60), dec(j.loads), dec(m3(j.loads)), dec(j.kmOneWay || 0, 1), dec(kmRound(j), 1), j.note]));
+  const out = [['Datum', 'Zákazník', 'IČO', 'Místo', 'Od', 'Do', 'Hodin', 'Fůry', 'm3', 'km jedna cesta', 'Jízd tam a zpět', 'km celkem', 'Poznámka']];
+  rows.forEach(j => out.push([csvDate(j.date), j.customer || '', j.customerIco || '', j.place, j.from, j.to, dec(jobMinutes(j) / 60), dec(j.loads), dec(m3(j.loads)), dec(j.kmOneWay || 0, 1), trips(j.loads), dec(kmRound(j), 1), j.note]));
   download(`zakazky-${ym}.csv`, '﻿' + out.map(r => r.map(csvCell).join(';')).join('\r\n'), 'text/csv;charset=utf-8');
 }
 function csvFuel() {
