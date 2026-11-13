@@ -440,6 +440,7 @@ function render() {
   else if (UI.tab === 'prehled') v.innerHTML = viewPrehled();
   else if (UI.tab === 'stat') v.innerHTML = viewStat();
   else v.innerHTML = viewNastaveni();
+  updateBadge();
   // podbarvení: aktuální = zelená, minulé = červená, budoucí = beze změny
   const t = todayIso(); let st = 0;
   if (UI.tab === 'denik') st = UI.day < t ? -1 : UI.day === t ? 0 : 1;
@@ -772,8 +773,9 @@ function viewStat() {
 
 
 /* ===== Přehled změn (nejnovější nahoře) ===== */
-const APP_VERSION = '2.7';
+const APP_VERSION = '2.8';
 const CHANGELOG = [
+  ['2.8', ['Odznak na ikoně s počtem zakázek k dokončení.', 'Upozornění v 16:00 (push z Firebase) – zapíná se v Nastavení → Upozornění a odznak.']],
   ['2.7', ['Formulář zakázky bez nadpisu nahoře.', 'Nová zakázka se ukládá jako otevřená, bez množství štěpky.', 'V den realizace po 16:00 se při otevření aplikace objeví Dokončit zakázku (čas, štěpka); víc otevřených zakázek jde jedna po druhé.', 'Pruh „čeká na dokončení“ v Deníku, otevřené zakázky šrafované v časové ose.', 'Oprava: knihovny Firebase a mapy se ukládají do telefonu, aplikace se přihlásí i bez signálu.']],
   ['2.6', ['Dny, kdy píkr může, jsou podbarvené zeleně, kdy nemůže, červeně (dnešek a budoucí dny).']],
   ['2.5', ['Pod číslem verze v Nastavení je přehled změn, starší verze jsou rozbalovací.', 'Opraveno skloňování počtu zakázek v záloze.']],
@@ -833,6 +835,12 @@ function viewNastaveni() {
     <p class="note" style="margin:0">${CLOUD_ON ? 'Data jsou ve Firebase, záloha je navíc kopie do souboru. Obnova ze zálohy nahraje záznamy do společné databáze.' : 'Data jsou uložená jen v tomto telefonu. Občas si stáhněte zálohu – při smazání dat Safari nebo výměně telefonu se dají obnovit.'}</p>
     <div class="g2"><button class="btn o" data-act="backup">Stáhnout zálohu</button><button class="btn o" data-act="restore">Obnovit ze zálohy</button></div>
     <div class="sub" style="font-weight:400">V úložišti: ${DB.jobs.length} ${DB.jobs.length === 1 ? 'zakázka' : DB.jobs.length > 1 && DB.jobs.length < 5 ? 'zakázky' : 'zakázek'}, ${DB.fuel.length} tankování.</div>
+  </div>
+  <div class="setting">
+    <h2>Upozornění a odznak</h2>
+    <p class="note" style="margin:0">V ${FINISH_HOUR}:00 přijde upozornění a na ikoně se objeví odznak, pokud je otevřená zakázka k dokončení. Funguje jen v aplikaci přidané na plochu.</p>
+    <div class="between"><span class="sub" style="font-weight:400" id="push-st">${pushStatusText()}</span>
+      ${pushState() === 'on' ? '<button class="btn o sm" data-act="push-test">Vyzkoušet</button>' : pushState() === 'off' ? '<button class="btn sm" data-act="push-on">Zapnout</button>' : ''}</div>
   </div>
   <div class="setting">
     <h2>Výpočet vzdálenosti</h2>
@@ -1226,13 +1234,72 @@ function saveFinish() {
   const next = dueJobs()[0]; if (next) setTimeout(() => openFinish(next.id), 350);
 }
 // výzva k dokončení po spuštění / návratu do aplikace (jednou za otevření)
+/* ===== Odznak na ikoně a push upozornění ===== */
+function updateBadge() {
+  try {
+    if (!('setAppBadge' in navigator)) return;
+    const n = dueJobs().length;
+    (n ? navigator.setAppBadge(n) : navigator.clearAppBadge()).catch(() => {});
+  } catch (e) {}
+}
+const pushToken = () => localStorage.getItem('stepkovac.pushToken') || '';
+function pushState() {
+  if (!CLOUD_ON) return 'nocloud';
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) return 'unsupported';
+  if (!(window.FIREBASE_VAPID_KEY || '').trim()) return 'nokey';
+  if (Notification.permission === 'denied') return 'denied';
+  if (Notification.permission === 'granted' && pushToken()) return 'on';
+  return 'off';
+}
+function pushStatusText() {
+  return { nocloud: 'Vyžaduje přihlášení přes Firebase.', unsupported: 'Otevřete aplikaci z ikony na ploše (v Safari to nejde).', nokey: 'Zatím nenastaveno – chybí klíč Web Push v config.js.',
+    denied: 'Upozornění jsou zakázaná – povolte je v Nastavení iPhonu → Oznámení → Štěpkovač.', on: 'Zapnuto na tomto telefonu.', off: 'Vypnuto na tomto telefonu.' }[pushState()];
+}
+async function getPushToken() {
+  const msg = await import(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-messaging.js`);
+  if (!(await msg.isSupported())) throw new Error('unsupported');
+  const m = msg.getMessaging(CLOUD.app);
+  const reg = await navigator.serviceWorker.ready;
+  const token = await msg.getToken(m, { vapidKey: window.FIREBASE_VAPID_KEY.trim(), serviceWorkerRegistration: reg });
+  if (!CLOUD.onMsg) { CLOUD.onMsg = true; msg.onMessage(m, (p) => { const d = p.data || {}; toast(d.title || 'Upozornění'); render(); }); }
+  return token;
+}
+async function savePushToken(token) {
+  const { fs } = CLOUD.m;
+  const old = pushToken();
+  await fs.setDoc(fs.doc(CLOUD.db, 'zarizeni', token), { email: CLOUD.user.email, uid: CLOUD.user.uid, zarizeni: navigator.userAgent.slice(0, 120), upraveno: Date.now() });
+  if (old && old !== token) fs.deleteDoc(fs.doc(CLOUD.db, 'zarizeni', old)).catch(() => {});
+  localStorage.setItem('stepkovac.pushToken', token);
+}
+async function enablePush() {
+  if (!cloudReady()) { toast('Nejdřív se přihlaste'); return; }
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') { toast('Upozornění nebyla povolena'); render(); return; }
+    await savePushToken(await getPushToken());
+    updateBadge(); toast('Upozornění zapnuta'); render();
+  } catch (e) { toast('Zapnutí selhalo: ' + (e.code || e.message)); }
+}
+// token se může časem změnit – při každém přihlášení ho tiše obnovíme
+async function refreshPush() {
+  try { if (pushState() === 'on' || (Notification.permission === 'granted' && pushState() === 'off')) await savePushToken(await getPushToken()); } catch (e) {}
+  updateBadge();
+}
+async function testPush() {
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    await reg.showNotification('Štěpkovač', { body: 'Takhle bude vypadat upozornění v 16:00.', icon: 'icon-192.png', tag: 'test' });
+    if ('setAppBadge' in navigator) navigator.setAppBadge(1).then(() => setTimeout(updateBadge, 8000));
+  } catch (e) { toast('Test selhal: ' + e.message); }
+}
+
 let finishPrompted = false;
 function promptFinish() {
   if (finishPrompted || FORM || (CLOUD_ON && !CLOUD.user && !CLOUD.failed) || $('#splash')) return;
   const due = dueJobs(); if (!due.length) return;
   finishPrompted = true; openFinish(due[0].id);
 }
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { finishPrompted = false; setTimeout(promptFinish, 600); } });
+document.addEventListener('visibilitychange', () => { updateBadge(); if (document.visibilityState === 'visible') { finishPrompted = false; setTimeout(promptFinish, 600); } });
 setInterval(() => { if (document.visibilityState === 'visible') { if (UI.tab === 'denik' && !FORM) render(); promptFinish(); } }, 60000);
 
 function openFuel(id, presetVeh) {
@@ -1413,6 +1480,8 @@ document.addEventListener('click', (e) => {
   if (act === 'overlay' && e.target !== el) return;
   switch (act) {
     case 'add-toggle': toggleAdd(); break;
+    case 'push-on': enablePush(); break;
+    case 'push-test': testPush(); break;
     case 'finish-next': { const d = dueJobs()[0]; if (d) openFinish(d.id); break; }
     case 'finish-this': { const id = FORM.j.id; closeSheet(); openFinish(id); break; }
     case 'finish-later': closeSheet(); render(); break;
@@ -1580,13 +1649,14 @@ async function cloudInit() {
   const [app, auth, fs] = await Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-auth.js'), import(base + 'firebase-firestore.js')]);
   CLOUD.m = { app, auth, fs };
   const a = app.initializeApp(window.FIREBASE_CONFIG);
+  CLOUD.app = a;
   CLOUD.auth = auth.getAuth(a);
   try { CLOUD.db = fs.initializeFirestore(a, { localCache: fs.persistentLocalCache({ tabManager: fs.persistentSingleTabManager() }) }); }
   catch (e) { CLOUD.db = fs.getFirestore(a); }
   return new Promise((res) => {
     auth.onAuthStateChanged(CLOUD.auth, async (u) => {
       CLOUD.user = u;
-      if (u) { showLogin(false); startSync(); render(); offerMigration(); }
+      if (u) { showLogin(false); startSync(); render(); offerMigration(); refreshPush(); }
       else { stopSync(); showLogin(true); }
       res();
     });
