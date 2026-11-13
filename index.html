@@ -177,6 +177,18 @@ textarea.in{height:76px;padding:10px 12px;resize:vertical}
 .map{height:190px;border-radius:12px;overflow:hidden;border:1px solid var(--line);margin-top:4px;background:#EAF0E6;z-index:0}
 .map .leaflet-control-attribution{font-size:9px}
 .hidden{display:none!important}
+.sheet-h.bare{padding:6px 10px 4px 18px;border-bottom:none;position:relative;justify-content:flex-end}
+.grip{position:absolute;left:50%;top:12px;transform:translateX(-50%);width:40px;height:5px;border-radius:3px;background:#D6D9D2}
+.openinfo{display:flex;gap:10px;align-items:flex-start;background:#FFF7E8;border:1px solid #F0DFC0;border-radius:12px;padding:12px;font-size:13px;color:#6B5326;line-height:1.45}
+.openinfo svg{flex-shrink:0;width:20px;height:20px}
+.card.open{border:1px dashed #D9A84A}
+.chip.op{background:#FFF1D9;color:#8A5A00;font-weight:600}
+.blk.open{background:repeating-linear-gradient(135deg,#C27A08 0 8px,#B06E05 8px 16px)}
+.duebar{display:flex;gap:10px;align-items:center;background:#FFF1D9;border:1px solid #EBC98A;border-radius:14px;padding:12px 14px;width:100%;text-align:left;margin-bottom:12px;min-height:48px}
+.duebar i{width:10px;height:10px;border-radius:5px;background:#C27A08;flex-shrink:0}
+.duebar span{flex:1;font-size:14px;color:#6B4A05}
+.duebar b.go{font-size:14px;color:#8A5A00;white-space:nowrap}
+.finsum{background:#F4F5F1;border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
 .pk{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap}
 .pk.ok{background:#E3F1DF;color:#1F4A27;border:1px solid #B9D6B2}
 .pk.no{background:#FBE6E4;color:#9B2C24;border:1px solid #EBC2BD}
@@ -393,6 +405,12 @@ const consTxt = (c) => c ? num(c.val, 1) + ' ' + c.per : '';
 const pikrOf = (d) => (DB.avail && DB.avail[d]) || '';
 const PERSON_IC = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
 const pikrChip = (d) => { const v = pikrOf(d); return v === 'ok' ? `<span class="pk ok">${PERSON_IC}píkr k dispozici</span>` : v === 'no' ? `<span class="pk no">${PERSON_IC}píkr nemůže</span>` : ''; };
+// otevřená zakázka = bez množství štěpky, dokončuje se v den realizace po 16:00
+const FINISH_HOUR = 16;
+const isOpen = (j) => j.status === 'open';
+const isDue = (j) => { if (!isOpen(j)) return false; const t = todayIso(); return j.date < t || (j.date === t && new Date().getHours() >= FINISH_HOUR); };
+const dueJobs = () => DB.jobs.filter(isDue).sort((a, b) => (a.date + a.from).localeCompare(b.date + b.from));
+const CLOCK_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="#8A5A00" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
 const jobsOn = (d) => DB.jobs.filter(j => j.date === d).sort((a, b) => (a.from || '').localeCompare(b.from || ''));
 const fuelOn = (d) => DB.fuel.filter(f => f.date === d).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
 function sumJobs(list) {
@@ -444,11 +462,11 @@ const dmY = (s) => { const d = parseIso(s); return d.getDate() + '. ' + (d.getMo
 /* ===== Deník ===== */
 function jobCard(j) {
   const km = kmRound(j);
-  return `<button class="card" data-act="edit-job" data-id="${j.id}">
+  return `<button class="card${isOpen(j) ? ' open' : ''}" data-act="edit-job" data-id="${j.id}">
     <div class="between" style="align-items:baseline"><span style="font-size:16px;font-weight:600">${esc(j.customer || j.place) || 'Bez místa'}</span><span class="sub">${esc(j.from || '?')}–${esc(j.to || '?')}</span></div>
     ${j.customer && j.place ? `<div class="sub" style="font-weight:400;margin-top:-4px">${esc(j.place)}</div>` : ''}
     <div class="chips">
-      <span class="chip g">${fmtLoads(j.loads)} ${loadsWord(+j.loads)} · ${num(m3(j.loads))} m³</span>
+      ${isOpen(j) ? `<span class="chip op">Otevřená · ${isDue(j) ? 'dokončit' : 'štěpka po dokončení'}</span>` : `<span class="chip g">${fmtLoads(j.loads)} ${loadsWord(+j.loads)} · ${num(m3(j.loads))} m³</span>`}
       <span class="chip">${fmtDur(jobMinutes(j))}</span>
       ${km ? `<span class="chip">${num(km)} km${trips(j.loads) > 1 ? ' · ' + trips(j.loads) + '× tam a zpět' : ' tam i zpět'}</span>` : ''}
     </div>
@@ -487,6 +505,7 @@ function viewDenik() {
     <div class="tile"><b>${num(m3(s.loads))}</b><span>m³</span></div>
     <div class="tile"><b>${num(s.km)}</b><span>km</span></div>
   </div>
+  ${(() => { const due = dueJobs(); return due.length ? `<button class="duebar" data-act="finish-next"><i></i><span><b>${due.length} ${due.length === 1 ? 'otevřená zakázka čeká' : due.length < 5 ? 'otevřené zakázky čekají' : 'otevřených zakázek čeká'}</b> na dokončení</span><b class="go">Dokončit ›</b></button>` : ''; })()}
   <div class="label">Záznamy</div>
   <div class="list">${items.length ? items.map(i => i.h).join('') : '<div class="empty">Na tento den zatím nic není.<br>Přidejte zakázku nebo tankování.</div>'}</div>
   ${d !== todayIso() ? '<div style="text-align:center;margin-top:16px"><button class="btn o" data-act="today" style="height:44px">Zpět na dnešek</button></div>' : ''}`;
@@ -514,7 +533,7 @@ function viewDny() {
     const blocks = js.map(j => {
       const a = toMin(j.from), b = toMin(j.to); if (a == null || b == null) return '';
       const end = b < a ? 24 * 60 : b, l = pos(a), w = Math.max(pos(end) - l, 1);
-      return `<span class="blk" style="left:${l}%;width:${w}%">${w > 9 ? esc(j.customer || (j.place || '').split(',')[0]) : ''}</span>`;
+      return `<span class="blk${isOpen(j) ? ' open' : ''}" style="left:${l}%;width:${w}%">${w > 9 ? esc(j.customer || (j.place || '').split(',')[0]) : ''}</span>`;
     }).join('');
     const dots = fs.map(f => { const t = toMin(f.time); return t == null ? '' : `<span class="dot${VCLS[veh(f)]}" title="Tankování ${VEH[veh(f)].toLowerCase()}" style="left:${pos(t)}%"></span>`; }).join('');
     const sum = s.n ? `${fmtDur(s.min)} · ${num(m3(s.loads))} m³ · ${num(s.km)} km` : (fs.length ? 'jen tankování' : '—');
@@ -606,7 +625,7 @@ function viewPrehled() {
   </div>
   <div class="box">
     <h2>Zakázky</h2>
-    <div>${jobs.length ? jobs.map(j => `<button class="tr" data-act="edit-job" data-id="${j.id}"><span class="sub" style="font-weight:400">${shortDate(j.date)}</span><span style="min-width:0"><span style="font-size:14px;font-weight:500">${esc([j.customer, j.place].filter(Boolean).join(' · ')) || 'Bez místa'}</span><small>${esc(j.from)}–${esc(j.to)} · ${fmtDur(jobMinutes(j))}${kmRound(j) ? ' · ' + num(kmRound(j)) + ' km' : ''}</small></span><span style="font-size:14px;font-weight:600">${num(m3(j.loads))} m³</span></button>`).join('') : '<div class="sub" style="font-weight:400">Žádné zakázky v tomto měsíci.</div>'}</div>
+    <div>${jobs.length ? jobs.map(j => `<button class="tr" data-act="edit-job" data-id="${j.id}"><span class="sub" style="font-weight:400">${shortDate(j.date)}</span><span style="min-width:0"><span style="font-size:14px;font-weight:500">${esc([j.customer, j.place].filter(Boolean).join(' · ')) || 'Bez místa'}</span><small>${esc(j.from)}–${esc(j.to)} · ${fmtDur(jobMinutes(j))}${kmRound(j) ? ' · ' + num(kmRound(j)) + ' km' : ''}</small></span><span style="font-size:14px;font-weight:600">${isOpen(j) ? 'otevřená' : num(m3(j.loads)) + ' m³'}</span></button>`).join('') : '<div class="sub" style="font-weight:400">Žádné zakázky v tomto měsíci.</div>'}</div>
   </div>
   <div class="g2">
     <button class="btn o" data-act="csv-jobs">Export zakázek</button>
@@ -753,8 +772,9 @@ function viewStat() {
 
 
 /* ===== Přehled změn (nejnovější nahoře) ===== */
-const APP_VERSION = '2.6';
+const APP_VERSION = '2.7';
 const CHANGELOG = [
+  ['2.7', ['Formulář zakázky bez nadpisu nahoře.', 'Nová zakázka se ukládá jako otevřená, bez množství štěpky.', 'V den realizace po 16:00 se při otevření aplikace objeví Dokončit zakázku (čas, štěpka); víc otevřených zakázek jde jedna po druhé.', 'Pruh „čeká na dokončení“ v Deníku, otevřené zakázky šrafované v časové ose.', 'Oprava: knihovny Firebase a mapy se ukládají do telefonu, aplikace se přihlásí i bez signálu.']],
   ['2.6', ['Dny, kdy píkr může, jsou podbarvené zeleně, kdy nemůže, červeně (dnešek a budoucí dny).']],
   ['2.5', ['Pod číslem verze v Nastavení je přehled změn, starší verze jsou rozbalovací.', 'Opraveno skloňování počtu zakázek v záloze.']],
   ['2.4', ['Plánování píkra: ve Dnech ikona kalendáře, u budoucích dnů „píkr může / nemůže“.', 'Štítky dostupnosti píkra u dnů i v Deníku, počet dnů v souhrnu týdne.', 'Dostupnost se ukládá do Firebase (kolekce dostupnost).']],
@@ -1045,9 +1065,9 @@ function onPlaceInput() {
 }
 
 /* ===== Formuláře (spodní panel) ===== */
-function openSheet(title, body, foot) {
-  $('#sheet-root').innerHTML = `<div class="overlay" data-act="overlay"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(title)}">
-    <div class="sheet-h"><h2 style="font-size:18px">${esc(title)}</h2><button class="icon-btn" style="border:none" aria-label="Zavřít" data-act="close">${ICON.close}</button></div>
+function openSheet(title, body, foot, label) {
+  $('#sheet-root').innerHTML = `<div class="overlay" data-act="overlay"><div class="sheet" role="dialog" aria-modal="true" aria-label="${esc(title || label || '')}">
+    <div class="sheet-h${title ? '' : ' bare'}">${title ? `<h2 style="font-size:18px">${esc(title)}</h2>` : '<span class="grip" aria-hidden="true"></span>'}<button class="icon-btn" style="border:none" aria-label="Zavřít" data-act="close">${ICON.close}</button></div>
     <div class="sheet-b">${body}</div><div class="sheet-f">${foot}</div></div></div>`;
   document.body.style.overflow = 'hidden';
 }
@@ -1058,9 +1078,10 @@ function nowRounded() { const d = new Date(); let m = Math.round((d.getHours() *
 
 function openJob(id) {
   const ex = id ? DB.jobs.find(j => j.id === id) : null;
-  const j = ex ? Object.assign({ customer: '' }, ex) : { id: null, date: UI.day, from: '07:00', to: '14:00', customer: '', place: '', kmOneWay: '', loads: 1, note: '' };
+  const j = ex ? Object.assign({ customer: '' }, ex) : { id: null, date: UI.day, from: '07:00', to: '14:00', customer: '', place: '', kmOneWay: '', loads: null, status: 'open', note: '' };
   FORM = { kind: 'job', j, coords: null, sugg: [], csugg: [] };
-  openSheet(ex ? 'Upravit zakázku' : 'Nová zakázka', `
+  const open = isOpen(j);
+  openSheet('', `
     <div class="f"><label for="j-cust">Zákazník</label>
       <div class="sugg"><input class="in" id="j-cust" value="${esc(j.customer)}" placeholder="jméno, firma nebo IČO" autocomplete="off" autocorrect="off"><div class="sugg-list hidden" id="j-csugg"></div></div>
       <div class="note" id="j-cico">${j.customerIco ? 'IČO ' + esc(j.customerIco) : ''}</div>
@@ -1085,16 +1106,9 @@ function openJob(id) {
       <div class="f"><label for="j-to">Do</label><input class="in" id="j-to" type="time" step="300" value="${esc(j.to)}"></div>
     </div>
     <div class="calc"><span>Doba práce</span><strong id="j-dur">–</strong></div>
-    <div class="f"><span class="lb">Množství štěpky (1 fůra = ${num(DB.settings.loadM3)} m³)</span>
-      <div class="quick">${[0.25, 0.5, 0.75, 1, 1.5, 2].map(v => `<button type="button" data-act="q-load" data-v="${v}">${fmtLoads(v)}</button>`).join('')}</div>
-      <div class="stepper">
-        <button type="button" aria-label="Ubrat čtvrt fůry" data-act="load" data-n="-0.25">−</button>
-        <div class="v"><b id="j-loads"></b><span id="j-m3"></span></div>
-        <button type="button" class="plus" aria-label="Přidat čtvrt fůry" data-act="load" data-n="0.25">+</button>
-      </div>
-    </div>
+    ${open ? `<div class="openinfo">${CLOCK_IC}<span><b>Množství štěpky se zadává až při dokončení.</b> Zakázka zůstane otevřená a v den realizace v ${FINISH_HOUR}:00 vás aplikace vyzve k dokončení.</span></div>` : loadPicker()}
     <div class="f"><label for="j-note">Poznámka</label><textarea class="in" id="j-note" placeholder="druh dřeva, poznámky…">${esc(j.note)}</textarea></div>
-  `, `${ex ? '<button class="btn red" data-act="del-job" style="flex:0 0 auto">Smazat</button>' : ''}<button class="btn" data-act="save-job">Uložit zakázku</button>`);
+  `, `${ex ? '<button class="btn red" data-act="del-job" style="flex:0 0 auto">Smazat</button>' : ''}${ex && open ? '<button class="btn o" data-act="finish-this" style="flex:0 0 auto">Dokončit</button>' : ''}<button class="btn" data-act="save-job">Uložit</button>`, ex ? 'Upravit zakázku' : 'Nová zakázka');
   updJobCalc();
   // u uložené zakázky rovnou ukázat trasu
   if (ex) {
@@ -1110,8 +1124,18 @@ function openJob(id) {
     })();
   }
 }
+function loadPicker() {
+  return `<div class="f"><span class="lb">Množství štěpky (1 fůra = ${num(DB.settings.loadM3)} m³)</span>
+      <div class="quick">${[0.25, 0.5, 0.75, 1, 1.5, 2].map(v => `<button type="button" data-act="q-load" data-v="${v}">${fmtLoads(v)}</button>`).join('')}</div>
+      <div class="stepper">
+        <button type="button" aria-label="Ubrat čtvrt fůry" data-act="load" data-n="-0.25">−</button>
+        <div class="v"><b id="j-loads"></b><span id="j-m3"></span></div>
+        <button type="button" class="plus" aria-label="Přidat čtvrt fůry" data-act="load" data-n="0.25">+</button>
+      </div>
+    </div>`;
+}
 function updJobCalc() {
-  if (!FORM || FORM.kind !== 'job') return;
+  if (!FORM || (FORM.kind !== 'job' && FORM.kind !== 'finish')) return;
   const km = parseFloat(($('#j-km').value || '').replace(',', '.'));
   const n = trips(FORM.j.loads);
   $('#j-km-lb').textContent = n === 1 ? 'Najeto celkem · tam a zpět' : `Najeto celkem · ${n} ${loadsWord(n)} = ${n}× tam a zpět`;
@@ -1119,6 +1143,7 @@ function updJobCalc() {
   const min = jobMinutes({ from: $('#j-from').value, to: $('#j-to').value });
   $('#j-dur').textContent = $('#j-from').value && $('#j-to').value ? fmtDur(min) : '–';
   const L = FORM.j.loads;
+  if (!$('#j-loads')) return;
   $('#j-loads').textContent = fmtLoads(L) + ' ' + loadsWord(L);
   $('#j-m3').textContent = '= ' + num(m3(L)) + ' m³';
   document.querySelectorAll('[data-act="q-load"]').forEach(b => b.classList.toggle('on', +b.dataset.v === L));
@@ -1164,11 +1189,51 @@ function saveJob() {
   j.from = $('#j-from').value; j.to = $('#j-to').value;
   j.note = $('#j-note').value.trim();
   if (!j.from || !j.to) { toast('Vyplňte čas od a do'); return; }
-  if (!(j.loads >= 0)) j.loads = 0;
+  if (isOpen(j)) j.loads = null; else if (!(j.loads >= 0)) j.loads = 0;
   if (j.id) { const i = DB.jobs.findIndex(x => x.id === j.id); DB.jobs[i] = j; }
   else { j.id = uid(); j.created = Date.now(); DB.jobs.push(j); }
   saveData(); cloudPut('jobs', j); UI.day = j.date; closeSheet(); render(); toast('Zakázka uložena');
 }
+
+function openFinish(id) {
+  const ex = DB.jobs.find(x => x.id === id); if (!ex) return;
+  const j = Object.assign({}, ex, { loads: ex.loads > 0 ? ex.loads : 1 });
+  FORM = { kind: 'finish', j };
+  const dt = parseIso(j.date), due = dueJobs(), idx = due.findIndex(x => x.id === id);
+  openSheet('Dokončit zakázku', `
+    ${due.length > 1 && idx >= 0 ? `<span class="sub" style="font-weight:400">Zakázka ${idx + 1} z ${due.length}</span>` : ''}
+    <div class="finsum"><span style="font-size:16px;font-weight:600">${esc([j.customer, j.place].filter(Boolean).join(' · ')) || 'Zakázka'}</span>
+      <span class="sub" style="font-weight:400">${DAYS[dt.getDay()]} ${shortDate(j.date)} · ${esc(j.from)}–${esc(j.to)}${j.kmOneWay ? ' · ' + num(j.kmOneWay) + ' km od základny' : ''}</span></div>
+    <div class="g2">
+      <div class="f"><label for="j-from">Skutečně od</label><input class="in" id="j-from" type="time" step="300" value="${esc(j.from)}"></div>
+      <div class="f"><label for="j-to">Skutečně do</label><input class="in" id="j-to" type="time" step="300" value="${esc(j.to)}"></div>
+    </div>
+    <div class="calc"><span>Doba práce</span><strong id="j-dur">–</strong></div>
+    ${loadPicker()}
+    <div class="calc"><span id="j-km-lb">Najeto</span><strong id="j-km-rt">–</strong></div>
+    <input type="hidden" id="j-km" value="${j.kmOneWay || ''}">
+  `, `<button class="btn o" data-act="finish-later" style="flex:0 0 auto">Později</button><button class="btn" data-act="finish-save">Dokončit zakázku</button>`);
+  updJobCalc();
+}
+function saveFinish() {
+  const j = FORM.j;
+  j.from = $('#j-from').value; j.to = $('#j-to').value;
+  if (!j.from || !j.to) { toast('Vyplňte čas od a do'); return; }
+  if (!(j.loads > 0)) { toast('Vyberte množství štěpky'); return; }
+  j.status = 'done'; j.finished = Date.now();
+  const i = DB.jobs.findIndex(x => x.id === j.id); if (i >= 0) DB.jobs[i] = j;
+  saveData(); cloudPut('jobs', j); closeSheet(); render(); toast('Zakázka dokončena');
+  const next = dueJobs()[0]; if (next) setTimeout(() => openFinish(next.id), 350);
+}
+// výzva k dokončení po spuštění / návratu do aplikace (jednou za otevření)
+let finishPrompted = false;
+function promptFinish() {
+  if (finishPrompted || FORM || (CLOUD_ON && !CLOUD.user && !CLOUD.failed) || $('#splash')) return;
+  const due = dueJobs(); if (!due.length) return;
+  finishPrompted = true; openFinish(due[0].id);
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { finishPrompted = false; setTimeout(promptFinish, 600); } });
+setInterval(() => { if (document.visibilityState === 'visible') { if (UI.tab === 'denik' && !FORM) render(); promptFinish(); } }, 60000);
 
 function openFuel(id, presetVeh) {
   const ex = id ? DB.fuel.find(f => f.id === id) : null;
@@ -1323,8 +1388,8 @@ const csvDate = (s) => { const d = parseIso(s); return d.getDate() + '.' + (d.ge
 const dec = (x, d = 2) => (Math.round((+x || 0) * 10 ** d) / 10 ** d).toString().replace('.', ',');
 function csvJobs() {
   const ym = UI.month, rows = DB.jobs.filter(j => j.date.startsWith(ym)).sort((a, b) => (a.date + a.from).localeCompare(b.date + b.from));
-  const out = [['Datum', 'Zákazník', 'IČO', 'Místo', 'Od', 'Do', 'Hodin', 'Fůry', 'm3', 'km jedna cesta', 'Jízd tam a zpět', 'km celkem', 'Poznámka']];
-  rows.forEach(j => out.push([csvDate(j.date), j.customer || '', j.customerIco || '', j.place, j.from, j.to, dec(jobMinutes(j) / 60), dec(j.loads), dec(m3(j.loads)), dec(j.kmOneWay || 0, 1), trips(j.loads), dec(kmRound(j), 1), j.note]));
+  const out = [['Datum', 'Stav', 'Zákazník', 'IČO', 'Místo', 'Od', 'Do', 'Hodin', 'Fůry', 'm3', 'km jedna cesta', 'Jízd tam a zpět', 'km celkem', 'Poznámka']];
+  rows.forEach(j => out.push([csvDate(j.date), isOpen(j) ? 'otevřená' : 'dokončená', j.customer || '', j.customerIco || '', j.place, j.from, j.to, dec(jobMinutes(j) / 60), dec(j.loads), dec(m3(j.loads)), dec(j.kmOneWay || 0, 1), trips(j.loads), dec(kmRound(j), 1), j.note]));
   download(`zakazky-${ym}.csv`, '﻿' + out.map(r => r.map(csvCell).join(';')).join('\r\n'), 'text/csv;charset=utf-8');
 }
 function csvFuel() {
@@ -1348,6 +1413,10 @@ document.addEventListener('click', (e) => {
   if (act === 'overlay' && e.target !== el) return;
   switch (act) {
     case 'add-toggle': toggleAdd(); break;
+    case 'finish-next': { const d = dueJobs()[0]; if (d) openFinish(d.id); break; }
+    case 'finish-this': { const id = FORM.j.id; closeSheet(); openFinish(id); break; }
+    case 'finish-later': closeSheet(); render(); break;
+    case 'finish-save': saveFinish(); break;
     case 'plan-on': UI.plan = true; if (UI.week < weekStart(todayIso())) UI.week = weekStart(todayIso()); render(); break;
     case 'plan-off': UI.plan = false; render(); break;
     case 'pikr': { const d = el.dataset.d, v = pikrOf(d) === el.dataset.v ? '' : el.dataset.v; setPikr(d, v); render(); break; }
@@ -1404,6 +1473,7 @@ document.addEventListener('click', (e) => {
 });
 document.addEventListener('input', (e) => {
   if (!FORM) return;
+  if (FORM.kind === 'finish') { updJobCalc(); return; }
   if (FORM.kind === 'job') { if (e.target.id === 'j-place') { FORM.coords = null; onPlaceInput(); } if (e.target.id === 'j-cust') onCustInput(); updJobCalc(); }
   else { updFuelCalc(e.target.id); updOdo(); }
 });
@@ -1464,7 +1534,7 @@ async function cloudUploadAll(jobs, fuel) {
   }
 }
 let renderT = null;
-function softRender() { clearTimeout(renderT); renderT = setTimeout(() => { saveData(); render(); }, 60); }
+function softRender() { clearTimeout(renderT); renderT = setTimeout(() => { saveData(); if (!FORM) render(); promptFinish(); }, 60); }
 function startSync() {
   const { fs } = CLOUD.m;
   stopSync();
@@ -1614,9 +1684,9 @@ render();
 (function boot() {
   const sp = $('#splash'), t0 = Date.now();
   const minShow = matchMedia('(prefers-reduced-motion: reduce)').matches ? 600 : 3000;
-  const ready = CLOUD_ON ? cloudInit().catch(() => { toast('Firebase se nepodařilo načíst – zobrazuji uložená data'); }) : Promise.resolve();
+  const ready = CLOUD_ON ? cloudInit().catch(() => { CLOUD.failed = true; toast('Firebase se nepodařilo načíst – zobrazuji uložená data'); }) : Promise.resolve();
   let gone = false;
-  const hide = () => { if (gone) return; gone = true; sp.classList.add('out'); setTimeout(() => sp.remove(), 400); };
+  const hide = () => { if (gone) return; gone = true; sp.classList.add('out'); setTimeout(() => { sp.remove(); setTimeout(promptFinish, 300); }, 400); };
   ready.then(() => setTimeout(hide, Math.max(0, minShow - (Date.now() - t0))));
   setTimeout(hide, 8000);             // pojistka při pomalém připojení
   sp.addEventListener('click', () => { if (Date.now() - t0 > 800) hide(); });
