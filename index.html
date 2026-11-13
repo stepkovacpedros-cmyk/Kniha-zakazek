@@ -63,6 +63,14 @@ h2{margin:0;font-size:16px;font-weight:600}
 .am-ic svg{width:24px;height:24px}
 .am-tx b{display:block;font-size:17px;font-weight:600}
 .am-tx small{display:block;font-size:12px;color:var(--mut);margin-top:1px}
+.seg button[data-v="auto"]{color:#8A5A00}.seg button[data-v="stepkovac"]{color:#7A3E0E}.seg button[data-v="pila"]{color:#24588F}
+.seg button[data-v="auto"].on{background:#C27A08;color:#fff}.seg button[data-v="stepkovac"].on{background:#8E4A12;color:#fff}.seg button[data-v="pila"].on{background:#2F6FB0;color:#fff}
+.seg button[data-v="auto"] small,.seg button[data-v="stepkovac"] small,.seg button[data-v="pila"] small{color:inherit;opacity:.8}
+.sheet{transition:background-color .25s}
+.sheet[data-veh="auto"]{background:#FFF7E8}.sheet[data-veh="stepkovac"]{background:#F8EEE5}.sheet[data-veh="pila"]{background:#EDF3FB}
+.sheet[data-veh] .seg{background:rgba(255,255,255,.7)}
+.sheet[data-veh] .calc{background:rgba(255,255,255,.7)}
+.sheet[data-veh] .sheet-h,.sheet[data-veh] .sheet-f{border-color:rgba(0,0,0,.08)}
 .fab.o{background:#fff;color:#C27A08;border:2px solid #E8C48A;box-shadow:0 6px 16px rgba(0,0,0,.15)}
 .fab:active{transform:scale(.94)}
 .btn{height:52px;border-radius:14px;border:none;background:var(--g);color:#fff;font-size:16px;font-weight:600;padding:0 16px}
@@ -721,7 +729,7 @@ function viewNastaveni() {
   <div class="setting">
     ${CLOUD_ON ? '<p class="note" style="margin:0">Smazat celou společnou databázi jde jen ve Firebase konzoli.</p>' : '<button class="btn red" data-act="wipe">Smazat všechna data</button>'}
   </div>
-  <p class="note" style="text-align:center">Štěpkovač · verze 2.2</p>`;
+  <p class="note" style="text-align:center">Štěpkovač · verze 2.3</p>`;
 }
 
 /* ===== Mapy.com (s API klíčem) / OpenStreetMap (bez klíče) ===== */
@@ -1100,6 +1108,7 @@ function openFuel(id, presetVeh) {
     <div class="f"><label for="f-note">Poznámka</label><input class="in" id="f-note" value="${esc(f.note)}" placeholder="např. karta, faktura…"></div>
   `, `${ex ? '<button class="btn red" data-act="del-fuel" style="flex:0 0 auto">Smazat</button>' : ''}<button class="btn" data-act="save-fuel">Uložit tankování</button>`);
   updFuelCalc();
+  $('.sheet').dataset.veh = f.vehicle;
   updOdo();
   if (!ex) nearFuel(true);
 }
@@ -1269,7 +1278,7 @@ document.addEventListener('click', (e) => {
     case 'save-fuel': saveFuel(); break;
     case 'near-fuel': nearFuel(false); break;
     case 'pick-station': { const x = FORM.stations[+el.dataset.i]; if (x) { $('#f-place').value = x.label; $('#f-st').className = 'status ok'; $('#f-st').textContent = 'Vybráno: ' + x.label; } const l = $('#f-sugg'); l.innerHTML = ''; l.classList.add('hidden'); break; }
-    case 'veh': FORM.f.vehicle = el.dataset.v; document.querySelectorAll('[data-act="veh"]').forEach(b => { const on = b.dataset.v === FORM.f.vehicle; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    case 'veh': FORM.f.vehicle = el.dataset.v; $('.sheet').dataset.veh = FORM.f.vehicle; document.querySelectorAll('[data-act="veh"]').forEach(b => { const on = b.dataset.v === FORM.f.vehicle; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
       { const o = ODO[FORM.f.vehicle]; $('#f-odo-box').classList.toggle('hidden', !o); if (o) { $('#f-odo-lb').textContent = o.lb; $('#f-odo').placeholder = FORM.f.vehicle === 'auto' ? 'např. 152 340' : 'např. 1 250,5'; } } updOdo(); break;
     case 'del-fuel': if (confirm('Opravdu smazat toto tankování?')) { cloudDel('fuel', FORM.f.id); DB.fuel = DB.fuel.filter(f => f.id !== FORM.f.id); saveData(); closeSheet(); render(); toast('Smazáno'); } break;
     case 'csv-jobs': csvJobs(); break;
