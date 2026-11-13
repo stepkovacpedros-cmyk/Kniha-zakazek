@@ -173,6 +173,16 @@ textarea.in{height:76px;padding:10px 12px;resize:vertical}
 .map{height:190px;border-radius:12px;overflow:hidden;border:1px solid var(--line);margin-top:4px;background:#EAF0E6;z-index:0}
 .map .leaflet-control-attribution{font-size:9px}
 .hidden{display:none!important}
+.pk{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.pk.ok{background:#E3F1DF;color:#1F4A27;border:1px solid #B9D6B2}
+.pk.no{background:#FBE6E4;color:#9B2C24;border:1px solid #EBC2BD}
+.plan{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.plan.today{border-color:var(--g);box-shadow:0 0 0 1px var(--g) inset}
+.plan-seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.plan-seg button{height:44px;border-radius:10px;font-size:15px;font-weight:600;background:#fff}
+.plan-seg .y{color:#1F4A27;border:1px solid #B9D6B2}.plan-seg .y.on{background:#2F6B3A;color:#fff;border-color:#2F6B3A}
+.plan-seg .n{color:#9B2C24;border:1px solid #EBC2BD}.plan-seg .n.on{background:#C2362F;color:#fff;border-color:#C2362F}
+.btn.sm{height:44px;padding:0 14px;font-size:15px}
 /* úvodní obrazovka – přehraje se jednou (cca 3 s) */
 .splash{position:fixed;inset:0;z-index:100;background:#2F6B3A;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;transition:opacity .35s;overflow:hidden}
 .splash.out{opacity:0;pointer-events:none}
@@ -298,10 +308,11 @@ function loadData() {
     const d = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (d && Array.isArray(d.jobs) && Array.isArray(d.fuel)) {
       d.settings = Object.assign({}, DEFAULT_SETTINGS, d.settings || {});
+      d.avail = d.avail || {};
       return d;
     }
   } catch (e) {}
-  return { jobs: [], fuel: [], settings: Object.assign({}, DEFAULT_SETTINGS) };
+  return { jobs: [], fuel: [], avail: {}, settings: Object.assign({}, DEFAULT_SETTINGS) };
 }
 let DB = loadData();
 function saveData() {
@@ -374,6 +385,10 @@ function consumption(f) {
   return { dist, val: v === 'auto' ? f.liters / dist * 100 : f.liters / dist, per: ODO[v].per, u: ODO[v].u };
 }
 const consTxt = (c) => c ? num(c.val, 1) + ' ' + c.per : '';
+// dostupnost píkra: 'ok' = může, 'no' = nemůže, jinak nevyplněno
+const pikrOf = (d) => (DB.avail && DB.avail[d]) || '';
+const PERSON_IC = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
+const pikrChip = (d) => { const v = pikrOf(d); return v === 'ok' ? `<span class="pk ok">${PERSON_IC}píkr k dispozici</span>` : v === 'no' ? `<span class="pk no">${PERSON_IC}píkr nemůže</span>` : ''; };
 const jobsOn = (d) => DB.jobs.filter(j => j.date === d).sort((a, b) => (a.from || '').localeCompare(b.from || ''));
 const fuelOn = (d) => DB.fuel.filter(f => f.date === d).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
 function sumJobs(list) {
@@ -391,12 +406,12 @@ const ICON = {
 };
 
 /* ===== Stav a navigace ===== */
-const UI = { tab: 'denik', day: todayIso(), week: weekStart(todayIso()), month: todayIso().slice(0, 7), statMode: 'mesice', statOff: 0 };
-function go(tab) { toggleAdd(false); UI.tab = tab; $('#view').classList.remove('inL', 'inR'); render(); window.scrollTo(0, 0); }
+const UI = { tab: 'denik', day: todayIso(), week: weekStart(todayIso()), month: todayIso().slice(0, 7), statMode: 'mesice', statOff: 0, plan: false };
+function go(tab) { toggleAdd(false); if (tab !== 'dny') UI.plan = false; UI.tab = tab; $('#view').classList.remove('inL', 'inR'); render(); window.scrollTo(0, 0); }
 
 function render() {
   document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === UI.tab));
-  $('#actions').classList.toggle('hidden', !(UI.tab === 'denik' || UI.tab === 'dny'));
+  $('#actions').classList.toggle('hidden', !(UI.tab === 'denik' || (UI.tab === 'dny' && !UI.plan)));
   const v = $('#view');
   if (UI.tab === 'denik') v.innerHTML = viewDenik();
   else if (UI.tab === 'dny') v.innerHTML = viewDny();
@@ -454,6 +469,7 @@ function viewDenik() {
       ${d === todayIso()
         ? `<h1>Dnes</h1><span class="sub" style="font-size:15px">${DAYS_LONG[parseIso(d).getDay()].toLowerCase()} ${dmY(d)}</span>`
         : `<h1>${DAYS_LONG[parseIso(d).getDay()]}</h1><span class="sub" style="font-size:15px">${dmY(d)}</span>`}
+      ${pikrChip(d) ? `<span style="margin-top:6px">${pikrChip(d)}</span>` : ''}
     </div>
     <div class="row" style="gap:6px">
       <button class="icon-btn" aria-label="Předchozí den" data-act="day" data-n="-1">${ICON.left}</button>
@@ -488,7 +504,7 @@ function viewDny() {
   const span = (maxH - minH) * 60, pos = (m) => Math.max(0, Math.min(100, (m - minH * 60) / span * 100));
   const ticks = []; for (let h = minH; h <= maxH; h += 2) ticks.push(h);
   const today = todayIso();
-  const shown = days.filter((d, i) => i < 5 || jobsOn(d).length || fuelOn(d).length);
+  const shown = days.filter((d, i) => i < 5 || jobsOn(d).length || fuelOn(d).length || pikrOf(d));
   const rows = shown.map(d => {
     const js = jobsOn(d), fs = fuelOn(d), s = sumJobs(js), dt = parseIso(d);
     const blocks = js.map(j => {
@@ -499,25 +515,59 @@ function viewDny() {
     const dots = fs.map(f => { const t = toMin(f.time); return t == null ? '' : `<span class="dot${VCLS[veh(f)]}" title="Tankování ${VEH[veh(f)].toLowerCase()}" style="left:${pos(t)}%"></span>`; }).join('');
     const sum = s.n ? `${fmtDur(s.min)} · ${num(m3(s.loads))} m³ · ${num(s.km)} km` : (fs.length ? 'jen tankování' : '—');
     return `<button class="day${d === today ? ' today' : d < today ? ' past' : ''}" data-act="open-day" data-d="${d}">
-      <div class="between" style="align-items:baseline"><span style="font-size:15px;font-weight:600">${DAYS[dt.getDay()]} ${shortDate(d)}</span><span class="sub" style="font-weight:400;font-size:12px">${sum}</span></div>
+      <div class="between"><span class="row" style="gap:8px;flex-wrap:wrap"><span style="font-size:15px;font-weight:600">${DAYS[dt.getDay()]} ${shortDate(d)}</span>${pikrChip(d)}</span><span class="sub" style="font-weight:400;font-size:12px;white-space:nowrap">${sum}</span></div>
       <div class="bar"><div class="grid">${ticks.slice(1).map(() => '<span></span>').join('')}</div>${blocks}${dots}${!js.length && !fs.length ? '<span class="none">bez záznamu</span>' : ''}</div>
     </button>`;
   }).join('');
   const all = sumJobs(days.flatMap(jobsOn));
+  const pkOk = days.filter(d => pikrOf(d) === 'ok').length;
+  if (UI.plan) return viewPlan(ws, days, range0(ws));
   const we = addDays(ws, 6), a = parseIso(ws), b = parseIso(we);
   const range = `${a.getDate()}. ${a.getMonth() + 1}. – ${b.getDate()}. ${b.getMonth() + 1}.${b.getFullYear() !== new Date().getFullYear() ? ' ' + b.getFullYear() : ''}`;
   return `
   <div class="between">
     <div style="display:flex;flex-direction:column;gap:2px"><h1>${isoWeek(ws)}. týden</h1><span class="sub" style="font-size:15px">${range}</span></div>
     <div class="row" style="gap:6px">
+      ${addDays(ws, 6) >= today ? `<button class="icon-btn" aria-label="Plánovat dostupnost píkra" title="Plánovat" data-act="plan-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M9 15.5l2 2 4-4"/></svg></button>` : ''}
       <button class="icon-btn" aria-label="Předchozí týden" data-act="week" data-n="-7">${ICON.left}</button>
       <button class="icon-btn" aria-label="Další týden" data-act="week" data-n="7">${ICON.right}</button>
     </div>
   </div>
-  <div class="sumbar"><span class="sub">Za týden · ${all.n} ${all.n === 1 ? 'zakázka' : all.n > 1 && all.n < 5 ? 'zakázky' : 'zakázek'}</span><div style="font-size:15px;font-weight:700;margin-top:2px">${fmtDur(all.min)} · ${num(m3(all.loads))} m³ · ${num(all.km)} km</div></div>
+  <div class="sumbar"><span class="sub">Za týden · ${all.n} ${all.n === 1 ? 'zakázka' : all.n > 1 && all.n < 5 ? 'zakázky' : 'zakázek'}${pkOk ? ` · píkr ${pkOk} ${pkOk === 1 ? 'den' : pkOk < 5 ? 'dny' : 'dní'}` : ''}</span><div style="font-size:15px;font-weight:700;margin-top:2px">${fmtDur(all.min)} · ${num(m3(all.loads))} m³ · ${num(all.km)} km</div></div>
   <div class="axis" aria-hidden="true">${ticks.map(h => `<span>${h}</span>`).join('')}</div>
   <div class="list">${rows}</div>
   <div class="legend" style="margin-top:14px"><span><i></i>práce</span><span><i class="f"></i>tankování auto</span><span><i class="s"></i>tankování štěpkovač</span><span><i class="p"></i>tankování pila</span></div>`;
+}
+
+function range0(ws) {
+  const a = parseIso(ws), b = parseIso(addDays(ws, 6));
+  return `${a.getDate()}. ${a.getMonth() + 1}. – ${b.getDate()}. ${b.getMonth() + 1}.${b.getFullYear() !== new Date().getFullYear() ? ' ' + b.getFullYear() : ''}`;
+}
+// plánovací režim: dostupnost píkra pro dnešek a budoucí dny týdne
+function viewPlan(ws, days, range) {
+  const today = todayIso(), list = days.filter(d => d >= today);
+  const cards = list.map(d => {
+    const dt = parseIso(d), v = pikrOf(d);
+    return `<div class="plan${d === today ? ' today' : ''}">
+      <span style="font-size:15px;font-weight:600">${DAYS_LONG[dt.getDay()]} ${shortDate(d)}${d === today ? ' · dnes' : ''}</span>
+      <div class="plan-seg" role="group" aria-label="Píkr ${shortDate(d)}">
+        <button class="y${v === 'ok' ? ' on' : ''}" aria-pressed="${v === 'ok'}" data-act="pikr" data-d="${d}" data-v="ok">✓ píkr může</button>
+        <button class="n${v === 'no' ? ' on' : ''}" aria-pressed="${v === 'no'}" data-act="pikr" data-d="${d}" data-v="no">✕ nemůže</button>
+      </div>
+    </div>`;
+  }).join('');
+  return `
+  <div class="between">
+    <div style="display:flex;flex-direction:column;gap:2px"><h1>${isoWeek(ws)}. týden</h1><span class="sub" style="font-size:15px">${range}</span></div>
+    <div class="row" style="gap:6px">
+      <button class="icon-btn" aria-label="Předchozí týden" data-act="week" data-n="-7"${ws <= weekStart(today) ? ' disabled style="opacity:.35"' : ''}>${ICON.left}</button>
+      <button class="icon-btn" aria-label="Další týden" data-act="week" data-n="7">${ICON.right}</button>
+      <button class="btn sm" data-act="plan-off">Hotovo</button>
+    </div>
+  </div>
+  <div class="label" style="margin-top:16px">Plánování píkra</div>
+  <div class="list">${cards || '<div class="empty">Tento týden už nejde plánovat.</div>'}</div>
+  <p class="note" style="margin-top:12px">Klepnutím na vybranou volbu ji zrušíte. Šipkami nebo swipem přejdete na další týden.</p>`;
 }
 
 /* ===== Přehled měsíce ===== */
@@ -729,7 +779,7 @@ function viewNastaveni() {
   <div class="setting">
     ${CLOUD_ON ? '<p class="note" style="margin:0">Smazat celou společnou databázi jde jen ve Firebase konzoli.</p>' : '<button class="btn red" data-act="wipe">Smazat všechna data</button>'}
   </div>
-  <p class="note" style="text-align:center">Štěpkovač · verze 2.3</p>`;
+  <p class="note" style="text-align:center">Štěpkovač · verze 2.4</p>`;
 }
 
 /* ===== Mapy.com (s API klíčem) / OpenStreetMap (bez klíče) ===== */
@@ -1256,6 +1306,9 @@ document.addEventListener('click', (e) => {
   if (act === 'overlay' && e.target !== el) return;
   switch (act) {
     case 'add-toggle': toggleAdd(); break;
+    case 'plan-on': UI.plan = true; if (UI.week < weekStart(todayIso())) UI.week = weekStart(todayIso()); render(); break;
+    case 'plan-off': UI.plan = false; render(); break;
+    case 'pikr': { const d = el.dataset.d, v = pikrOf(d) === el.dataset.v ? '' : el.dataset.v; setPikr(d, v); render(); break; }
     case 'add-close': toggleAdd(false); break;
     case 'new-job': toggleAdd(false); openJob(); break;
     case 'new-fuel': toggleAdd(false); openFuel(null, el.dataset.v); break;
@@ -1302,7 +1355,7 @@ document.addEventListener('click', (e) => {
     }
     case 'backup': download(`stepkovac-zaloha-${todayIso()}.json`, JSON.stringify(DB, null, 1), 'application/json'); break;
     case 'restore': $('#import-file').click(); break;
-    case 'logout': if (confirm('Odhlásit se?')) { stopSync(); CLOUD.m.auth.signOut(CLOUD.auth); DB = { jobs: [], fuel: [], settings: Object.assign({}, DEFAULT_SETTINGS) }; localStorage.removeItem(CACHE_KEY); go('denik'); } break;
+    case 'logout': if (confirm('Odhlásit se?')) { stopSync(); CLOUD.m.auth.signOut(CLOUD.auth); DB = { jobs: [], fuel: [], avail: {}, settings: Object.assign({}, DEFAULT_SETTINGS) }; localStorage.removeItem(CACHE_KEY); go('denik'); } break;
     case 'reset-pass': { const em = $('#l-email').value.trim(); if (!em) { $('#l-err').textContent = 'Nejdřív vyplňte e-mail.'; break; } if (!CLOUD.m) break; CLOUD.m.auth.sendPasswordResetEmail(CLOUD.auth, em).then(() => { $('#l-err').className = 'status ok'; $('#l-err').textContent = 'Odkaz pro nové heslo byl odeslán na ' + em + '.'; }).catch(x => { $('#l-err').className = 'status err'; $('#l-err').textContent = AUTH_ERR[x.code] || 'Odeslání selhalo.'; }); break; }
     case 'wipe': if (confirm('Smazat všechny zakázky a tankování? Tohle nejde vrátit.') && confirm('Opravdu? Doporučuji nejdřív stáhnout zálohu.')) { DB.jobs = []; DB.fuel = []; saveData(); render(); toast('Data smazána'); } break;
   }
@@ -1346,6 +1399,15 @@ function cloudDel(kind, id) {
   const { fs } = CLOUD.m;
   fs.deleteDoc(fs.doc(CLOUD.db, COL[kind], id)).catch(e => toast('Smazání v cloudu selhalo: ' + (e.code || e.message)));
 }
+function setPikr(d, v) {
+  DB.avail = DB.avail || {};
+  if (v) DB.avail[d] = v; else delete DB.avail[d];
+  saveData();
+  if (!cloudReady()) return;
+  const { fs } = CLOUD.m, ref = fs.doc(CLOUD.db, 'dostupnost', d);
+  (v ? fs.setDoc(ref, { pikr: v, upravil: CLOUD.user.email, upraveno: Date.now() }) : fs.deleteDoc(ref))
+    .catch(e => toast('Uložení dostupnosti selhalo: ' + (e.code || e.message)));
+}
 function cloudSettings() {
   if (!cloudReady()) return;
   const { fs } = CLOUD.m, st = DB.settings;
@@ -1370,6 +1432,9 @@ function startSync() {
   }, (e) => toast('Načtení zakázek selhalo: ' + (e.code || e.message))));
   CLOUD.unsubs.push(fs.onSnapshot(fs.collection(CLOUD.db, COL.fuel), (snap) => { DB.fuel = snap.docs.map(strip); softRender(); },
     (e) => toast('Načtení tankování selhalo: ' + (e.code || e.message))));
+  CLOUD.unsubs.push(fs.onSnapshot(fs.collection(CLOUD.db, 'dostupnost'), (snap) => {
+    const a = {}; snap.docs.forEach(d => { const x = d.data(); if (x.pikr) a[d.id] = x.pikr; }); DB.avail = a; softRender();
+  }, (e) => { if (e.code !== 'permission-denied') toast('Načtení dostupnosti selhalo: ' + (e.code || e.message)); else toast('Doplňte pravidla Firestore pro „dostupnost“'); }));
   CLOUD.unsubs.push(fs.onSnapshot(fs.doc(CLOUD.db, 'nastaveni', 'firma'), (d) => {
     if (d.exists()) { const x = d.data(); delete x.upravil; delete x.upraveno; DB.settings = Object.assign({}, DEFAULT_SETTINGS, DB.settings, x); softRender(); }
   }, () => {}));
@@ -1438,7 +1503,7 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') toggleAdd(
 /* ===== Posun den / týden / měsíc (tlačítka i swipe) ===== */
 function shift(n) {
   if (UI.tab === 'denik') UI.day = addDays(UI.day, n);
-  else if (UI.tab === 'dny') UI.week = addDays(UI.week, n * 7);
+  else if (UI.tab === 'dny') { const nw = addDays(UI.week, n * 7); if (UI.plan && nw < weekStart(todayIso())) return; UI.week = nw; }
   else if (UI.tab === 'prehled') { let [y, m] = UI.month.split('-').map(Number); m += n; while (m < 1) { m += 12; y--; } while (m > 12) { m -= 12; y++; } UI.month = y + '-' + pad(m); }
   else if (UI.tab === 'stat') UI.statOff += n;
   else return;
