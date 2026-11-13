@@ -23,7 +23,7 @@ self.addEventListener('notificationclick', (e) => {
   }));
 });
 // Při každé změně souborů zvyšte číslo verze, aby se telefon aktualizoval.
-const CACHE = 'stepkovac-v23';
+const CACHE = 'stepkovac-v25';
 const LIB_CACHE = 'stepkovac-lib-v1'; // knihovny z CDN (Firebase, Leaflet) – mění se jen s verzí v adrese
 const ASSETS = ['./', './index.html', './config.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 const LIB_HOSTS = ['www.gstatic.com', 'unpkg.com'];

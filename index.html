@@ -374,7 +374,7 @@ function fmtLoads(x) {
   if (!w && fr) return fr;
   return w + fr;
 }
-const loadsWord = (x) => (x > 0 && x <= 1 ? 'fůra' : x > 1 && x < 5 ? 'fůry' : 'fůr');
+const loadsWord = (x) => (+x === 1 ? 'fůra' : (+x >= 5 || !+x) ? 'fůr' : 'fůry'); // 1 fůra, 5 a víc (i 0) fůr, ostatní fůry
 const m3 = (loads) => (+loads || 0) * (+DB.settings.loadM3 || 15);
 // každá započatá fůra = jedna cesta tam a zpět (vysypání na základně)
 const trips = (loads) => Math.max(1, Math.ceil((+loads || 0) - 1e-9));
@@ -773,8 +773,9 @@ function viewStat() {
 
 
 /* ===== Přehled změn (nejnovější nahoře) ===== */
-const APP_VERSION = '2.8';
+const APP_VERSION = '2.9';
 const CHANGELOG = [
+  ['2.9', ['Množství štěpky: „1 fůra“, od 5 výš „fůr“, ostatní „fůry“ (½ fůry, 1½ fůry, 4½ fůry).']],
   ['2.8', ['Odznak na ikoně s počtem zakázek k dokončení.', 'Upozornění v 16:00 (push z Firebase) – zapíná se v Nastavení → Upozornění a odznak.']],
   ['2.7', ['Formulář zakázky bez nadpisu nahoře.', 'Nová zakázka se ukládá jako otevřená, bez množství štěpky.', 'V den realizace po 16:00 se při otevření aplikace objeví Dokončit zakázku (čas, štěpka); víc otevřených zakázek jde jedna po druhé.', 'Pruh „čeká na dokončení“ v Deníku, otevřené zakázky šrafované v časové ose.', 'Oprava: knihovny Firebase a mapy se ukládají do telefonu, aplikace se přihlásí i bez signálu.']],
   ['2.6', ['Dny, kdy píkr může, jsou podbarvené zeleně, kdy nemůže, červeně (dnešek a budoucí dny).']],
