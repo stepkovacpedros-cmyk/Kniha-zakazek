@@ -746,6 +746,42 @@ function viewStat() {
   <p class="note">Spotřeba a náklady na km / motohodinu platí při tankování do plné nádrže. Pila nemá počítadlo, proto se její náklady počítají na pracovní den (den, kdy je zapsaná zakázka).</p>`;
 }
 
+
+/* ===== Přehled změn (nejnovější nahoře) ===== */
+const APP_VERSION = '2.5';
+const CHANGELOG = [
+  ['2.5', ['Pod číslem verze v Nastavení je přehled změn, starší verze jsou rozbalovací.', 'Opraveno skloňování počtu zakázek v záloze.']],
+  ['2.4', ['Plánování píkra: ve Dnech ikona kalendáře, u budoucích dnů „píkr může / nemůže“.', 'Štítky dostupnosti píkra u dnů i v Deníku, počet dnů v souhrnu týdne.', 'Dostupnost se ukládá do Firebase (kolekce dostupnost).']],
+  ['2.3', ['Tankování barevně podle stroje: přepínač i podbarvení celé karty.']],
+  ['2.2', ['Jedno tlačítko + s nabídkou: zakázka, tankování auto, štěpkovač, pila.']],
+  ['2.1', ['Týden zobrazuje pondělí–pátek, víkend jen se záznamem.', 'Vysvětlivky barev na konci seznamu.', 'Kulatá tlačítka místo širokých.']],
+  ['2.0', ['Úvodní obrazovka s animací štěpkovače.', 'Přihlášení e-mailem a heslem.', 'Společná data ve Firebase, práce i offline, nahrání dat z telefonu.']],
+  ['1.12', ['Trasa zakreslená v mapě, tlačítko Navigovat (Google Maps).']],
+  ['1.11', ['Mapa trasy ze základny na místo zakázky.']],
+  ['1.10', ['Kilometry podle fůr: každá započatá fůra = jedna cesta tam a zpět.']],
+  ['1.9', ['Záložka Statistiky: grafy nákladů, spotřeby, Kč/km, Kč/mth, ceny paliva.']],
+  ['1.8', ['Hledání firem v ARES v poli Zákazník, uložení IČO.']],
+  ['1.7', ['Tankování pily (benzín), oprava názvu obce u benzinky.']],
+  ['1.6', ['Stav km / motohodin a výpočet spotřeby.']],
+  ['1.5', ['Zadání ceny za litr, dopočet třetí hodnoty.']],
+  ['1.4', ['Benzinka podle polohy.']],
+  ['1.3', ['Tankování rozděleno na auto a štěpkovač, zavírání okna swipem z levého okraje.']],
+  ['1.2', ['Podbarvení minulých a aktuálních dnů, nové nadpisy, pole Zákazník, našeptávač Mapy.com.']],
+  ['1.1', ['Souhrn týdne nahoře, řazení od pondělí, přechod swipem.']],
+  ['1.0', ['První verze: deník, dny, přehled, nastavení, tankování.']]
+];
+function changelogHtml() {
+  const [cur, ...old] = CHANGELOG;
+  const li = (items) => `<ul style="margin:6px 0 0;padding-left:18px;display:flex;flex-direction:column;gap:4px">${items.map(t => `<li>${esc(t)}</li>`).join('')}</ul>`;
+  return `<div class="setting" style="gap:8px">
+    <div class="between"><h2>Štěpkovač · verze ${cur[0]}</h2></div>
+    <div class="note" style="margin:0">Novinky v této verzi:${li(cur[1])}</div>
+    <details class="note"><summary style="cursor:pointer;min-height:40px;display:flex;align-items:center;color:var(--g);font-weight:600">Starší verze</summary>
+      ${old.map(([v, it]) => `<div style="margin-top:10px"><b style="color:var(--tx)">${v}</b>${li(it)}</div>`).join('')}
+    </details>
+  </div>`;
+}
+
 /* ===== Nastavení ===== */
 function viewNastaveni() {
   const st = DB.settings;
@@ -770,7 +806,7 @@ function viewNastaveni() {
     <h2>Záloha dat</h2>
     <p class="note" style="margin:0">${CLOUD_ON ? 'Data jsou ve Firebase, záloha je navíc kopie do souboru. Obnova ze zálohy nahraje záznamy do společné databáze.' : 'Data jsou uložená jen v tomto telefonu. Občas si stáhněte zálohu – při smazání dat Safari nebo výměně telefonu se dají obnovit.'}</p>
     <div class="g2"><button class="btn o" data-act="backup">Stáhnout zálohu</button><button class="btn o" data-act="restore">Obnovit ze zálohy</button></div>
-    <div class="sub" style="font-weight:400">V úložišti: ${DB.jobs.length} zakázek, ${DB.fuel.length} tankování.</div>
+    <div class="sub" style="font-weight:400">V úložišti: ${DB.jobs.length} ${DB.jobs.length === 1 ? 'zakázka' : DB.jobs.length > 1 && DB.jobs.length < 5 ? 'zakázky' : 'zakázek'}, ${DB.fuel.length} tankování.</div>
   </div>
   <div class="setting">
     <h2>Výpočet vzdálenosti</h2>
@@ -779,7 +815,7 @@ function viewNastaveni() {
   <div class="setting">
     ${CLOUD_ON ? '<p class="note" style="margin:0">Smazat celou společnou databázi jde jen ve Firebase konzoli.</p>' : '<button class="btn red" data-act="wipe">Smazat všechna data</button>'}
   </div>
-  <p class="note" style="text-align:center">Štěpkovač · verze 2.4</p>`;
+  ${changelogHtml()}`;
 }
 
 /* ===== Mapy.com (s API klíčem) / OpenStreetMap (bez klíče) ===== */
