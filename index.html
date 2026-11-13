@@ -90,6 +90,10 @@ nav.tabs button.on{color:var(--g);font-weight:600}
 .day{display:flex;flex-direction:column;gap:8px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 12px 14px;width:100%;text-align:left}
 .day.today{border-color:var(--g);box-shadow:0 0 0 1px var(--g) inset;background:#F3FAF0}
 .day.past{background:#FFF7F6;border-color:#F1DCD9}
+.day.pk-ok{background:#E6F3E2;border-color:#B9D6B2}
+.day.pk-no{background:#FBE3E0;border-color:#EBC2BD}
+.day.today.pk-ok,.day.today.pk-no{border-color:var(--g)}
+.day.pk-ok .bar,.day.pk-no .bar{background:rgba(255,255,255,.65)}
 body{transition:background-color .2s}
 .sugg{position:relative}
 .sugg-list{position:absolute;left:0;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #C9CDD3;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:30;overflow:hidden}
@@ -514,7 +518,8 @@ function viewDny() {
     }).join('');
     const dots = fs.map(f => { const t = toMin(f.time); return t == null ? '' : `<span class="dot${VCLS[veh(f)]}" title="Tankování ${VEH[veh(f)].toLowerCase()}" style="left:${pos(t)}%"></span>`; }).join('');
     const sum = s.n ? `${fmtDur(s.min)} · ${num(m3(s.loads))} m³ · ${num(s.km)} km` : (fs.length ? 'jen tankování' : '—');
-    return `<button class="day${d === today ? ' today' : d < today ? ' past' : ''}" data-act="open-day" data-d="${d}">
+    const pk = d >= today ? pikrOf(d) : '';
+    return `<button class="day${d === today ? ' today' : d < today ? ' past' : ''}${pk === 'ok' ? ' pk-ok' : pk === 'no' ? ' pk-no' : ''}" data-act="open-day" data-d="${d}">
       <div class="between"><span class="row" style="gap:8px;flex-wrap:wrap"><span style="font-size:15px;font-weight:600">${DAYS[dt.getDay()]} ${shortDate(d)}</span>${pikrChip(d)}</span><span class="sub" style="font-weight:400;font-size:12px;white-space:nowrap">${sum}</span></div>
       <div class="bar"><div class="grid">${ticks.slice(1).map(() => '<span></span>').join('')}</div>${blocks}${dots}${!js.length && !fs.length ? '<span class="none">bez záznamu</span>' : ''}</div>
     </button>`;
@@ -748,8 +753,9 @@ function viewStat() {
 
 
 /* ===== Přehled změn (nejnovější nahoře) ===== */
-const APP_VERSION = '2.5';
+const APP_VERSION = '2.6';
 const CHANGELOG = [
+  ['2.6', ['Dny, kdy píkr může, jsou podbarvené zeleně, kdy nemůže, červeně (dnešek a budoucí dny).']],
   ['2.5', ['Pod číslem verze v Nastavení je přehled změn, starší verze jsou rozbalovací.', 'Opraveno skloňování počtu zakázek v záloze.']],
   ['2.4', ['Plánování píkra: ve Dnech ikona kalendáře, u budoucích dnů „píkr může / nemůže“.', 'Štítky dostupnosti píkra u dnů i v Deníku, počet dnů v souhrnu týdne.', 'Dostupnost se ukládá do Firebase (kolekce dostupnost).']],
   ['2.3', ['Tankování barevně podle stroje: přepínač i podbarvení celé karty.']],
