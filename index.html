@@ -49,9 +49,20 @@ h2{margin:0;font-size:16px;font-weight:600}
 .fuel-ic{width:40px;height:40px;border-radius:10px;background:#F6E3BF;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .fuel-ic svg{width:20px;height:20px}
 .empty{color:var(--mut);text-align:center;padding:28px 10px;font-size:15px;background:#fff;border-radius:14px;border:1px dashed #D6D9D2}
-.actions{position:fixed;left:0;right:0;bottom:calc(72px + var(--sab));padding:0 18px;display:flex;justify-content:flex-end;gap:14px;max-width:560px;margin:0 auto;pointer-events:none;z-index:4}
+.actions{position:fixed;left:0;right:0;bottom:calc(72px + var(--sab));padding:0 18px;display:flex;flex-direction:column;align-items:flex-end;gap:12px;max-width:560px;margin:0 auto;pointer-events:none;z-index:6}
 .fab{pointer-events:auto;width:62px;height:62px;border-radius:50%;border:none;background:var(--g);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(31,74,39,.35)}
 .fab svg{width:30px;height:30px}
+.fab svg{transition:transform .2s}
+.fab.open svg{transform:rotate(45deg)}
+.addback{position:fixed;inset:0;background:rgba(20,24,20,.35);z-index:5}
+.addmenu{pointer-events:auto;background:#fff;border-radius:20px;padding:8px;box-shadow:0 10px 30px rgba(0,0,0,.2);min-width:250px;display:flex;flex-direction:column;transform-origin:100% 100%;animation:am-in .16s ease-out}
+@keyframes am-in{from{opacity:0;transform:scale(.9) translateY(8px)}to{opacity:1;transform:none}}
+.am-item{display:flex;align-items:center;gap:14px;background:none;border:none;border-radius:14px;padding:8px 10px;min-height:60px;text-align:left;width:100%}
+.am-item:active{background:#F1F3EF}
+.am-ic{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.am-ic svg{width:24px;height:24px}
+.am-tx b{display:block;font-size:17px;font-weight:600}
+.am-tx small{display:block;font-size:12px;color:var(--mut);margin-top:1px}
 .fab.o{background:#fff;color:#C27A08;border:2px solid #E8C48A;box-shadow:0 6px 16px rgba(0,0,0,.15)}
 .fab:active{transform:scale(.94)}
 .btn{height:52px;border-radius:14px;border:none;background:var(--g);color:#fff;font-size:16px;font-weight:600;padding:0 16px}
@@ -204,12 +215,16 @@ textarea.in{height:76px;padding:10px 12px;resize:vertical}
 <body>
 <div id="app">
   <main id="view"></main>
+  <div class="addback hidden" id="addback" data-act="add-close"></div>
   <div class="actions" id="actions">
-    <button class="fab o" data-act="new-fuel" aria-label="Nové tankování" title="Tankování">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5h7l4 4v11a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M9 5V3h4v2"/><path d="M14 5l2.5-2.5L19 5"/><path d="M9 12l5 5M14 12l-5 5"/></svg>
-    </button>
-    <button class="fab" data-act="new-job" aria-label="Nová zakázka" title="Zakázka">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="7" cy="15" rx="3.5" ry="4.5"/><ellipse cx="7" cy="15" rx="1.2" ry="1.6"/><path d="M7 10.5h10.5c1.9 0 3.5 2 3.5 4.5s-1.6 4.5-3.5 4.5H7"/><path d="M19 2v5M16.5 4.5h5"/></svg>
+    <div class="addmenu hidden" id="addmenu" role="menu" aria-label="Přidat záznam">
+      <button type="button" class="am-item" data-act="new-job" role="menuitem"><span class="am-ic" style="background:#2F6B3A"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="7" cy="14" rx="3.5" ry="4.5"/><ellipse cx="7" cy="14" rx="1.2" ry="1.6"/><path d="M7 9.5h10.5c1.9 0 3.5 2 3.5 4.5s-1.6 4.5-3.5 4.5H7"/></svg></span><span class="am-tx"><b>Zakázka</b><small>nová práce se štěpkovačem</small></span></button>
+      <button type="button" class="am-item" data-act="new-fuel" data-v="auto" role="menuitem"><span class="am-ic" style="background:#C27A08"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5h7l4 4v11a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M9 5V3h4v2"/><path d="M14 5l2.5-2.5L19 5"/><path d="M9 12l5 5M14 12l-5 5"/></svg></span><span class="am-tx"><b>Auto</b><small>tankování · nafta</small></span></button>
+      <button type="button" class="am-item" data-act="new-fuel" data-v="stepkovac" role="menuitem"><span class="am-ic" style="background:#8E4A12"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5h7l4 4v11a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M9 5V3h4v2"/><path d="M14 5l2.5-2.5L19 5"/><path d="M9 12l5 5M14 12l-5 5"/></svg></span><span class="am-tx"><b>Štěpkovač</b><small>tankování · nafta</small></span></button>
+      <button type="button" class="am-item" data-act="new-fuel" data-v="pila" role="menuitem"><span class="am-ic" style="background:#2F6FB0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5h7l4 4v11a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M9 5V3h4v2"/><path d="M14 5l2.5-2.5L19 5"/><path d="M9 12l5 5M14 12l-5 5"/></svg></span><span class="am-tx"><b>Pila</b><small>tankování · benzín</small></span></button>
+    </div>
+    <button class="fab" id="fab" data-act="add-toggle" aria-label="Přidat záznam" aria-haspopup="menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
     </button>
   </div>
   <nav class="tabs" aria-label="Hlavní menu">
@@ -369,7 +384,7 @@ const ICON = {
 
 /* ===== Stav a navigace ===== */
 const UI = { tab: 'denik', day: todayIso(), week: weekStart(todayIso()), month: todayIso().slice(0, 7), statMode: 'mesice', statOff: 0 };
-function go(tab) { UI.tab = tab; $('#view').classList.remove('inL', 'inR'); render(); window.scrollTo(0, 0); }
+function go(tab) { toggleAdd(false); UI.tab = tab; $('#view').classList.remove('inL', 'inR'); render(); window.scrollTo(0, 0); }
 
 function render() {
   document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === UI.tab));
@@ -706,7 +721,7 @@ function viewNastaveni() {
   <div class="setting">
     ${CLOUD_ON ? '<p class="note" style="margin:0">Smazat celou společnou databázi jde jen ve Firebase konzoli.</p>' : '<button class="btn red" data-act="wipe">Smazat všechna data</button>'}
   </div>
-  <p class="note" style="text-align:center">Štěpkovač · verze 2.1</p>`;
+  <p class="note" style="text-align:center">Štěpkovač · verze 2.2</p>`;
 }
 
 /* ===== Mapy.com (s API klíčem) / OpenStreetMap (bez klíče) ===== */
@@ -1055,10 +1070,10 @@ function saveJob() {
   saveData(); cloudPut('jobs', j); UI.day = j.date; closeSheet(); render(); toast('Zakázka uložena');
 }
 
-function openFuel(id) {
+function openFuel(id, presetVeh) {
   const ex = id ? DB.fuel.find(f => f.id === id) : null;
   const last = DB.fuel.slice().sort((a, b) => (b.date + (b.time || '')).localeCompare(a.date + (a.time || '')))[0];
-  const f = ex ? Object.assign({}, ex, { vehicle: veh(ex) }) : { id: null, vehicle: 'auto', date: UI.day, time: UI.day === todayIso() ? nowRounded() : '', place: last ? last.place : '', liters: '', price: '', note: '' };
+  const f = ex ? Object.assign({}, ex, { vehicle: veh(ex) }) : { id: null, vehicle: VEH[presetVeh] ? presetVeh : 'auto', date: UI.day, time: UI.day === todayIso() ? nowRounded() : '', place: last ? last.place : '', liters: '', price: '', note: '' };
   FORM = { kind: 'fuel', f, edits: ex ? ['f-l', 'f-p'] : [] };
   openSheet(ex ? 'Upravit tankování' : 'Tankování', `
     <div class="f"><span class="lb">Co se tankovalo</span>
@@ -1231,8 +1246,10 @@ document.addEventListener('click', (e) => {
   const act = el.dataset.act;
   if (act === 'overlay' && e.target !== el) return;
   switch (act) {
-    case 'new-job': openJob(); break;
-    case 'new-fuel': openFuel(); break;
+    case 'add-toggle': toggleAdd(); break;
+    case 'add-close': toggleAdd(false); break;
+    case 'new-job': toggleAdd(false); openJob(); break;
+    case 'new-fuel': toggleAdd(false); openFuel(null, el.dataset.v); break;
     case 'edit-job': openJob(el.dataset.id); break;
     case 'edit-fuel': openFuel(el.dataset.id); break;
     case 'overlay': case 'close': closeSheet(); break;
@@ -1400,6 +1417,14 @@ $('#login-form').addEventListener('submit', async (e) => {
 });
 window.addEventListener('online', () => { CLOUD.online = true; if (UI.tab === 'nastaveni') render(); });
 window.addEventListener('offline', () => { CLOUD.online = false; if (UI.tab === 'nastaveni') render(); });
+
+/* ===== Nabídka tlačítka + ===== */
+function toggleAdd(force) {
+  const m = $('#addmenu'), open = force === undefined ? m.classList.contains('hidden') : force;
+  m.classList.toggle('hidden', !open); $('#addback').classList.toggle('hidden', !open);
+  $('#fab').classList.toggle('open', open); $('#fab').setAttribute('aria-expanded', open);
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') toggleAdd(false); });
 
 /* ===== Posun den / týden / měsíc (tlačítka i swipe) ===== */
 function shift(n) {

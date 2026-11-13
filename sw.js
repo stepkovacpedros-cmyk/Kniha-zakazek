@@ -1,6 +1,6 @@
 // Štěpkovač – service worker (offline režim)
 // Při každé změně souborů zvyšte číslo verze, aby se telefon aktualizoval.
-const CACHE = 'stepkovac-v16';
+const CACHE = 'stepkovac-v17';
 const ASSETS = ['./', './index.html', './config.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => {
