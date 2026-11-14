@@ -255,6 +255,9 @@ textarea.in{height:76px;padding:10px 12px;resize:vertical}
 .kpi b.m{font-size:22px}
 
 /* testovací funkce (admin) */
+.repbtn{display:flex;align-items:center;gap:12px;width:100%;margin-top:16px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-align:left;color:var(--tx)}
+.repbtn svg{width:26px;height:26px;color:var(--g);flex:none}.repbtn span{flex:1;display:flex;flex-direction:column;gap:2px}
+.repbtn b{font-size:15px}.repbtn small{font-size:12px;color:var(--mut)}.repbtn i{font-style:normal;font-size:22px;color:var(--mut)}
 .jobw{display:flex;flex-direction:column;flex:none;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .jobw.open{border:1px dashed #D9A84A}.jobw.ord{border:2px dashed var(--g)}
 .jobw .card.in{flex:none;height:auto;border:none;border-radius:0;background:transparent}
@@ -640,7 +643,8 @@ function viewDny() {
   <div class="sumbar"><span class="sub">Za týden · ${all.n} ${all.n === 1 ? 'zakázka' : all.n > 1 && all.n < 5 ? 'zakázky' : 'zakázek'}${pkOk ? ` · píkr ${pkOk} ${pkOk === 1 ? 'den' : pkOk < 5 ? 'dny' : 'dní'}` : ''}</span><div style="font-size:15px;font-weight:700;margin-top:2px">${fmtDur(all.min)} · ${num(m3(all.loads))} m³ · ${num(all.km)} km</div></div>
   <div class="axis" aria-hidden="true">${ticks.map(h => `<span>${h}</span>`).join('')}</div>
   <div class="list">${rows}</div>
-  <div class="legend" style="margin-top:14px"><span><i></i>práce</span>${beta() ? '<span><i style="background:#fff;border:1.5px dashed var(--g)"></i>objednávka</span>' : ''}<span><i class="f"></i>tankování auto</span><span><i class="s"></i>tankování štěpkovač</span><span><i class="p"></i>tankování pila</span></div>`;
+  <div class="legend" style="margin-top:14px"><span><i></i>práce</span>${beta() ? '<span><i style="background:#fff;border:1.5px dashed var(--g)"></i>objednávka</span>' : ''}<span><i class="f"></i>tankování auto</span><span><i class="s"></i>tankování štěpkovač</span><span><i class="p"></i>tankování pila</span></div>
+  ${reportBtn('week', ws)}`;
 }
 
 function range0(ws) {
@@ -722,7 +726,8 @@ function viewPrehledM() {
     <button class="btn o" data-act="csv-jobs">Export zakázek</button>
     <button class="btn o" data-act="csv-fuel">Export tankování</button>
   </div>
-  <p class="note" style="margin-top:10px">CSV soubory otevřete v Excelu (oddělovač středník, čeština funguje).</p>`;
+  <p class="note" style="margin-top:10px">CSV soubory otevřete v Excelu (oddělovač středník, čeština funguje).</p>
+  ${reportBtn('month', ym)}`;
 }
 
 
@@ -869,8 +874,9 @@ function viewStat() {
 
 
 /* ===== Přehled změn (nejnovější nahoře) ===== */
-const APP_VERSION = '2.13';
+const APP_VERSION = '2.14';
 const CHANGELOG = [
+  ['2.14', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.13', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.12', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.11', ['Úvodní obrazovka ukazuje pod čarou průběhu číslo načítané verze.']],
@@ -2320,6 +2326,127 @@ function betaSettings() {
   </div>`;
 }
 
+/* ---------- Souhrn týdne / měsíce v PDF (za dokončené období) ---------- */
+function pdfFromJpegs(pages) {
+  const enc = new TextEncoder(), parts = [], offs = []; let len = 0;
+  const push = (x) => { const b = typeof x === 'string' ? enc.encode(x) : x; parts.push(b); len += b.length; };
+  const obj = (n, body, stream) => { offs[n] = len; push(`${n} 0 obj\n${body}\n`); if (stream) { push('stream\n'); push(stream); push('\nendstream\n'); } push('endobj\n'); };
+  const PW = 595.28, PH = 841.89, n = pages.length, content = enc.encode(`q ${PW} 0 0 ${PH} 0 0 cm /Im0 Do Q`);
+  push('%PDF-1.4\n');
+  obj(1, '<< /Type /Catalog /Pages 2 0 R >>');
+  obj(2, `<< /Type /Pages /Kids [${pages.map((_, i) => (3 + i * 3) + ' 0 R').join(' ')}] /Count ${n} >>`);
+  pages.forEach((p, i) => {
+    const o = 3 + i * 3;
+    obj(o, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /XObject << /Im0 ${o + 2} 0 R >> >> /Contents ${o + 1} 0 R >>`);
+    obj(o + 1, `<< /Length ${content.length} >>`, content);
+    obj(o + 2, `<< /Type /XObject /Subtype /Image /Width ${p.w} /Height ${p.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${p.jpeg.length} >>`, p.jpeg);
+  });
+  const total = 3 + n * 3, x = len;
+  push(`xref\n0 ${total}\n0000000000 65535 f \n`);
+  for (let k = 1; k < total; k++) push(String(offs[k]).padStart(10, '0') + ' 00000 n \n');
+  push(`trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${x}\n%%EOF`);
+  return new Blob(parts, { type: 'application/pdf' });
+}
+function renderReport(R) {
+  const W = 1240, H = 1754, M = 90, pages = [];
+  const F = (s, w = 400) => `${w} ${s}px -apple-system, "Segoe UI", Roboto, Arial, sans-serif`;
+  let c, g, y;
+  const st = DB.settings, firm = st.firmName || 'Štěpkování';
+  const page = () => {
+    c = document.createElement('canvas'); c.width = W; c.height = H; g = c.getContext('2d'); pages.push(c);
+    g.fillStyle = '#fff'; g.fillRect(0, 0, W, H);
+    g.fillStyle = '#2F6B3A'; g.font = F(44, 700); g.fillText(R.title, M, M + 34);
+    g.fillStyle = '#444'; g.font = F(26); g.fillText(R.sub, M, M + 74);
+    g.textAlign = 'right'; g.fillStyle = '#1B1F1A'; g.font = F(26, 700); g.fillText(firm, W - M, M + 30);
+    g.font = F(20); g.fillStyle = '#666'; g.fillText(st.startAddress || '', W - M, M + 62); g.textAlign = 'left';
+    g.fillStyle = '#2F6B3A'; g.fillRect(M, M + 100, W - 2 * M, 4);
+    y = M + 160;
+  };
+  const need = (h) => { if (y + h > H - 120) page(); };
+  const cut = (t, w) => { t = String(t); if (g.measureText(t).width <= w) return t; while (t.length > 1 && g.measureText(t + '…').width > w) t = t.slice(0, -1); return t + '…'; };
+  const table = (cols, rows, total) => {
+    const head = () => { g.fillStyle = '#EEF2EC'; g.fillRect(M, y - 30, W - 2 * M, 44); g.font = F(20, 700); g.fillStyle = '#3A4037';
+      let x = M + 10; cols.forEach(col => { g.textAlign = col.r ? 'right' : 'left'; g.fillText(col.h, col.r ? x + col.w - 14 : x, y); x += col.w; }); g.textAlign = 'left'; y += 46; };
+    need(100); head();
+    rows.forEach((r, i) => {
+      if (y + 40 > H - 120) { page(); head(); }
+      if (i % 2) { g.fillStyle = '#F7F8F5'; g.fillRect(M, y - 28, W - 2 * M, 40); }
+      let x = M + 10; g.font = F(21); g.fillStyle = '#1B1F1A';
+      cols.forEach((col, k) => { g.textAlign = col.r ? 'right' : 'left'; g.fillText(cut(r[k], col.w - 18), col.r ? x + col.w - 14 : x, y); x += col.w; });
+      g.textAlign = 'left'; y += 40;
+    });
+    if (total) { need(50); g.fillStyle = '#2F6B3A'; g.fillRect(M, y - 26, W - 2 * M, 2); y += 10; let x = M + 10; g.font = F(21, 700); g.fillStyle = '#1B1F1A';
+      cols.forEach((col, k) => { if (total[k]) { g.textAlign = col.r ? 'right' : 'left'; g.fillText(total[k], col.r ? x + col.w - 14 : x, y); } x += col.w; }); g.textAlign = 'left'; y += 40; }
+    y += 24;
+  };
+  const h2 = (t) => { need(110); g.fillStyle = '#1B1F1A'; g.font = F(30, 700); g.fillText(t, M, y); y += 48; };
+  page();
+  // dlaždice se souhrnem
+  const tiles = R.tiles, tw = (W - 2 * M - 3 * 16) / 4;
+  tiles.forEach((t, i) => {
+    const x = M + (i % 4) * (tw + 16), yy = y - 30 + Math.floor(i / 4) * 130;
+    g.fillStyle = t.hl ? '#2F6B3A' : '#F2F5F0'; g.fillRect(x, yy, tw, 114);
+    g.fillStyle = t.hl ? '#D5E6D2' : '#5A6157'; g.font = F(20); g.fillText(t.k, x + 18, yy + 34);
+    g.fillStyle = t.hl ? '#fff' : '#1B1F1A'; g.font = F(34, 700); g.fillText(cut(t.v, tw - 30), x + 18, yy + 82);
+  });
+  y += Math.ceil(tiles.length / 4) * 130 + 30;
+  h2('Zakázky');
+  if (R.jobs.length) table(
+    [{ h: 'Datum', w: 120 }, { h: 'Zákazník · místo', w: 410 }, { h: 'Čas', w: 150 }, { h: 'Štěpka', w: 120, r: 1 }, { h: 'Km', w: 100, r: 1 }, { h: 'Výnos', w: 160, r: 1 }],
+    R.jobs.map(j => [shortDate(j.date), [j.customer, j.place].filter(Boolean).join(' · ') || '—', `${j.from}–${j.to}`, isOpen(j) ? 'otevřená' : num(m3(j.loads)) + ' m³', kmRound(j) ? num(kmRound(j)) : '–', isOpen(j) ? '–' : money(revenue(j))]),
+    ['Celkem', plural(R.jobs.length, 'zakázka', 'zakázky', 'zakázek'), fmtDur(R.s.min), num(m3(R.s.loads)) + ' m³', num(R.s.km), money(R.rev)]);
+  else { g.font = F(22); g.fillStyle = '#666'; g.fillText('Žádné zakázky.', M, y); y += 60; }
+  h2('Tankování');
+  if (R.fuel.length) table(
+    [{ h: 'Datum', w: 120 }, { h: 'Stroj', w: 170 }, { h: 'Místo', w: 330 }, { h: 'Litry', w: 140, r: 1 }, { h: 'Kč/l', w: 130, r: 1 }, { h: 'Cena', w: 170, r: 1 }],
+    R.fuel.map(f => [shortDate(f.date), VEH[veh(f)], f.place || '—', num(f.liters) + ' l', +f.liters ? num(f.price / f.liters, 2) : '–', money(f.price)]),
+    ['Celkem', '', '', num(R.lit) + ' l', R.lit ? num(R.fk / R.lit, 2) : '', money(R.fk)]);
+  else { g.font = F(22); g.fillStyle = '#666'; g.fillText('Žádné tankování.', M, y); y += 60; }
+  const made = new Date();
+  pages.forEach((p, i) => { const gg = p.getContext('2d'); gg.fillStyle = '#888'; gg.font = F(20);
+    gg.fillText(`Vytvořeno v aplikaci Štěpkovač ${made.getDate()}. ${made.getMonth() + 1}. ${made.getFullYear()}`, M, H - 60);
+    gg.textAlign = 'right'; gg.fillText(`${i + 1}/${pages.length}`, W - M, H - 60); gg.textAlign = 'left'; });
+  return pages;
+}
+function reportData(kind, key) {
+  let from, to, title, sub, file;
+  if (kind === 'week') {
+    from = key; to = addDays(key, 6);
+    title = `Souhrn ${isoWeek(key)}. týdne`; sub = `${dmY(from)} – ${dmY(to)} ${to.slice(0, 4)}`.replace(/(\d+\. \d+\.) (\d{4}) – /, '$1 – ');
+    file = `souhrn-${to.slice(0, 4)}-tyden-${pad(isoWeek(key))}.pdf`;
+  } else {
+    const [yy, mm] = key.split('-').map(Number);
+    from = key + '-01'; to = key + '-' + pad(new Date(yy, mm, 0).getDate());
+    const mn = MONTHS[mm - 1]; title = `Souhrn – ${mn} ${yy}`; sub = `${dmY(from)} – ${dmY(to)} ${yy}`;
+    file = `souhrn-${key}.pdf`;
+  }
+  sub = `${parseIso(from).getDate()}. ${parseIso(from).getMonth() + 1}. – ${parseIso(to).getDate()}. ${parseIso(to).getMonth() + 1}. ${to.slice(0, 4)}`;
+  const jobs = DB.jobs.filter(j => j.date >= from && j.date <= to).sort((a, b) => (a.date + a.from).localeCompare(b.date + b.from));
+  const fuel = DB.fuel.filter(f => f.date >= from && f.date <= to).sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
+  const s = sumJobs(jobs), rev = jobs.reduce((t, j) => t + revenue(j), 0);
+  const fk = fuel.reduce((t, f) => t + (+f.price || 0), 0), lit = fuel.reduce((t, f) => t + (+f.liters || 0), 0);
+  const tiles = [
+    { k: 'Zakázky', v: String(s.n) }, { k: 'Odpracováno', v: fmtDur(s.min) }, { k: 'Štěpka', v: num(m3(s.loads)) + ' m³', hl: 1 }, { k: 'Najeto k zakázkám', v: num(s.km, 0) + ' km' },
+    { k: 'Výnos (' + money(priceM3()) + '/m³)', v: money(rev), hl: 1 }, { k: 'Palivo', v: money(fk) }, { k: 'Po odečtení paliva', v: money(rev - fk) }, { k: 'Natankováno', v: num(lit) + ' l' }
+  ];
+  return { title, sub, file, jobs, fuel, s, rev, fk, lit, tiles };
+}
+const periodDone = (kind, key) => (kind === 'week' ? addDays(key, 6) : key + '-31') < todayIso() && (kind === 'week' || key < todayIso().slice(0, 7));
+function reportBtn(kind, key) {
+  if (!beta() || !periodDone(kind, key)) return '';
+  return `<button class="repbtn" data-act="b-rep" data-k="${kind}" data-v="${key}">${BI.pdf}<span><b>PDF souhrn ${kind === 'week' ? isoWeek(key) + '. týdne' : 'za ' + MONTHS[+key.slice(5, 7) - 1]}</b><small>zakázky, tankování, výnos – stáhnout nebo poslat</small></span><i>›</i></button>`;
+}
+async function openReport(kind, key) {
+  toast('Vytvářím PDF…');
+  const R = reportData(kind, key), pages = renderReport(R);
+  const imgs = pages.map(c => c.toDataURL('image/jpeg', 0.85));
+  const blob = pdfFromJpegs(imgs.map((u, i) => { const b = atob(u.split(',')[1]), a = new Uint8Array(b.length); for (let k = 0; k < b.length; k++) a[k] = b.charCodeAt(k); return { jpeg: a, w: pages[i].width, h: pages[i].height }; }));
+  FORM = { kind: 'vykaz', v: { blob, name: R.file, url: imgs[0] }, j: null };
+  openSheet('', `<div class="between"><b style="font-size:18px">${esc(R.title)}</b><span class="sub">${plural(pages.length, 'strana', 'strany', 'stran')}</span></div>
+    <div class="vprev" style="display:flex;flex-direction:column;gap:10px">${imgs.map(u => `<img src="${u}" alt="Strana souhrnu">`).join('')}</div>`,
+    `<button class="btn o" data-act="b-pdf-dl" style="flex:0 0 auto">Stáhnout</button><button class="btn" data-act="b-pdf-share">${BI.share.replace('<svg', '<svg width="18" height="18" style="vertical-align:-3px;margin-right:6px"')}Poslat</button>`, R.title);
+}
+
 /* ---------- Události testovacích funkcí ---------- */
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-act^="b-"]'); if (!el) return;
@@ -2339,6 +2466,7 @@ document.addEventListener('click', (e) => {
     case 'b-cust-newjob': { const o = saveCust(); if (!o) break; closeSheet(); JOB_PRESET = { customer: o.name, customerId: o.id, customerIco: o.ico || '', place: o.place || '', kmOneWay: o.kmOneWay || '', lat: o.lat, lon: o.lon, date: todayIso() < UI.day ? UI.day : addDays(todayIso(), 1) }; openJob(); break; }
     case 'b-cust-job': closeSheet(); openJob(id); break;
     case 'b-pdf': openVykaz(id); break;
+    case 'b-rep': openReport(el.dataset.k, el.dataset.v); break;
     case 'b-pdf-dl': if (FORM && FORM.v) dlBlob(FORM.v.blob, FORM.v.name); break;
     case 'b-pdf-share': shareVykaz(FORM && FORM.j && FORM.j.id); break;
     case 'b-pdf-share-id': shareVykaz(id); break;
