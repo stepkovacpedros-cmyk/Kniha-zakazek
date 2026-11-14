@@ -110,7 +110,13 @@ body{transition:background-color .2s}
 .dot{position:absolute;top:8px;width:14px;height:14px;margin-left:-7px;border-radius:999px;background:#C27A08;border:2px solid #fff}
 .dot.s{background:#8E4A12}
 .dot.p{background:#2F6FB0}
-.flane{position:relative;height:10px;margin-top:4px;margin-bottom:-4px}
+.flane{position:relative;height:16px;margin-top:2px;margin-bottom:-4px}
+.fl{position:absolute;top:0;display:flex;align-items:center;gap:4px;height:16px;transform:translateX(-5px);white-space:nowrap;font-size:11px;color:var(--mut)}
+.fl b{font-weight:500}
+.fl i{flex:none;width:10px;height:10px;border-radius:999px;background:#C27A08;box-shadow:0 0 0 1.5px #fff}
+.fl.s i{background:#8E4A12}
+.fl.p i{background:#2F6FB0}
+.fl.r{flex-direction:row-reverse;transform:translateX(calc(-100% + 5px))}
 .flane .dot{top:0;width:10px;height:10px;margin-left:-5px;border-width:0;box-shadow:0 0 0 1.5px #fff}
 .legend i.p{border-radius:999px;background:#2F6FB0}
 .card.fuel.p{background:#EEF4FB;border-color:#CFE0F2}
@@ -538,7 +544,21 @@ function viewDny() {
       const end = b < a ? 24 * 60 : b, l = pos(a), w = Math.max(pos(end) - l, 1);
       return `<span class="blk${isOpen(j) ? ' open' : ''}" style="left:${l}%;width:${w}%">${w > 9 ? esc(j.customer || (j.place || '').split(',')[0]) : ''}</span>`;
     }).join('');
-    const dots = fs.map(f => { const t = toMin(f.time); return t == null ? '' : `<span class="dot${VCLS[veh(f)]}" title="Tankování ${VEH[veh(f)].toLowerCase()}" style="left:${pos(t)}%"></span>`; }).join('');
+    const fpos = fs.map(f => ({ f, t: toMin(f.time) })).filter(o => o.t != null).map(o => ({ f: o.f, x: pos(o.t) })).sort((a, b) => a.x - b.x);
+    let usedTo = -100; // kam až (v %) sahá předchozí popisek – popisky se nepřekrývají
+    const dots = fpos.map((o, i) => {
+      const f = o.f, nextX = i < fpos.length - 1 ? fpos[i + 1].x : 100;
+      const full = `${num(f.liters)} l${+f.price ? ' · ' + money(f.price) : ''}`, short = `${num(f.liters, 0)} l`;
+      const w = (t) => 4 + t.length * 1.9; // odhad šířky popisku v % řádku
+      const roomR = nextX - o.x - (i < fpos.length - 1 ? 4 : 0), roomL = o.x - Math.max(usedTo, 0);
+      let txt = '', right = false;
+      for (const t of [full, short]) {
+        if (w(t) <= roomR) { txt = t; usedTo = o.x + w(t); break; }
+        if (w(t) <= roomL) { txt = t; right = true; usedTo = o.x; break; }
+      }
+      if (!txt) usedTo = o.x;
+      return `<span class="fl${VCLS[veh(f)]}${right ? ' r' : ''}" title="Tankování ${VEH[veh(f)].toLowerCase()} · ${esc(full)}" style="left:${o.x}%"><i></i>${txt ? `<b>${esc(txt)}</b>` : ''}</span>`;
+    }).join('');
     const sum = s.n ? `${fmtDur(s.min)} · ${num(m3(s.loads))} m³ · ${num(s.km)} km` : (fs.length ? 'jen tankování' : '—');
     const pk = d >= today ? pikrOf(d) : '';
     return `<button class="day${d === today ? ' today' : d < today ? ' past' : ''}${pk === 'ok' ? ' pk-ok' : pk === 'no' ? ' pk-no' : ''}" data-act="open-day" data-d="${d}">
@@ -777,7 +797,7 @@ function viewStat() {
 /* ===== Přehled změn (nejnovější nahoře) ===== */
 const APP_VERSION = '2.10';
 const CHANGELOG = [
-  ['2.10', ['Dny: tankování se ukazuje v řádku pod zakázkou, jméno zákazníka už nepřekrývá.']],
+  ['2.10', ['Dny: tankování má vlastní řádek pod zakázkou, jméno zákazníka už nepřekrývá.', 'U tečky tankování jsou litry a cena; když je málo místa, jen litry.']],
   ['2.9', ['Množství štěpky: „1 fůra“, od 5 výš „fůr“, ostatní „fůry“ (½ fůry, 1½ fůry, 4½ fůry).']],
   ['2.8', ['Odznak na ikoně s počtem zakázek k dokončení.', 'Upozornění v 16:00 (push z Firebase) – zapíná se v Nastavení → Upozornění a odznak.']],
   ['2.7', ['Formulář zakázky bez nadpisu nahoře.', 'Nová zakázka se ukládá jako otevřená, bez množství štěpky.', 'V den realizace po 16:00 se při otevření aplikace objeví Dokončit zakázku (čas, štěpka); víc otevřených zakázek jde jedna po druhé.', 'Pruh „čeká na dokončení“ v Deníku, otevřené zakázky šrafované v časové ose.', 'Oprava: knihovny Firebase a mapy se ukládají do telefonu, aplikace se přihlásí i bez signálu.']],
