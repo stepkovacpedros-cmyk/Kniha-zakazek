@@ -12,4 +12,4 @@ self.FIREBASE_CONFIG = {
 
 // Klíč pro upozornění (Web Push): Firebase konzole → Nastavení projektu → Cloud Messaging
 // → Web Push certificates → Generate key pair → zkopírujte „Key pair“ sem mezi uvozovky.
-self.FIREBASE_VAPID_KEY = "";
+self.FIREBASE_VAPID_KEY = "BLRrTG5hcuva5VJ-KH1d_ECvQpEq0SaIBnrTcqiGNWGajdQyz3LJkFDtCywfmwMqj6GTlzd9CoRUmyGygMMC_qY";
