@@ -869,8 +869,9 @@ function viewStat() {
 
 
 /* ===== Přehled změn (nejnovější nahoře) ===== */
-const APP_VERSION = '2.12';
+const APP_VERSION = '2.13';
 const CHANGELOG = [
+  ['2.13', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.12', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.11', ['Úvodní obrazovka ukazuje pod čarou průběhu číslo načítané verze.']],
   ['2.10', ['Dny: tankování má vlastní řádek pod zakázkou, jméno zákazníka už nepřekrývá.', 'U tečky tankování jsou litry a cena; když je málo místa, jen litry.']],
@@ -1217,6 +1218,7 @@ function openJob(id) {
       <div class="f"><label for="j-to">Do</label><input class="in" id="j-to" type="time" step="300" value="${esc(j.to)}"></div>
     </div>
     <div class="calc"><span>Doba práce</span><strong id="j-dur">–</strong></div>
+    ${beta() ? odoFields(j) : ''}
     ${open ? `<div class="openinfo">${CLOCK_IC}<span><b>Množství štěpky se zadává až při dokončení.</b> Zakázka zůstane otevřená a v den realizace v ${FINISH_HOUR}:00 vás aplikace vyzve k dokončení.</span></div>` : loadPicker()}
     ${beta() && open ? orderBox(j) : ''}
     ${beta() ? formPhotos(j) : ''}
@@ -1303,6 +1305,7 @@ function saveJob() {
   j.note = $('#j-note').value.trim();
   if (!j.from || !j.to) { toast('Vyplňte čas od a do'); return; }
   if (isOpen(j)) j.loads = null; else if (!(j.loads >= 0)) j.loads = 0;
+  readOdo(j);
   if ($('#j-call')) { j.callBefore = $('#j-call').checked; if (!j.estLoads) delete j.estLoads; }
   if (beta() && j.customer && !j.customerId) { const c = Object.values(DB.cust || {}).find(c => custKey(c.name) === custKey(j.customer)); if (c) j.customerId = c.id; }
   if (j.customerId && DB.cust && DB.cust[j.customerId] && custKey(DB.cust[j.customerId].name) !== custKey(j.customer)) delete j.customerId;
@@ -1325,6 +1328,7 @@ function openFinish(id) {
       <div class="f"><label for="j-to">Skutečně do</label><input class="in" id="j-to" type="time" step="300" value="${esc(j.to)}"></div>
     </div>
     <div class="calc"><span>Doba práce</span><strong id="j-dur">–</strong></div>
+    ${beta() ? odoFields(j) : ''}
     ${loadPicker()}
     <div class="calc"><span id="j-km-lb">Najeto</span><strong id="j-km-rt">–</strong></div>
     <input type="hidden" id="j-km" value="${j.kmOneWay || ''}">
@@ -1337,6 +1341,7 @@ function saveFinish() {
   j.from = $('#j-from').value; j.to = $('#j-to').value;
   if (!j.from || !j.to) { toast('Vyplňte čas od a do'); return; }
   if (!(j.loads > 0)) { toast('Vyberte množství štěpky'); return; }
+  readOdo(j);
   j.status = 'done'; j.finished = Date.now();
   const i = DB.jobs.findIndex(x => x.id === j.id); if (i >= 0) { if (DB.jobs[i].photos) j.photos = DB.jobs[i].photos; DB.jobs[i] = j; }
   if (beta()) { j.priceM3 = priceM3(); if (!j.vykazNo) j.vykazNo = nextVykazNo(j.date.slice(0, 4)); delete j.callBefore; }
@@ -1998,6 +2003,8 @@ const svcItems = () => { const s = DB.svc && DB.svc.items; return s && Object.ke
 function curOdo(v) {
   let m = 0;
   DB.fuel.forEach(f => { if (veh(f) === v && +f.odo > m) m = +f.odo; });
+  const jk = v === 'auto' ? 'odoKm' : v === 'stepkovac' ? 'odoMth' : null;
+  if (jk) DB.jobs.forEach(j => { if (+j[jk] > m) m = +j[jk]; });
   svcItems().forEach(it => { if (it.veh === v && +it.lastOdo > m) m = +it.lastOdo; });
   return m;
 }
@@ -2036,7 +2043,7 @@ function viewServis() {
       ${its.map(it => { const s = svcStatus(it); return `<button class="svc" data-act="b-svc" data-id="${esc(it.id)}"><span class="between"><span class="t">${esc(it.name)}</span><span class="badge ${s.lvl}">${esc(s.txt)}</span></span>${s.lvl !== 'n' ? `<span class="pbar ${s.lvl}"><i style="width:${Math.max(3, Math.min(100, s.pct * 100))}%"></i></span>` : ''}<span class="m">${esc(s.info)}</span></button>`; }).join('') || '<span class="sub" style="font-weight:400;padding:8px 0">Žádné úkony.</span>'}
       <button class="linkbtn" style="align-self:flex-start;min-height:40px" data-act="b-svc-new" data-v="${v}">+ Přidat úkon</button>
     </div>`;
-  }).join('') + `<p class="note">Stav km a motohodin se bere z posledního tankování se zapsaným stavem. Upozornění v Deníku se objeví ${SVC_WARN.mth} mth / ${num(SVC_WARN.km, 0)} km / ${SVC_WARN.d} dní předem.</p>`;
+  }).join('') + `<p class="note">Stav km a motohodin se bere z nejvyššího zapsaného stavu u tankování nebo zakázky. Upozornění v Deníku se objeví ${SVC_WARN.mth} mth / ${num(SVC_WARN.km, 0)} km / ${SVC_WARN.d} dní předem.</p>`;
 }
 function openSvc(id, newVeh) {
   const ex = id ? svcItems().find(i => i.id === id) : null;
@@ -2279,10 +2286,25 @@ function jobCardB(j) {
   </div>`;
 }
 
+/* ---------- Stav km a motohodin u zakázky ---------- */
+function odoFields(j) {
+  const ph = (v) => { const c = curOdo(v); return c ? num(c, v === 'auto' ? 0 : 1) : '0'; };
+  return `<div class="g2">
+    <div class="f"><label for="j-okm">Stav km (auto)</label><input class="in" id="j-okm" type="number" inputmode="decimal" min="0" step="any" value="${esc(j.odoKm || '')}" placeholder="${ph('auto')}"></div>
+    <div class="f"><label for="j-omth">Motohodiny (štěpkovač)</label><input class="in" id="j-omth" type="number" inputmode="decimal" min="0" step="any" value="${esc(j.odoMth || '')}" placeholder="${ph('stepkovac')}"></div>
+  </div>${curOdo('auto') || curOdo('stepkovac') ? '<div class="note" style="margin-top:-8px">Šedě je poslední zapsaný stav. Hlídá se podle něj servis.</div>' : ''}`;
+}
+function readOdo(j) {
+  const n = (id) => { const el = $('#' + id); if (!el) return undefined; const v = parseFloat((el.value || '').replace(/\s/g, '').replace(',', '.')); return v > 0 ? v : null; };
+  const k = n('j-okm'), h = n('j-omth');
+  if (k !== undefined) { if (k) j.odoKm = k; else delete j.odoKm; }
+  if (h !== undefined) { if (h) j.odoMth = h; else delete j.odoMth; }
+}
+
 /* ---------- Objednávka ve formuláři zakázky ---------- */
 function orderBox(j) {
   return `<div class="f"><span class="lb">Odhad štěpky (objednávka)</span><div class="quick q4">${[0.5, 1, 1.5, 2].map(v => `<button type="button" data-act="b-est" data-v="${v}" class="${+j.estLoads === v ? 'on' : ''}">${fmtLoads(v)}</button>`).join('')}</div></div>
-    <label class="tgl"><span><b>Zavolat zákazníkovi den předem</b><small>připomenutí v ${FINISH_HOUR}:00 den před zakázkou</small></span><input type="checkbox" id="j-call"${j.callBefore ? ' checked' : ''}><i></i></label>`;
+    <label class="tgl"><span><b>Zavolat zákazníkovi den předem</b><small>připomenutí ve 12:00 den před zakázkou</small></span><input type="checkbox" id="j-call"${j.callBefore ? ' checked' : ''}><i></i></label>`;
 }
 
 /* ---------- Nastavení výkazu a výnosu ---------- */
