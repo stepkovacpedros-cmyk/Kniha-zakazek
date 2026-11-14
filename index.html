@@ -110,6 +110,8 @@ body{transition:background-color .2s}
 .dot{position:absolute;top:8px;width:14px;height:14px;margin-left:-7px;border-radius:999px;background:#C27A08;border:2px solid #fff}
 .dot.s{background:#8E4A12}
 .dot.p{background:#2F6FB0}
+.flane{position:relative;height:10px;margin-top:4px;margin-bottom:-4px}
+.flane .dot{top:0;width:10px;height:10px;margin-left:-5px;border-width:0;box-shadow:0 0 0 1.5px #fff}
 .legend i.p{border-radius:999px;background:#2F6FB0}
 .card.fuel.p{background:#EEF4FB;border-color:#CFE0F2}
 .card.fuel.p .fuel-ic{background:#D9E7F6}
@@ -541,7 +543,7 @@ function viewDny() {
     const pk = d >= today ? pikrOf(d) : '';
     return `<button class="day${d === today ? ' today' : d < today ? ' past' : ''}${pk === 'ok' ? ' pk-ok' : pk === 'no' ? ' pk-no' : ''}" data-act="open-day" data-d="${d}">
       <div class="between"><span class="row" style="gap:8px;flex-wrap:wrap"><span style="font-size:15px;font-weight:600">${DAYS[dt.getDay()]} ${shortDate(d)}</span>${pikrChip(d)}</span><span class="sub" style="font-weight:400;font-size:12px;white-space:nowrap">${sum}</span></div>
-      <div class="bar"><div class="grid">${ticks.slice(1).map(() => '<span></span>').join('')}</div>${blocks}${dots}${!js.length && !fs.length ? '<span class="none">bez záznamu</span>' : ''}</div>
+      <div class="bar"><div class="grid">${ticks.slice(1).map(() => '<span></span>').join('')}</div>${blocks}${!js.length && !fs.length ? '<span class="none">bez záznamu</span>' : ''}</div>${dots ? `<div class="flane">${dots}</div>` : ''}
     </button>`;
   }).join('');
   const all = sumJobs(days.flatMap(jobsOn));
@@ -773,8 +775,9 @@ function viewStat() {
 
 
 /* ===== Přehled změn (nejnovější nahoře) ===== */
-const APP_VERSION = '2.9';
+const APP_VERSION = '2.10';
 const CHANGELOG = [
+  ['2.10', ['Dny: tankování se ukazuje v řádku pod zakázkou, jméno zákazníka už nepřekrývá.']],
   ['2.9', ['Množství štěpky: „1 fůra“, od 5 výš „fůr“, ostatní „fůry“ (½ fůry, 1½ fůry, 4½ fůry).']],
   ['2.8', ['Odznak na ikoně s počtem zakázek k dokončení.', 'Upozornění v 16:00 (push z Firebase) – zapíná se v Nastavení → Upozornění a odznak.']],
   ['2.7', ['Formulář zakázky bez nadpisu nahoře.', 'Nová zakázka se ukládá jako otevřená, bez množství štěpky.', 'V den realizace po 16:00 se při otevření aplikace objeví Dokončit zakázku (čas, štěpka); víc otevřených zakázek jde jedna po druhé.', 'Pruh „čeká na dokončení“ v Deníku, otevřené zakázky šrafované v časové ose.', 'Oprava: knihovny Firebase a mapy se ukládají do telefonu, aplikace se přihlásí i bez signálu.']],
