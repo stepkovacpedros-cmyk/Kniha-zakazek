@@ -9,8 +9,8 @@ try {
     firebase.messaging().onBackgroundMessage((p) => {
       const d = p.data || {};
       const n = parseInt(d.count, 10) || 0;
-      if (self.navigator && 'setAppBadge' in self.navigator) (n ? self.navigator.setAppBadge(n) : self.navigator.clearAppBadge()).catch(() => {});
-      return self.registration.showNotification(d.title || 'Štěpkovač', { body: d.body || '', icon: 'icon-192.png', tag: 'dokonceni', renotify: true, data: { url: d.url || './' } });
+      if (d.count != null && self.navigator && 'setAppBadge' in self.navigator) (n ? self.navigator.setAppBadge(n) : self.navigator.clearAppBadge()).catch(() => {});
+      return self.registration.showNotification(d.title || 'Štěpkovač', { body: d.body || '', icon: 'icon-192.png', tag: d.tag || 'dokonceni', renotify: true, data: { url: d.url || './' } });
     });
   }
 } catch (e) { /* bez Firebase funguje aplikace dál, jen bez upozornění */ }
@@ -23,7 +23,7 @@ self.addEventListener('notificationclick', (e) => {
   }));
 });
 // Při každé změně souborů zvyšte číslo verze, aby se telefon aktualizoval.
-const CACHE = 'stepkovac-v26';
+const CACHE = 'stepkovac-v28';
 const LIB_CACHE = 'stepkovac-lib-v1'; // knihovny z CDN (Firebase, Leaflet) – mění se jen s verzí v adrese
 const ASSETS = ['./', './index.html', './config.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 const LIB_HOSTS = ['www.gstatic.com', 'unpkg.com'];

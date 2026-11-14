@@ -224,6 +224,7 @@ textarea.in{height:76px;padding:10px 12px;resize:vertical}
 .sp-title small{font-size:16px;font-weight:500;color:#D5E6D2}
 @keyframes sp-up{0%{opacity:0;transform:translateY(14px)}100%{opacity:1;transform:none}}
 .sp-track{width:160px;height:6px;border-radius:3px;background:rgba(255,255,255,.22);overflow:hidden}
+.sp-ver{margin-top:-14px;font-size:13px;font-weight:500;color:#D5E6D2;letter-spacing:.02em;font-variant-numeric:tabular-nums;animation:sp-up .6s ease-out .9s both}
 .sp-bar{width:100%;height:100%;background:#F2B33D;border-radius:3px;transform-origin:0 50%;animation:sp-bar 3s linear both}
 @keyframes sp-bar{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}
 @media (prefers-reduced-motion: reduce){.splash *{animation-duration:.01s!important;animation-delay:0s!important}}
@@ -252,6 +253,57 @@ textarea.in{height:76px;padding:10px 12px;resize:vertical}
 .chart th{color:var(--mut);font-weight:600}
 .kpi small{font-size:12px;color:var(--mut)}
 .kpi b.m{font-size:22px}
+
+/* testovací funkce (admin) */
+.jobw{display:flex;flex-direction:column;flex:none;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.jobw.open{border:1px dashed #D9A84A}.jobw.ord{border:2px dashed var(--g)}
+.jobw .card.in{flex:none;height:auto;border:none;border-radius:0;background:transparent}
+.jobw-x{padding:0 16px 14px;display:flex;flex-direction:column;gap:10px}
+.chip.ordc{background:#E6F0E4;color:var(--g2);display:inline-flex;align-items:center;gap:4px}
+.thumbs{display:flex;gap:6px;flex-wrap:wrap}
+.thumbs .ph{width:64px;height:64px;border-radius:10px;border:none;padding:0;overflow:hidden;background:#E7EAE3;flex:none}
+.thumbs .ph img{width:100%;height:100%;object-fit:cover;display:block}
+.thumbs .ph.miss{background:repeating-linear-gradient(135deg,#EEF0EC 0 6px,#E3E6DF 6px 12px)}
+.thumbs .ph.add{background:#fff;border:1.5px dashed #C9CDD3;color:var(--mut);display:flex;align-items:center;justify-content:center}
+.thumbs .ph.add svg{width:24px;height:24px}
+.ib{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:14px;font-weight:600;color:var(--g2);text-decoration:none}
+.ib svg{width:17px;height:17px;flex:none}.ib.sm{min-height:36px;padding:0 10px}.ib.off{opacity:.4}
+.pview{position:fixed;inset:0;z-index:60;background:rgba(10,12,10,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(20px + var(--sat)) 14px calc(20px + var(--sab));gap:14px}
+.pview img{max-width:100%;max-height:calc(100% - 70px);border-radius:8px;object-fit:contain}
+.pview-f{display:flex;gap:10px}
+.vprev{background:#E9ECE6;border-radius:12px;padding:12px}.vprev img{width:100%;display:block;box-shadow:0 2px 10px rgba(0,0,0,.18);border-radius:2px}
+.pseg{display:flex;gap:4px;background:#E9ECE6;border-radius:12px;padding:4px;margin:12px 0 14px}
+.pseg button{flex:1;height:40px;border:none;border-radius:9px;background:transparent;font-size:15px;font-weight:500;color:#4A5059}
+.pseg button.on{background:#fff;color:var(--tx);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.svc{display:flex;flex-direction:column;gap:5px;padding:10px 0;border:none;border-top:1px solid var(--line);background:none;text-align:left;width:100%}
+.svc:first-of-type{border-top:none}
+.svc .t{font-size:15px;font-weight:600}.svc .m{font-size:13px;color:var(--mut)}
+.pbar{height:6px;border-radius:3px;background:#E7EAE3;overflow:hidden;display:block}.pbar i{display:block;height:100%;border-radius:3px;background:var(--g)}
+.pbar.w i{background:#D98A0B}.pbar.r i{background:#C2362F}
+.badge{font-size:12px;font-weight:600;padding:3px 8px;border-radius:999px;background:var(--gl);color:var(--g2);white-space:nowrap}
+.badge.w{background:#FFF1D9;color:#7A5206}.badge.r{background:#FBE3E1;color:#9C2621}.badge.n{background:var(--chip);color:var(--mut)}
+.duebar.svc{background:#FBE9E7;border:1px solid #EDB9B4;flex-direction:row;padding:12px 14px}
+.duebar.svc i{background:#C2362F}.duebar.svc span{color:#8A231E}.duebar.svc b.go{color:#9C2621}
+.linkbtn{background:none;border:none;color:var(--g);font-weight:600;font-size:14px;padding:0}
+.sbox{position:relative;margin-bottom:10px}.sbox .in{padding-left:40px}
+.sbox-ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--mut);display:flex}.sbox-ic svg{width:18px;height:18px}
+.li{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line)}.li:first-child{border-top:none}
+.li-main{flex:1;min-width:0;display:flex;align-items:center;gap:12px;padding:11px 0;background:none;border:none;text-align:left}
+.av{width:40px;height:40px;border-radius:20px;background:var(--gl);color:var(--g2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex:none}
+.callb{width:42px;height:42px;border-radius:21px;background:var(--g);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}.callb svg{width:18px;height:18px}
+.bkpi{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.bkpi div{background:#F5F6F3;border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.bkpi span{font-size:11px;color:var(--mut)}.bkpi b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hrow{display:flex;align-items:center;gap:10px;border-top:1px solid var(--line)}
+.hrow-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;padding:9px 0;background:none;border:none;text-align:left}
+.quick.q4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.tgl{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#F5F6F8;border-radius:12px;padding:12px 14px;cursor:pointer}
+.tgl span{display:flex;flex-direction:column;gap:2px}.tgl b{font-size:15px}.tgl small{font-size:12px;color:var(--mut)}
+.tgl input{position:absolute;opacity:0;pointer-events:none}
+.tgl i{width:48px;height:30px;border-radius:15px;background:#D3D7CF;position:relative;flex:none;transition:background .15s}
+.tgl i::after{content:"";position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:12px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .15s}
+.tgl input:checked+i{background:var(--g)}.tgl input:checked+i::after{transform:translateX(18px)}
+.blk.ord{background:#fff;border:2px dashed var(--g);color:var(--g2);top:2px;bottom:2px;gap:4px}
 </style>
 </head>
 <body>
@@ -314,6 +366,7 @@ textarea.in{height:76px;padding:10px 12px;resize:vertical}
   </svg>
   <div class="sp-title"><span>Štěpkovač</span><small>Kniha zakázek</small></div>
   <div class="sp-track"><div class="sp-bar"></div></div>
+  <div class="sp-ver" id="sp-ver"></div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <input type="file" id="import-file" accept="application/json,.json" class="hidden">
@@ -449,6 +502,7 @@ function render() {
   else if (UI.tab === 'stat') v.innerHTML = viewStat();
   else v.innerHTML = viewNastaveni();
   updateBadge();
+  if (beta()) hydratePhotos();
   // podbarvení: aktuální = zelená, minulé = červená, budoucí = beze změny
   const t = todayIso(); let st = 0;
   if (UI.tab === 'denik') st = UI.day < t ? -1 : UI.day === t ? 0 : 1;
@@ -493,7 +547,7 @@ function fuelCard(f) {
 }
 function viewDenik() {
   const d = UI.day, jobs = jobsOn(d), fuel = fuelOn(d), s = sumJobs(jobs);
-  const items = [...jobs.map(j => ({ t: j.from || '', h: jobCard(j) })), ...fuel.map(f => ({ t: f.time || '', h: fuelCard(f) }))].sort((a, b) => a.t.localeCompare(b.t));
+  const items = [...jobs.map(j => ({ t: j.from || '', h: beta() ? jobCardB(j) : jobCard(j) })), ...fuel.map(f => ({ t: f.time || '', h: fuelCard(f) }))].sort((a, b) => a.t.localeCompare(b.t));
   return `
   <div class="between">
     <div style="display:flex;flex-direction:column;gap:2px">
@@ -514,6 +568,7 @@ function viewDenik() {
     <div class="tile"><b>${num(m3(s.loads))}</b><span>m³</span></div>
     <div class="tile"><b>${num(s.km)}</b><span>km</span></div>
   </div>
+  ${beta() ? svcBar() : ''}
   ${(() => { const due = dueJobs(); return due.length ? `<button class="duebar" data-act="finish-next"><i></i><span><b>${due.length} ${due.length === 1 ? 'otevřená zakázka čeká' : due.length < 5 ? 'otevřené zakázky čekají' : 'otevřených zakázek čeká'}</b> na dokončení</span><b class="go">Dokončit ›</b></button>` : ''; })()}
   <div class="label">Záznamy</div>
   <div class="list">${items.length ? items.map(i => i.h).join('') : '<div class="empty">Na tento den zatím nic není.<br>Přidejte zakázku nebo tankování.</div>'}</div>
@@ -542,7 +597,8 @@ function viewDny() {
     const blocks = js.map(j => {
       const a = toMin(j.from), b = toMin(j.to); if (a == null || b == null) return '';
       const end = b < a ? 24 * 60 : b, l = pos(a), w = Math.max(pos(end) - l, 1);
-      return `<span class="blk${isOpen(j) ? ' open' : ''}" style="left:${l}%;width:${w}%">${w > 9 ? esc(j.customer || (j.place || '').split(',')[0]) : ''}</span>`;
+      const ord = beta() && isOrder(j);
+      return `<span class="blk${ord ? ' ord' : isOpen(j) ? ' open' : ''}" style="left:${l}%;width:${w}%">${w > 9 ? (ord && j.callBefore ? telIc(11) : '') + esc(j.customer || (j.place || '').split(',')[0]) : ''}</span>`;
     }).join('');
     const fpos = fs.map(f => ({ f, t: toMin(f.time) })).filter(o => o.t != null).map(o => ({ f: o.f, x: pos(o.t) })).sort((a, b) => a.x - b.x);
     let usedTo = -100; // kam až (v %) sahá předchozí popisek – popisky se nepřekrývají
@@ -559,7 +615,8 @@ function viewDny() {
       if (!txt) usedTo = o.x;
       return `<span class="fl${VCLS[veh(f)]}${right ? ' r' : ''}" title="Tankování ${VEH[veh(f)].toLowerCase()} · ${esc(full)}" style="left:${o.x}%"><i></i>${txt ? `<b>${esc(txt)}</b>` : ''}</span>`;
     }).join('');
-    const sum = s.n ? `${fmtDur(s.min)} · ${num(m3(s.loads))} m³ · ${num(s.km)} km` : (fs.length ? 'jen tankování' : '—');
+    const allOrd = beta() && js.length && js.every(isOrder), est = js.reduce((t, j) => t + (+j.estLoads || 0), 0);
+    const sum = allOrd ? `objednáno${est ? ' · ≈ ' + num(m3(est)) + ' m³' : ''}` : s.n ? `${fmtDur(s.min)} · ${num(m3(s.loads))} m³ · ${num(s.km)} km` : (fs.length ? 'jen tankování' : '—');
     const pk = d >= today ? pikrOf(d) : '';
     return `<button class="day${d === today ? ' today' : d < today ? ' past' : ''}${pk === 'ok' ? ' pk-ok' : pk === 'no' ? ' pk-no' : ''}" data-act="open-day" data-d="${d}">
       <div class="between"><span class="row" style="gap:8px;flex-wrap:wrap"><span style="font-size:15px;font-weight:600">${DAYS[dt.getDay()]} ${shortDate(d)}</span>${pikrChip(d)}</span><span class="sub" style="font-weight:400;font-size:12px;white-space:nowrap">${sum}</span></div>
@@ -583,7 +640,7 @@ function viewDny() {
   <div class="sumbar"><span class="sub">Za týden · ${all.n} ${all.n === 1 ? 'zakázka' : all.n > 1 && all.n < 5 ? 'zakázky' : 'zakázek'}${pkOk ? ` · píkr ${pkOk} ${pkOk === 1 ? 'den' : pkOk < 5 ? 'dny' : 'dní'}` : ''}</span><div style="font-size:15px;font-weight:700;margin-top:2px">${fmtDur(all.min)} · ${num(m3(all.loads))} m³ · ${num(all.km)} km</div></div>
   <div class="axis" aria-hidden="true">${ticks.map(h => `<span>${h}</span>`).join('')}</div>
   <div class="list">${rows}</div>
-  <div class="legend" style="margin-top:14px"><span><i></i>práce</span><span><i class="f"></i>tankování auto</span><span><i class="s"></i>tankování štěpkovač</span><span><i class="p"></i>tankování pila</span></div>`;
+  <div class="legend" style="margin-top:14px"><span><i></i>práce</span>${beta() ? '<span><i style="background:#fff;border:1.5px dashed var(--g)"></i>objednávka</span>' : ''}<span><i class="f"></i>tankování auto</span><span><i class="s"></i>tankování štěpkovač</span><span><i class="p"></i>tankování pila</span></div>`;
 }
 
 function range0(ws) {
@@ -619,6 +676,16 @@ function viewPlan(ws, days, range) {
 
 /* ===== Přehled měsíce ===== */
 function viewPrehled() {
+  if (beta()) {
+    const sg = UI.pseg || 'mesic';
+    const seg = `<div class="pseg" role="group" aria-label="Přehled">${[['mesic', 'Měsíc'], ['servis', 'Servis'], ['zak', 'Zákazníci']].map(([v, l]) => `<button type="button" data-act="b-seg" data-v="${v}" aria-pressed="${sg === v}" class="${sg === v ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+    if (sg === 'servis') return `<h1>Servis</h1>${seg}${viewServis()}`;
+    if (sg === 'zak') return `<h1>Zákazníci</h1>${seg}${viewZak()}`;
+    return seg + viewPrehledM();
+  }
+  return viewPrehledM();
+}
+function viewPrehledM() {
   const ym = UI.month, [y, m] = ym.split('-').map(Number);
   const jobs = DB.jobs.filter(j => j.date.startsWith(ym)).sort((a, b) => (a.date + a.from).localeCompare(b.date + b.from));
   const fuel = DB.fuel.filter(f => f.date.startsWith(ym)).sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')));
@@ -637,6 +704,7 @@ function viewPrehled() {
     <div class="kpi hl"><span>Štěpka</span><b>${num(m3(s.loads))} m³</b><span>${fmtLoads(s.loads)} ${loadsWord(s.loads)}</span></div>
     <div class="kpi"><span>Najeto k zakázkám</span><b>${num(s.km, 0)} km</b></div>
   </div>
+  ${beta() ? revKpis(jobs, kc) : ''}
   <div class="box">
     <div class="between" style="align-items:baseline"><h2>Tankování</h2><span style="font-size:14px;font-weight:600">${num(lit)} l · ${money(kc)}</span></div>
     ${Object.keys(VEH).map(v => { const fv = fuel.filter(f => veh(f) === v), l = fv.reduce((t, f) => t + (+f.liters || 0), 0), k = fv.reduce((t, f) => t + (+f.price || 0), 0); if (!fv.length) return '';
@@ -690,14 +758,18 @@ function axisY(max) {
 }
 function legend(series) { return series.length < 2 ? '' : `<div class="lg">${series.map(se => `<span><i style="background:${se.color}"></i>${esc(se.name)}</span>`).join('')}</div>`; }
 // sloupcový (i skládaný) graf podle období
-function barChart(id, B, series, vals, unitTxt, dec) {
-  const tot = vals.map(o => series.reduce((a, se) => a + (o[se.key] || 0), 0));
+function barChart(id, B, series, vals, unitTxt, dec, grouped) {
+  const tot = vals.map(o => grouped ? Math.max(...series.map(se => o[se.key] || 0)) : series.reduce((a, se) => a + (o[se.key] || 0), 0));
   if (!tot.some(v => v > 0)) return '<div class="empty2">Za toto období nejsou data.</div>';
   const max = niceMax(Math.max(...tot)), slot = PW / B.length, bw = Math.min(24, slot * 0.62), every = Math.ceil(B.length / 7);
   let g = axisY(max);
   B.forEach((b, i) => {
     const cx = PL + slot * i + slot / 2; let y0 = PT + PH;
     const segs = series.filter(se => (vals[i][se.key] || 0) > 0);
+    if (grouped) {
+      const gw = Math.min(14, slot * 0.36);
+      series.forEach((se, k) => { const v = vals[i][se.key] || 0; if (v > 0) { const h = Math.max(v / max * PH, 1); g += roundTop(cx - gw - 1 + k * (gw + 2), PT + PH - h, gw, h, 3, se.color); } });
+    } else
     segs.forEach((se, k) => {
       const h = vals[i][se.key] / max * PH, yTop = y0 - h, yBot = k > 0 ? y0 - 2 : y0, hh = Math.max(yBot - yTop, 1);
       g += k === segs.length - 1 ? roundTop(cx - bw / 2, yTop, bw, hh, 4, se.color) : `<rect x="${cx - bw / 2}" y="${yTop}" width="${bw}" height="${hh}" fill="${se.color}"/>`;
@@ -707,8 +779,8 @@ function barChart(id, B, series, vals, unitTxt, dec) {
     g += `<rect x="${PL + slot * i}" y="${PT}" width="${slot}" height="${PH + PB}" fill="transparent" data-act="tip" data-c="${id}" data-i="${i}" style="cursor:pointer"/>`;
   });
   g += `<line x1="${PL}" x2="${W - PR}" y1="${PT + PH}" y2="${PT + PH}" stroke="#C9CDD3" stroke-width="1"/>`;
-  TIPS[id] = B.map((b, i) => ({ x: (PL + slot * i + slot / 2) / W * 100, html: `<b>${esc(b.long)}</b>` + (tot[i] ? (series.length > 1 ? series.filter(se => vals[i][se.key]).map(se => `<br>${esc(se.name)}: ${num(vals[i][se.key], dec)} ${unitTxt}`).join('') + `<br>Celkem: ${num(tot[i], dec)} ${unitTxt}` : `<br>${num(tot[i], dec)} ${unitTxt}`) : '<br>bez dat') }));
-  const table = `<details><summary>Tabulka</summary><table><tr><th>Období</th>${series.map(se => `<th>${esc(se.name)}</th>`).join('')}${series.length > 1 ? '<th>Celkem</th>' : ''}</tr>${B.map((b, i) => tot[i] ? `<tr><td>${esc(b.long)}</td>${series.map(se => `<td>${vals[i][se.key] ? num(vals[i][se.key], dec) : '–'}</td>`).join('')}${series.length > 1 ? `<td>${num(tot[i], dec)}</td>` : ''}</tr>` : '').join('')}</table></details>`;
+  TIPS[id] = B.map((b, i) => ({ x: (PL + slot * i + slot / 2) / W * 100, html: `<b>${esc(b.long)}</b>` + (tot[i] ? (series.length > 1 ? (grouped ? series.map(se => `<br>${esc(se.name)}: ${num(vals[i][se.key] || 0, dec)} ${unitTxt}`).join('') : series.filter(se => vals[i][se.key]).map(se => `<br>${esc(se.name)}: ${num(vals[i][se.key], dec)} ${unitTxt}`).join('') + `<br>Celkem: ${num(tot[i], dec)} ${unitTxt}`) : `<br>${num(tot[i], dec)} ${unitTxt}`) : '<br>bez dat') }));
+  const table = `<details><summary>Tabulka</summary><table><tr><th>Období</th>${series.map(se => `<th>${esc(se.name)}</th>`).join('')}${series.length > 1 && !grouped ? '<th>Celkem</th>' : ''}</tr>${B.map((b, i) => tot[i] ? `<tr><td>${esc(b.long)}</td>${series.map(se => `<td>${vals[i][se.key] ? num(vals[i][se.key], dec) : '–'}</td>`).join('')}${series.length > 1 && !grouped ? `<td>${num(tot[i], dec)}</td>` : ''}</tr>` : '').join('')}</table></details>`;
   return legend(series) + `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Sloupcový graf">${g}</svg>` + table;
 }
 // spojnicový graf podle data (body = jednotlivá tankování)
@@ -773,6 +845,7 @@ function viewStat() {
     <span style="font-size:15px;font-weight:600;text-align:center">${esc(range)}</span>
     <button class="icon-btn" aria-label="Později" data-act="stat-nav" data-n="1">${ICON.right}</button>
   </div>
+  ${beta() ? revKpis(jobs, totK) : ''}
   <div class="kpis" style="margin-top:0">
     <div class="kpi hl"><span>Palivo celkem</span><b class="m">${money(totK)}</b><span>${num(totL)} l</span></div>
     <div class="kpi"><span>Na 1 m³ štěpky</span>${totM3 && totK ? k(num(totK / totM3, 1) + ' Kč', num(totM3) + ' m³') : k('–', 'bez štěpky')}</div>
@@ -783,6 +856,7 @@ function viewStat() {
     <div class="kpi"><span>Pila · náklady</span>${pi.k && workDays ? k(num(pi.k / workDays, 0) + ' Kč', 'na pracovní den') : k(pi.k ? money(pi.k) : '–', pi.k ? 'bez pracovních dnů' : 'bez tankování')}</div>
     <div class="kpi"><span>Palivo na hodinu práce</span>${js.min && totK ? k(num(totK / (js.min / 60), 0) + ' Kč', fmtDur(js.min) + ' práce') : k('–', 'bez zakázek')}</div>
   </div>
+  ${beta() ? `<div class="chart" id="ch-rev"><h2>Výnos a palivo</h2><div class="csub">Kč · výnos = štěpka × ${money(priceM3())}/m³</div>${barChart('rev', B, [{ key: 'v', name: 'Výnos', color: '#2F6B3A' }, { key: 'p', name: 'Palivo', color: '#C27A08' }], B.map((b, i) => ({ v: jobs.filter(j => idx(j.date) === i).reduce((t, j) => t + revenue(j), 0), p: cost[i].auto + cost[i].stepkovac + cost[i].pila })), 'Kč', 0, true)}</div>` : ''}
   <div class="chart" id="ch-cost"><h2>Náklady na palivo</h2><div class="csub">Kč za ${UI.statMode === 'dny' ? 'den' : UI.statMode === 'tydny' ? 'týden' : 'měsíc'} · klepněte na sloupec</div>${barChart('cost', B, series, cost, 'Kč', 0)}</div>
   <div class="chart" id="ch-lit"><h2>Natankováno</h2><div class="csub">litry</div>${barChart('lit', B, series, lit, 'l', 1)}</div>
   <div class="chart" id="ch-ukm"><h2>Auto – náklady na kilometr</h2><div class="csub">Kč/km podle stavu tachometru</div>${barChart('ukm', B, [{ key: 'v', name: 'Kč/km', color: VCOL.auto }], unit.auto.map(u => ({ v: u.d ? u.k / u.d : 0 })), 'Kč/km', 2)}</div>
@@ -795,8 +869,10 @@ function viewStat() {
 
 
 /* ===== Přehled změn (nejnovější nahoře) ===== */
-const APP_VERSION = '2.10';
+const APP_VERSION = '2.12';
 const CHANGELOG = [
+  ['2.12', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
+  ['2.11', ['Úvodní obrazovka ukazuje pod čarou průběhu číslo načítané verze.']],
   ['2.10', ['Dny: tankování má vlastní řádek pod zakázkou, jméno zákazníka už nepřekrývá.', 'U tečky tankování jsou litry a cena; když je málo místa, jen litry.']],
   ['2.9', ['Množství štěpky: „1 fůra“, od 5 výš „fůr“, ostatní „fůry“ (½ fůry, 1½ fůry, 4½ fůry).']],
   ['2.8', ['Odznak na ikoně s počtem zakázek k dokončení.', 'Upozornění v 16:00 (push z Firebase) – zapíná se v Nastavení → Upozornění a odznak.']],
@@ -854,6 +930,7 @@ function viewNastaveni() {
     <div class="f"><label for="s-load">Objem jedné plné fůry (m³)</label><input class="in" id="s-load" type="number" inputmode="decimal" step="0.5" min="1" value="${esc(st.loadM3)}"></div>
     <button class="btn" data-act="save-settings">Uložit nastavení</button>
   </div>
+  ${beta() ? betaSettings() : ''}
   <div class="setting">
     <h2>Záloha dat</h2>
     <p class="note" style="margin:0">${CLOUD_ON ? 'Data jsou ve Firebase, záloha je navíc kopie do souboru. Obnova ze zálohy nahraje záznamy do společné databáze.' : 'Data jsou uložená jen v tomto telefonu. Občas si stáhněte zálohu – při smazání dat Safari nebo výměně telefonu se dají obnovit.'}</p>
@@ -1049,8 +1126,8 @@ function renderCust(items, loading) {
   const l = $('#j-csugg'); if (!l) return;
   FORM.csugg = items;
   if (!items.length && !loading) { hideCust(); return; }
-  l.innerHTML = items.map((it, i) => `<button type="button" data-act="pick-cust" data-i="${i}"><b>${esc(it.name)}</b><small>${it.src === 'hist' ? 'dřívější zákazník' : 'IČO ' + esc(it.ico) + (it.addr ? ' · ' + esc(it.addr) : '')}</small></button>`).join('')
-    + `<div class="src">${loading ? 'Hledám v ARES…' : items.some(x => x.src === 'ares') ? 'Firmy z ARES (obchodní rejstřík)' : 'Dřívější zákazníci'}</div>`;
+  l.innerHTML = items.map((it, i) => `<button type="button" data-act="pick-cust" data-i="${i}"><b>${esc(it.name)}</b><small>${it.src === 'adr' ? 'ze zákazníků' + (it.addr ? ' · ' + esc(it.addr) : '') : it.src === 'hist' ? 'dřívější zákazník' : 'IČO ' + esc(it.ico) + (it.addr ? ' · ' + esc(it.addr) : '')}</small></button>`).join('')
+    + `<div class="src">${loading ? 'Hledám v ARES…' : items.some(x => x.src === 'ares') ? 'Firmy z ARES (obchodní rejstřík)' : items.some(x => x.src === 'adr') ? 'Zákazníci' : 'Dřívější zákazníci'}</div>`;
   l.classList.remove('hidden');
 }
 function onCustInput() {
@@ -1060,7 +1137,7 @@ function onCustInput() {
   if (q.length < 2) { hideCust(); return; }
   const seen = new Map();
   DB.jobs.forEach(x => { if (x.customer && fold(x.customer).includes(fold(q)) && !seen.has(x.customer)) seen.set(x.customer, { name: x.customer, ico: x.customerIco || '', addr: '', src: 'hist' }); });
-  const hist = [...seen.values()].slice(0, 4);
+  const hist = beta() ? [...custSuggest(q), ...[...seen.values()].filter(h => !custSuggest(q).some(c => custKey(c.name) === custKey(h.name)))].slice(0, 5) : [...seen.values()].slice(0, 4);
   renderCust(hist, q.length >= 3);
   if (q.length < 3) return;
   custT = setTimeout(async () => {
@@ -1102,6 +1179,7 @@ function openSheet(title, body, foot, label) {
     <div class="sheet-h${title ? '' : ' bare'}">${title ? `<h2 style="font-size:18px">${esc(title)}</h2>` : '<span class="grip" aria-hidden="true"></span>'}<button class="icon-btn" style="border:none" aria-label="Zavřít" data-act="close">${ICON.close}</button></div>
     <div class="sheet-b">${body}</div><div class="sheet-f">${foot}</div></div></div>`;
   document.body.style.overflow = 'hidden';
+  if (beta()) hydratePhotos();
 }
 function closeSheet() { if (FORM && FORM.map) { try { FORM.map.remove(); } catch (e) {} } $('#sheet-root').innerHTML = ''; document.body.style.overflow = ''; FORM = null; }
 let FORM = null;
@@ -1110,7 +1188,8 @@ function nowRounded() { const d = new Date(); let m = Math.round((d.getHours() *
 
 function openJob(id) {
   const ex = id ? DB.jobs.find(j => j.id === id) : null;
-  const j = ex ? Object.assign({ customer: '' }, ex) : { id: null, date: UI.day, from: '07:00', to: '14:00', customer: '', place: '', kmOneWay: '', loads: null, status: 'open', note: '' };
+  const j = ex ? Object.assign({ customer: '' }, ex) : Object.assign({ id: null, date: UI.day, from: '07:00', to: '14:00', customer: '', place: '', kmOneWay: '', loads: null, status: 'open', note: '' }, JOB_PRESET || {});
+  JOB_PRESET = null;
   FORM = { kind: 'job', j, coords: null, sugg: [], csugg: [] };
   const open = isOpen(j);
   openSheet('', `
@@ -1139,6 +1218,8 @@ function openJob(id) {
     </div>
     <div class="calc"><span>Doba práce</span><strong id="j-dur">–</strong></div>
     ${open ? `<div class="openinfo">${CLOCK_IC}<span><b>Množství štěpky se zadává až při dokončení.</b> Zakázka zůstane otevřená a v den realizace v ${FINISH_HOUR}:00 vás aplikace vyzve k dokončení.</span></div>` : loadPicker()}
+    ${beta() && open ? orderBox(j) : ''}
+    ${beta() ? formPhotos(j) : ''}
     <div class="f"><label for="j-note">Poznámka</label><textarea class="in" id="j-note" placeholder="druh dřeva, poznámky…">${esc(j.note)}</textarea></div>
   `, `${ex ? '<button class="btn red" data-act="del-job" style="flex:0 0 auto">Smazat</button>' : ''}${ex && open ? '<button class="btn o" data-act="finish-this" style="flex:0 0 auto">Dokončit</button>' : ''}<button class="btn" data-act="save-job">Uložit</button>`, ex ? 'Upravit zakázku' : 'Nová zakázka');
   updJobCalc();
@@ -1222,7 +1303,10 @@ function saveJob() {
   j.note = $('#j-note').value.trim();
   if (!j.from || !j.to) { toast('Vyplňte čas od a do'); return; }
   if (isOpen(j)) j.loads = null; else if (!(j.loads >= 0)) j.loads = 0;
-  if (j.id) { const i = DB.jobs.findIndex(x => x.id === j.id); DB.jobs[i] = j; }
+  if ($('#j-call')) { j.callBefore = $('#j-call').checked; if (!j.estLoads) delete j.estLoads; }
+  if (beta() && j.customer && !j.customerId) { const c = Object.values(DB.cust || {}).find(c => custKey(c.name) === custKey(j.customer)); if (c) j.customerId = c.id; }
+  if (j.customerId && DB.cust && DB.cust[j.customerId] && custKey(DB.cust[j.customerId].name) !== custKey(j.customer)) delete j.customerId;
+  if (j.id) { const i = DB.jobs.findIndex(x => x.id === j.id); const cur = DB.jobs[i]; if (cur && cur.photos) j.photos = cur.photos; DB.jobs[i] = j; }
   else { j.id = uid(); j.created = Date.now(); DB.jobs.push(j); }
   saveData(); cloudPut('jobs', j); UI.day = j.date; closeSheet(); render(); toast('Zakázka uložena');
 }
@@ -1244,6 +1328,7 @@ function openFinish(id) {
     ${loadPicker()}
     <div class="calc"><span id="j-km-lb">Najeto</span><strong id="j-km-rt">–</strong></div>
     <input type="hidden" id="j-km" value="${j.kmOneWay || ''}">
+    ${beta() ? formPhotos(j) + `<div class="openinfo" style="background:var(--gl);border-color:#CFE0CB;color:var(--g2)">${BI.pdf.replace('<svg', '<svg width="20" height="20" style="flex:none"')}<span>Po dokončení se vytvoří <b>výkaz PDF</b> – najdete ho u zakázky v Deníku.</span></div>` : ''}
   `, `<button class="btn o" data-act="finish-later" style="flex:0 0 auto">Později</button><button class="btn" data-act="finish-save">Dokončit zakázku</button>`);
   updJobCalc();
 }
@@ -1253,8 +1338,9 @@ function saveFinish() {
   if (!j.from || !j.to) { toast('Vyplňte čas od a do'); return; }
   if (!(j.loads > 0)) { toast('Vyberte množství štěpky'); return; }
   j.status = 'done'; j.finished = Date.now();
-  const i = DB.jobs.findIndex(x => x.id === j.id); if (i >= 0) DB.jobs[i] = j;
-  saveData(); cloudPut('jobs', j); closeSheet(); render(); toast('Zakázka dokončena');
+  const i = DB.jobs.findIndex(x => x.id === j.id); if (i >= 0) { if (DB.jobs[i].photos) j.photos = DB.jobs[i].photos; DB.jobs[i] = j; }
+  if (beta()) { j.priceM3 = priceM3(); if (!j.vykazNo) j.vykazNo = nextVykazNo(j.date.slice(0, 4)); delete j.callBefore; }
+  saveData(); cloudPut('jobs', j); closeSheet(); render(); toast(beta() ? 'Zakázka dokončena · výkaz č. ' + j.vykazNo : 'Zakázka dokončena');
   const next = dueJobs()[0]; if (next) setTimeout(() => openFinish(next.id), 350);
 }
 // výzva k dokončení po spuštění / návratu do aplikace (jednou za otevření)
@@ -1527,7 +1613,7 @@ document.addEventListener('click', (e) => {
     case 'q-load': FORM.j.loads = +el.dataset.v; updJobCalc(); break;
     case 'load': FORM.j.loads = Math.max(0, Math.round((FORM.j.loads + +el.dataset.n) * 4) / 4); updJobCalc(); break;
     case 'calc-km': calcKm(); break;
-    case 'pick-cust': { const it = FORM.csugg[+el.dataset.i]; if (!it) break; $('#j-cust').value = it.name; FORM.j.customerIco = it.ico || ''; $('#j-cico').textContent = it.ico ? 'IČO ' + it.ico + (it.addr ? ' · sídlo ' + it.addr : '') : ''; hideCust(); break; }
+    case 'pick-cust': { const it = FORM.csugg[+el.dataset.i]; if (!it) break; $('#j-cust').value = it.name; FORM.j.customerIco = it.ico || ''; $('#j-cico').textContent = it.ico ? 'IČO ' + it.ico + (it.addr && it.src !== 'adr' ? ' · sídlo ' + it.addr : '') : ''; hideCust(); if (it.cust) applyCust(it.cust); else delete FORM.j.customerId; break; }
     case 'pick-sugg': { const it = FORM.sugg[+el.dataset.i]; if (!it) break; $('#j-place').value = it.label; FORM.coords = { lat: it.lat, lon: it.lon }; hideSugg(); calcKm(); break; }
     case 'geo': useGeo(); break;
     case 'save-job': saveJob(); break;
@@ -1555,6 +1641,7 @@ document.addEventListener('click', (e) => {
       if (addr !== DB.settings.startAddress) { DB.settings.startAddress = addr; DB.settings.startLat = null; DB.settings.startLon = null; }
       if (load > 0) DB.settings.loadM3 = load;
       DB.settings.mapyKey = $('#s-key').value.trim();
+      if ($('#s-price')) { const pr = parseFloat(($('#s-price').value || '').replace(',', '.')); if (pr > 0) DB.settings.priceM3 = pr; DB.settings.firmName = $('#s-firm').value.trim(); DB.settings.firmIco = $('#s-fico').value.trim(); DB.settings.firmPhone = $('#s-ftel').value.trim(); }
       saveData(); cloudSettings(); render(); toast('Nastavení uloženo'); break;
     }
     case 'backup': download(`stepkovac-zaloha-${todayIso()}.json`, JSON.stringify(DB, null, 1), 'application/json'); break;
@@ -1568,7 +1655,7 @@ document.addEventListener('input', (e) => {
   if (!FORM) return;
   if (FORM.kind === 'finish') { updJobCalc(); return; }
   if (FORM.kind === 'job') { if (e.target.id === 'j-place') { FORM.coords = null; onPlaceInput(); } if (e.target.id === 'j-cust') onCustInput(); updJobCalc(); }
-  else { updFuelCalc(e.target.id); updOdo(); }
+  else if (FORM.kind === 'fuel') { updFuelCalc(e.target.id); updOdo(); }
 });
 document.addEventListener('change', (e) => {
   if (e.target.id === 'day-pick' && e.target.value) { UI.day = e.target.value; render(); }
@@ -1616,7 +1703,7 @@ function setPikr(d, v) {
 function cloudSettings() {
   if (!cloudReady()) return;
   const { fs } = CLOUD.m, st = DB.settings;
-  fs.setDoc(fs.doc(CLOUD.db, 'nastaveni', 'firma'), clean({ startAddress: st.startAddress, startLat: st.startLat, startLon: st.startLon, loadM3: st.loadM3, mapyKey: st.mapyKey || '', upravil: CLOUD.user.email, upraveno: Date.now() }), { merge: true }).catch(() => {});
+  fs.setDoc(fs.doc(CLOUD.db, 'nastaveni', 'firma'), clean({ startAddress: st.startAddress, startLat: st.startLat, startLon: st.startLon, loadM3: st.loadM3, mapyKey: st.mapyKey || '', priceM3: st.priceM3 || null, firmName: st.firmName || '', firmIco: st.firmIco || '', firmPhone: st.firmPhone || '', upravil: CLOUD.user.email, upraveno: Date.now() }), { merge: true }).catch(() => {});
 }
 async function cloudUploadAll(jobs, fuel) {
   const { fs } = CLOUD.m, ops = [...jobs.map(o => ['jobs', o]), ...fuel.map(o => ['fuel', o])];
@@ -1640,6 +1727,8 @@ function startSync() {
   CLOUD.unsubs.push(fs.onSnapshot(fs.collection(CLOUD.db, 'dostupnost'), (snap) => {
     const a = {}; snap.docs.forEach(d => { const x = d.data(); if (x.pikr) a[d.id] = x.pikr; }); DB.avail = a; softRender();
   }, (e) => { if (e.code !== 'permission-denied') toast('Načtení dostupnosti selhalo: ' + (e.code || e.message)); else toast('Doplňte pravidla Firestore pro „dostupnost“'); }));
+  CLOUD.unsubs.push(fs.onSnapshot(fs.doc(CLOUD.db, 'nastaveni', 'adresar'), (d) => { DB.cust = d.exists() ? (d.data().items || {}) : {}; softRender(); }, () => {}));
+  CLOUD.unsubs.push(fs.onSnapshot(fs.doc(CLOUD.db, 'nastaveni', 'servis'), (d) => { DB.svc = d.exists() ? { items: d.data().items || {} } : { items: {} }; softRender(); }, () => {}));
   CLOUD.unsubs.push(fs.onSnapshot(fs.doc(CLOUD.db, 'nastaveni', 'firma'), (d) => {
     if (d.exists()) { const x = d.data(); delete x.upravil; delete x.upraveno; DB.settings = Object.assign({}, DEFAULT_SETTINGS, DB.settings, x); softRender(); }
   }, () => {}));
@@ -1773,10 +1862,478 @@ function shift(n) {
   });
 })();
 
+let JOB_PRESET = null;
+/* ===== Testovací funkce (zatím jen pro účet admin) =====
+   adresář zákazníků, servis strojů, objednávky, fotky, výkaz PDF, výnos */
+const BETA_EMAILS = ['admin@stepkovac.cz'];
+const beta = () => !!(CLOUD_ON && CLOUD.user && BETA_EMAILS.includes(String(CLOUD.user.email || '').toLowerCase()));
+const priceM3 = () => (+DB.settings.priceM3 > 0 ? +DB.settings.priceM3 : 500);
+const jobPrice = (j) => (+j.priceM3 > 0 ? +j.priceM3 : priceM3());
+const revenue = (j) => (isOpen(j) ? 0 : m3(j.loads) * jobPrice(j));
+const isOrder = (j) => isOpen(j) && j.date > todayIso();
+const plural = (n, a, b, c) => n + ' ' + (n === 1 ? a : n > 1 && n < 5 ? b : c);
+const BI = {
+  pdf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6v18h12V7z"/><path d="M14 3v4h4M9 13h6M9 17h4"/></svg>',
+  share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5M5 13v7h14v-7"/></svg>',
+  cam: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  tel: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg>',
+  sms: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+  nav: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l18-8-8 18-2-8z"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>'
+};
+const telIc = (s = 12) => BI.tel.replace('<svg', `<svg width="${s}" height="${s}" style="flex:none"`);
+
+/* ---------- Výnos ---------- */
+function revKpis(jobs, fuelKc) {
+  const rev = jobs.reduce((t, j) => t + revenue(j), 0), m = jobs.reduce((t, j) => t + (isOpen(j) ? 0 : m3(j.loads)), 0);
+  return `<div class="kpis" style="margin-top:0">
+    <div class="kpi hl"><span>Výnos za odvoz štěpky</span><b class="m">${money(rev)}</b><span>${num(m)} m³ × ${money(priceM3())}/m³</span></div>
+    <div class="kpi"><span>Po odečtení paliva</span><b class="m" style="color:${rev - fuelKc < 0 ? 'var(--red)' : 'var(--g2)'}">${money(rev - fuelKc)}</b><small>palivo ${money(fuelKc)}</small></div>
+  </div>`;
+}
+
+/* ---------- Adresář zákazníků (Firestore nastaveni/adresar) ---------- */
+const custKey = (s) => fold(s).replace(/\s+/g, ' ').trim();
+function custList() {
+  const map = new Map();
+  Object.values(DB.cust || {}).forEach(c => map.set('id:' + c.id, Object.assign({ key: c.id, jobs: [] }, c)));
+  const byName = new Map([...map.values()].map(c => [custKey(c.name), c]));
+  DB.jobs.forEach(j => {
+    let c = (j.customerId && map.get('id:' + j.customerId)) || (j.customer && byName.get(custKey(j.customer)));
+    if (!c && j.customer) { c = { key: 'n:' + j.customer, name: j.customer, ico: j.customerIco || '', jobs: [] }; map.set(c.key, c); byName.set(custKey(j.customer), c); }
+    if (c) c.jobs.push(j);
+  });
+  return [...map.values()].map(c => {
+    c.jobs.sort((a, b) => (b.date + b.from).localeCompare(a.date + a.from));
+    const last = c.jobs.find(j => j.place);
+    if (!c.place && last) { c.place = last.place; c.kmOneWay = last.kmOneWay; c.lat = last.lat; c.lon = last.lon; c.auto = true; }
+    if (!c.ico) c.ico = (c.jobs.find(j => j.customerIco) || {}).customerIco || '';
+    return c;
+  }).sort((a, b) => a.name.localeCompare(b.name, 'cs'));
+}
+const custByKey = (k) => custList().find(c => c.key === k);
+const initials = (n) => String(n || '?').replace(/s\.\s*r\.\s*o\.|a\.\s*s\.|spol\./gi, '').trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('') || '?';
+const telHref = (t) => String(t || '').replace(/[^\d+]/g, '');
+function custStats(c) {
+  const done = c.jobs.filter(j => !isOpen(j));
+  return { n: c.jobs.length, m3: done.reduce((t, j) => t + m3(j.loads), 0), rev: done.reduce((t, j) => t + revenue(j), 0) };
+}
+function viewZak() {
+  const q = custKey(UI.custQ || ''), all = custList();
+  const list = q ? all.filter(c => custKey([c.name, c.place, c.phone, c.ico].join(' ')).includes(q)) : all;
+  return `<div class="sbox"><span class="sbox-ic">${BI.search}</span><input class="in" id="cust-q" type="search" value="${esc(UI.custQ || '')}" placeholder="Hledat jméno, obec, telefon" autocomplete="off"></div>
+  <div id="cust-list">${custRows(list)}</div>
+  <div style="margin-top:12px"><button class="btn o" style="width:100%" data-act="b-cust-new">+ Nový zákazník</button></div>`;
+}
+function custRows(list) {
+  if (!list.length) return '<div class="empty">Žádný zákazník.<br>Zákazníci se přidávají sami ze zakázek.</div>';
+  return `<div class="box" style="gap:0;padding:4px 14px">${list.map(c => { const s = custStats(c);
+    return `<div class="li"><button class="li-main" data-act="b-cust" data-k="${esc(c.key)}"><span class="av">${esc(initials(c.name))}</span><span style="min-width:0;display:flex;flex-direction:column;gap:1px"><b style="font-size:15px">${esc(c.name)}</b>${c.place ? `<span class="sub" style="font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.place)}</span>` : ''}<span class="sub" style="font-weight:400;font-size:12px">${plural(s.n, 'zakázka', 'zakázky', 'zakázek')}${s.m3 ? ' · ' + num(s.m3) + ' m³' : ''}</span></span></button>
+    ${c.phone ? `<a class="callb" href="tel:${esc(telHref(c.phone))}" aria-label="Zavolat ${esc(c.name)}">${BI.tel}</a>` : ''}</div>`; }).join('')}</div>`;
+}
+function openCust(key) {
+  const c = key ? custByKey(key) : { key: '', name: '', jobs: [] };
+  if (!c) return;
+  FORM = { kind: 'cust', c };
+  const s = custStats(c), place = c.place || '';
+  const navUrl = c.lat != null ? `https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lon}&travelmode=driving` : place ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place)}&travelmode=driving` : '';
+  openSheet('', `
+    ${c.name ? `<div class="row"><span class="av" style="width:52px;height:52px;border-radius:26px;font-size:18px">${esc(initials(c.name))}</span><div style="min-width:0"><b style="font-size:20px">${esc(c.name)}</b><div class="sub" style="font-weight:400">${c.ico ? 'IČO ' + esc(c.ico) : 'bez IČO'}</div></div></div>
+    <div class="g3">${c.phone ? `<a class="ib" href="tel:${esc(telHref(c.phone))}">${BI.tel}Zavolat</a><a class="ib" href="sms:${esc(telHref(c.phone))}">${BI.sms}SMS</a>` : '<span class="ib off">' + BI.tel + 'Zavolat</span><span class="ib off">' + BI.sms + 'SMS</span>'}${navUrl ? `<a class="ib" href="${esc(navUrl)}" target="_blank" rel="noopener">${BI.nav}Navigovat</a>` : '<span class="ib off">' + BI.nav + 'Navigovat</span>'}</div>` : ''}
+    <div class="f"><label for="c-name">Jméno / firma</label><input class="in" id="c-name" value="${esc(c.name)}" autocomplete="off"></div>
+    <div class="g2"><div class="f"><label for="c-tel">Telefon</label><input class="in" id="c-tel" type="tel" inputmode="tel" value="${esc(c.phone || '')}" placeholder="+420 …"></div>
+      <div class="f"><label for="c-ico">IČO</label><input class="in" id="c-ico" inputmode="numeric" value="${esc(c.ico || '')}"></div></div>
+    <div class="f"><label for="c-place">Obvyklé místo práce</label><input class="in" id="c-place" value="${esc(place)}" placeholder="obec, ulice" autocomplete="off">${c.auto ? '<div class="note">Doplněno z poslední zakázky.</div>' : ''}</div>
+    <div class="f"><label for="c-note">Poznámka</label><textarea class="in" id="c-note" placeholder="kontaktní osoba, vjezd…">${esc(c.note || '')}</textarea></div>
+    ${c.jobs.length ? `<div class="bkpi"><div><span>Zakázky</span><b>${s.n}</b></div><div><span>Štěpka</span><b>${num(s.m3)} m³</b></div><div><span>Výnos</span><b>${money(s.rev)}</b></div></div>
+    <div class="label" style="margin:0">Historie zakázek</div>
+    <div>${c.jobs.map(j => `<div class="hrow"><button class="hrow-main" data-act="b-cust-job" data-id="${j.id}"><b style="font-size:14px">${dmY(j.date)}${isOrder(j) ? ' · objednáno' : isOpen(j) ? ' · otevřená' : ''}</b><span class="sub" style="font-weight:400">${isOpen(j) ? esc(j.place || '') : `${fmtLoads(j.loads)} ${loadsWord(+j.loads)} · ${num(m3(j.loads))} m³ · ${money(revenue(j))}`}</span></button>${isOpen(j) ? '' : `<button class="ib sm" data-act="b-pdf" data-id="${j.id}">${BI.pdf}PDF</button>`}</div>`).join('')}</div>` : ''}
+  `, `${c.id ? '<button class="btn red" data-act="b-cust-del" style="flex:0 0 auto">Smazat</button>' : ''}${c.name ? '<button class="btn o" data-act="b-cust-newjob" style="flex:0 0 auto">+ Zakázka</button>' : ''}<button class="btn" data-act="b-cust-save">Uložit</button>`, c.name || 'Nový zákazník');
+}
+function saveCust() {
+  const c = FORM.c, name = $('#c-name').value.trim();
+  if (!name) { toast('Vyplňte jméno'); return null; }
+  const o = { id: c.id || uid(), name, phone: $('#c-tel').value.trim(), ico: $('#c-ico').value.replace(/\s/g, ''), place: $('#c-place').value.trim(), note: $('#c-note').value.trim() };
+  if (o.place && o.place === c.place) { if (c.lat != null) { o.lat = c.lat; o.lon = c.lon; } if (c.kmOneWay) o.kmOneWay = c.kmOneWay; }
+  DB.cust = DB.cust || {}; DB.cust[o.id] = o;
+  // zakázky se starým jménem přiřadit k zákazníkovi
+  c.jobs.forEach(j => { if (j.customerId !== o.id || j.customer !== name) { j.customerId = o.id; j.customer = name; if (o.ico) j.customerIco = o.ico; cloudPut('jobs', j); } });
+  saveData();
+  if (cloudReady()) { const { fs } = CLOUD.m; fs.setDoc(fs.doc(CLOUD.db, 'nastaveni', 'adresar'), { items: { [o.id]: clean(o) }, upravil: CLOUD.user.email, upraveno: Date.now() }, { merge: true }).catch(e => toast('Uložení zákazníka selhalo: ' + (e.code || e.message))); }
+  return o;
+}
+function delCust() {
+  const c = FORM.c; if (!c.id || !confirm('Smazat zákazníka z adresáře? Zakázky zůstanou.')) return;
+  delete DB.cust[c.id]; saveData();
+  if (cloudReady()) { const { fs } = CLOUD.m; fs.updateDoc(fs.doc(CLOUD.db, 'nastaveni', 'adresar'), { ['items.' + c.id]: fs.deleteField() }).catch(() => {}); }
+  closeSheet(); render(); toast('Zákazník smazán');
+}
+// našeptávač v zakázce: zákazníci z adresáře (s místem a km)
+function custSuggest(q) {
+  const f = custKey(q);
+  return custList().filter(c => custKey(c.name).includes(f)).slice(0, 4).map(c => ({ name: c.name, ico: c.ico || '', addr: c.place || '', src: 'adr', cust: c }));
+}
+function applyCust(c) {
+  if (!FORM || FORM.kind !== 'job') return;
+  if (c.id) FORM.j.customerId = c.id;
+  if (c.place && !$('#j-place').value.trim()) {
+    $('#j-place').value = c.place;
+    if (c.lat != null) FORM.coords = { lat: c.lat, lon: c.lon };
+    if (c.kmOneWay) $('#j-km').value = c.kmOneWay;
+    updJobCalc();
+    if (FORM.coords) calcKm();
+  }
+}
+
+/* ---------- Servis strojů (Firestore nastaveni/servis) ---------- */
+const SVC_DEFAULT = [
+  { id: 'st-noze', veh: 'stepkovac', name: 'Ostření nožů', everyMth: 40 },
+  { id: 'st-olej', veh: 'stepkovac', name: 'Olej motoru', everyMth: 100 },
+  { id: 'st-stk', veh: 'stepkovac', name: 'Technická prohlídka (přívěs)', everyMonths: 24 },
+  { id: 'au-stk', veh: 'auto', name: 'Technická prohlídka (STK + emise)', everyMonths: 24 },
+  { id: 'au-olej', veh: 'auto', name: 'Olej a filtry', everyKm: 30000 },
+  { id: 'pi-servis', veh: 'pila', name: 'Servis pily', everyMonths: 12 }
+];
+const svcItems = () => { const s = DB.svc && DB.svc.items; return s && Object.keys(s).length ? Object.values(s) : SVC_DEFAULT.map(x => Object.assign({ log: [] }, x)); };
+function curOdo(v) {
+  let m = 0;
+  DB.fuel.forEach(f => { if (veh(f) === v && +f.odo > m) m = +f.odo; });
+  svcItems().forEach(it => { if (it.veh === v && +it.lastOdo > m) m = +it.lastOdo; });
+  return m;
+}
+const addMonths = (s, n) => { const d = parseIso(s), day = d.getDate(); d.setDate(1); d.setMonth(d.getMonth() + n); d.setDate(Math.min(day, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate())); return iso(d); };
+const daysBetween = (a, b) => Math.round((parseIso(b) - parseIso(a)) / 864e5);
+const SVC_WARN = { mth: 5, km: 1000, d: 30 };
+function svcStatus(it) {
+  const out = [], t = todayIso();
+  const u = it.veh === 'auto' ? 'km' : 'mth', every = it.veh === 'auto' ? +it.everyKm : +it.everyMth;
+  if (every > 0 && ODO[it.veh] && it.lastOdo != null && it.lastOdo !== '') {
+    const cur = Math.max(curOdo(it.veh), +it.lastOdo), rem = +it.lastOdo + every - cur;
+    out.push({ pct: (cur - it.lastOdo) / every, rem, u, warn: SVC_WARN[u], txt: rem < 0 ? `přetaženo o ${num(-rem, 0)} ${u}` : `za ${num(rem, 0)} ${u}`, info: `každých ${num(every, 0)} ${u} · naposledy ${num(+it.lastOdo, u === 'km' ? 0 : 1)} ${u}` });
+  }
+  if (+it.everyMonths > 0 && it.lastDate) {
+    const due = addMonths(it.lastDate, +it.everyMonths), rem = daysBetween(t, due), tot = Math.max(1, daysBetween(it.lastDate, due));
+    out.push({ pct: (tot - rem) / tot, rem, u: 'd', warn: SVC_WARN.d, txt: rem < 0 ? `po termínu ${plural(-rem, 'den', 'dny', 'dní')}` : rem === 0 ? 'dnes' : `za ${plural(rem, 'den', 'dny', 'dní')}`, info: `platí do ${dmY(due)}` });
+  }
+  if (!out.length) return { lvl: 'n', pct: 0, txt: 'zadat', info: (it.everyMth || it.everyKm) && !ODO[it.veh] ? 'pila nemá počítadlo – hlídá se podle data' : 'zatím nezadané poslední provedení' };
+  const s = out.sort((a, b) => b.pct - a.pct)[0];
+  s.lvl = s.rem <= s.warn || s.pct >= 1 ? 'r' : s.pct >= 0.75 ? 'w' : '';
+  if (out.length > 1) s.info = out.map(o => o.info).join(' · ');
+  return s;
+}
+const svcAlerts = () => svcItems().map(it => ({ it, s: svcStatus(it) })).filter(x => x.s.lvl === 'r').sort((a, b) => b.s.pct - a.s.pct);
+function svcBar() {
+  const a = svcAlerts(); if (!a.length) return '';
+  const f = a[0];
+  return `<button class="duebar svc" data-act="b-svc-go"><i></i><span><b>Servis:</b> ${esc(f.it.name.toLowerCase())} (${VEH[f.it.veh].toLowerCase()}) – ${esc(f.s.txt)}${a.length > 1 ? ` a ${plural(a.length - 1, 'další', 'další', 'dalších')}` : ''}</span><b class="go">Otevřít ›</b></button>`;
+}
+function viewServis() {
+  const items = svcItems();
+  return Object.keys(VEH).map(v => {
+    const its = items.filter(i => i.veh === v); const o = ODO[v];
+    return `<div class="box" style="gap:2px;padding:12px 16px 6px">
+      <div class="between" style="margin-bottom:4px"><b style="font-size:16px;color:${VCOL[v]}">${VEH[v]}</b><span class="sub">${o ? (curOdo(v) ? num(curOdo(v), v === 'auto' ? 0 : 1) + ' ' + o.u : 'stav ' + o.u + ' zatím nezadán') : 'podle data'}</span></div>
+      ${its.map(it => { const s = svcStatus(it); return `<button class="svc" data-act="b-svc" data-id="${esc(it.id)}"><span class="between"><span class="t">${esc(it.name)}</span><span class="badge ${s.lvl}">${esc(s.txt)}</span></span>${s.lvl !== 'n' ? `<span class="pbar ${s.lvl}"><i style="width:${Math.max(3, Math.min(100, s.pct * 100))}%"></i></span>` : ''}<span class="m">${esc(s.info)}</span></button>`; }).join('') || '<span class="sub" style="font-weight:400;padding:8px 0">Žádné úkony.</span>'}
+      <button class="linkbtn" style="align-self:flex-start;min-height:40px" data-act="b-svc-new" data-v="${v}">+ Přidat úkon</button>
+    </div>`;
+  }).join('') + `<p class="note">Stav km a motohodin se bere z posledního tankování se zapsaným stavem. Upozornění v Deníku se objeví ${SVC_WARN.mth} mth / ${num(SVC_WARN.km, 0)} km / ${SVC_WARN.d} dní předem.</p>`;
+}
+function openSvc(id, newVeh) {
+  const ex = id ? svcItems().find(i => i.id === id) : null;
+  const it = ex ? JSON.parse(JSON.stringify(ex)) : { id: null, veh: newVeh || 'stepkovac', name: '', log: [] };
+  FORM = { kind: 'svc', it };
+  const o = ODO[it.veh], cur = curOdo(it.veh), every = it.veh === 'auto' ? it.everyKm : it.everyMth;
+  openSheet('', `
+    <div><b style="font-size:20px">${esc(it.name || 'Nový úkon')}</b><div class="sub" style="font-weight:400">${VEH[it.veh]}${o && cur ? ' · teď ' + num(cur, it.veh === 'auto' ? 0 : 1) + ' ' + o.u : ''}</div></div>
+    <div class="f"><label for="v-name">Úkon</label><input class="in" id="v-name" value="${esc(it.name)}" placeholder="např. výměna řemene"></div>
+    <div class="g2">
+      ${o ? `<div class="f"><label for="v-every">Interval (${o.u})</label><input class="in" id="v-every" type="number" inputmode="decimal" min="0" value="${esc(every || '')}" placeholder="—"></div>` : ''}
+      <div class="f"><label for="v-months">Interval (měsíce)</label><input class="in" id="v-months" type="number" inputmode="numeric" min="0" value="${esc(it.everyMonths || '')}" placeholder="—"></div>
+    </div>
+    <div class="label" style="margin:4px 0 -4px">Provedení</div>
+    <div class="g2">
+      <div class="f"><label for="v-date">Datum</label><input class="in" id="v-date" type="date" value="${esc(todayIso())}"></div>
+      ${o ? `<div class="f"><label for="v-odo">Stav (${o.u})</label><input class="in" id="v-odo" type="number" inputmode="decimal" min="0" step="any" value="${cur || ''}"></div>` : ''}
+    </div>
+    <div class="g2">
+      <div class="f"><label for="v-price">Cena (Kč)</label><input class="in" id="v-price" type="number" inputmode="decimal" min="0" placeholder="0"></div>
+      <div class="f"><label for="v-note">Poznámka</label><input class="in" id="v-note" placeholder="kde, co…"></div>
+    </div>
+    ${it.log && it.log.length ? `<div class="label" style="margin:4px 0 -6px">Historie</div><div>${it.log.slice().sort((a, b) => b.date.localeCompare(a.date)).map(l => `<div class="between sub" style="font-weight:400;padding:7px 0;border-top:1px solid var(--line)"><span>${dmY(l.date)}${l.odo ? ' · ' + num(l.odo, it.veh === 'auto' ? 0 : 1) + ' ' + (o ? o.u : '') : ''}${l.note ? ' · ' + esc(l.note) : ''}</span><span>${l.price ? money(l.price) : ''}</span></div>`).join('')}</div>`
+      : (ex && (ex.lastDate || ex.lastOdo) ? `<div class="note">Naposledy: ${ex.lastDate ? dmY(ex.lastDate) : ''}${ex.lastOdo ? ' · ' + num(ex.lastOdo) + ' ' + (o ? o.u : '') : ''}</div>` : '<div class="note">Zapište, kdy se úkon dělal naposledy – od toho se počítá další termín. U STK zadejte datum poslední prohlídky.</div>')}
+  `, `${ex ? '<button class="btn red" data-act="b-svc-del" style="flex:0 0 auto">Smazat</button>' : ''}<button class="btn o" data-act="b-svc-save" style="flex:0 0 auto">Uložit</button><button class="btn" data-act="b-svc-done">Zapsat provedení</button>`, it.name || 'Servis');
+}
+function svcPersist(items) {
+  DB.svc = { items: Object.fromEntries(items.map(i => [i.id, i])) }; saveData();
+  if (cloudReady()) { const { fs } = CLOUD.m; fs.setDoc(fs.doc(CLOUD.db, 'nastaveni', 'servis'), clean({ items: DB.svc.items, upravil: CLOUD.user.email, upraveno: Date.now() })).catch(e => toast('Uložení servisu selhalo: ' + (e.code || e.message))); }
+}
+function saveSvc(done) {
+  const it = FORM.it, name = $('#v-name').value.trim();
+  if (!name) { toast('Vyplňte název úkonu'); return; }
+  const n = (id) => { const el = $('#' + id); const v = el ? parseFloat((el.value || '').replace(/\s/g, '').replace(',', '.')) : NaN; return v > 0 ? v : null; };
+  it.name = name;
+  const ev = n('v-every'); if (it.veh === 'auto') it.everyKm = ev; else it.everyMth = ev;
+  it.everyMonths = n('v-months');
+  if (!ev && !it.everyMonths) { toast('Zadejte interval (km / mth nebo měsíce)'); return; }
+  if (done) {
+    const d = $('#v-date').value || todayIso(), odo = n('v-odo'), price = n('v-price'), note = $('#v-note').value.trim();
+    it.log = it.log || []; it.log.push({ date: d, odo, price, note });
+    if (!it.lastDate || d >= it.lastDate) { it.lastDate = d; if (odo) it.lastOdo = odo; }
+  }
+  if (!it.id) it.id = uid();
+  const items = svcItems().filter(i => i.id !== it.id); items.push(it);
+  svcPersist(items); closeSheet(); render(); toast(done ? 'Provedení zapsáno' : 'Uloženo');
+}
+
+/* ---------- Fotky (Firestore kolekce fotky, zmenšené JPEG) ---------- */
+const PHOTO = new Map();
+let photoTarget = null;
+function photoInput() {
+  let el = $('#photo-file');
+  if (!el) {
+    el = document.createElement('input'); el.type = 'file'; el.accept = 'image/*'; el.multiple = true; el.id = 'photo-file'; el.className = 'hidden';
+    el.addEventListener('change', async () => { const files = [...el.files]; el.value = ''; if (files.length && photoTarget) await addPhotos(photoTarget, files); });
+    document.body.appendChild(el);
+  }
+  return el;
+}
+function shrink(file, max = 1280) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement('canvas');
+      c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      let q = 0.72, d = c.toDataURL('image/jpeg', q);
+      while (d.length > 700000 && q > 0.35) { q -= 0.12; d = c.toDataURL('image/jpeg', q); }
+      res(d);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('img')); };
+    img.src = url;
+  });
+}
+async function addPhotos(jobId, files) {
+  if (!cloudReady()) { toast('Fotky jdou ukládat jen po přihlášení'); return; }
+  const j = DB.jobs.find(x => x.id === jobId); if (!j) return;
+  const { fs } = CLOUD.m; toast('Ukládám ' + plural(files.length, 'fotku', 'fotky', 'fotek') + '…');
+  for (const f of files) {
+    try {
+      const data = await shrink(f), pid = uid();
+      PHOTO.set(pid, data);
+      await Promise.race([fs.setDoc(fs.doc(CLOUD.db, 'fotky', pid), { jobId, data, created: Date.now(), by: CLOUD.user.email }), new Promise(r => setTimeout(r, 4000))]);
+      j.photos = [...(j.photos || []), pid];
+      if (FORM && FORM.j && FORM.j.id === jobId) FORM.j.photos = j.photos.slice();
+    } catch (e) { toast(e.code === 'permission-denied' ? 'Doplňte pravidla Firestore pro „fotky“' : 'Fotku se nepodařilo uložit'); return; }
+  }
+  saveData(); cloudPut('jobs', j);
+  const box = $('#form-photos'); if (box && FORM && FORM.j && FORM.j.id === jobId) box.innerHTML = thumbs(j, true);
+  if (!FORM) render();
+  hydratePhotos(); toast('Fotky uloženy');
+}
+async function loadPhoto(pid) {
+  if (PHOTO.has(pid)) return PHOTO.get(pid);
+  if (!cloudReady()) return null;
+  const { fs } = CLOUD.m;
+  try { const d = await fs.getDoc(fs.doc(CLOUD.db, 'fotky', pid)); const v = d.exists() ? d.data().data : null; if (v) PHOTO.set(pid, v); return v; } catch (e) { return null; }
+}
+function hydratePhotos() {
+  document.querySelectorAll('img[data-pid]:not([src])').forEach(async im => { const v = await loadPhoto(im.dataset.pid); if (v) im.src = v; else im.closest('.ph')?.classList.add('miss'); });
+}
+function thumbs(j, add) {
+  const ps = j.photos || [];
+  if (!ps.length && !add) return '';
+  return `<div class="thumbs">${ps.map(p => `<button class="ph" data-act="b-photo" data-pid="${esc(p)}" data-id="${j.id}" aria-label="Fotka"><img data-pid="${esc(p)}" alt=""></button>`).join('')}${add ? `<button class="ph add" data-act="b-photo-add" data-id="${j.id}" aria-label="Přidat fotku">${BI.cam}</button>` : ''}</div>`;
+}
+async function viewPhoto(pid, jobId) {
+  const v = await loadPhoto(pid); if (!v) { toast('Fotku se nepodařilo načíst'); return; }
+  const d = document.createElement('div'); d.className = 'pview';
+  d.innerHTML = `<img src="${v}" alt="Fotka zakázky"><div class="pview-f"><button class="btn red sm" data-pdel="1">Smazat</button><button class="btn sm" data-pclose="1">Zavřít</button></div>`;
+  d.addEventListener('click', (e) => {
+    if (e.target.closest('[data-pdel]')) { if (!confirm('Smazat fotku?')) return; delPhoto(pid, jobId); d.remove(); }
+    else if (e.target.closest('[data-pclose]') || e.target === d) d.remove();
+  });
+  document.body.appendChild(d);
+}
+function delPhoto(pid, jobId) {
+  const j = DB.jobs.find(x => x.id === jobId); if (!j) return;
+  j.photos = (j.photos || []).filter(p => p !== pid); saveData(); cloudPut('jobs', j);
+  if (FORM && FORM.j && FORM.j.id === jobId) { FORM.j.photos = j.photos.slice(); const box = $('#form-photos'); if (box) box.innerHTML = thumbs(j, true); hydratePhotos(); }
+  if (cloudReady()) { const { fs } = CLOUD.m; fs.deleteDoc(fs.doc(CLOUD.db, 'fotky', pid)).catch(() => {}); }
+  PHOTO.delete(pid); if (!FORM) render(); toast('Fotka smazána');
+}
+const formPhotos = (j) => j.id ? `<div class="f"><span class="lb">Fotky z místa</span><div id="form-photos">${thumbs(j, true)}</div><div class="note">Fotka se zmenší a uloží k zakázce, uvidí ji oba účty.</div></div>` : '';
+
+/* ---------- Výkaz PDF (vykreslí se v telefonu, nic se nikam neposílá) ---------- */
+function nextVykazNo(y) {
+  const n = DB.jobs.map(j => j.vykazNo || '').filter(v => v.startsWith(y + '-')).map(v => +v.split('-')[1] || 0);
+  return y + '-' + String((n.length ? Math.max(...n) : 0) + 1).padStart(3, '0');
+}
+function ensureVykazNo(j) {
+  if (j.vykazNo) return j.vykazNo;
+  j.vykazNo = nextVykazNo(j.date.slice(0, 4));
+  const i = DB.jobs.findIndex(x => x.id === j.id); if (i >= 0) { DB.jobs[i].vykazNo = j.vykazNo; saveData(); cloudPut('jobs', DB.jobs[i]); }
+  return j.vykazNo;
+}
+const loadImg = (src) => new Promise((res) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; });
+function wrapText(g, text, x, y, maxW, lh) {
+  const words = String(text).split(/\s+/); let line = '';
+  for (const w of words) { const t = line ? line + ' ' + w : w; if (g.measureText(t).width > maxW && line) { g.fillText(line, x, y); y += lh; line = w; } else line = t; }
+  if (line) { g.fillText(line, x, y); y += lh; }
+  return y;
+}
+async function renderVykaz(j) {
+  const W = 1240, H = 1754, M = 100, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d'), F = (s, w = 400) => `${w} ${s}px -apple-system, "Segoe UI", Roboto, Arial, sans-serif`;
+  g.fillStyle = '#fff'; g.fillRect(0, 0, W, H); g.textBaseline = 'alphabetic';
+  const st = DB.settings, firm = st.firmName || 'Štěpkování', no = ensureVykazNo(j);
+  g.fillStyle = '#2F6B3A'; g.font = F(52, 700); g.fillText('Výkaz práce', M, M + 40);
+  g.fillStyle = '#444'; g.font = F(26); g.fillText('č. ' + no, M, M + 84);
+  g.textAlign = 'right'; g.fillStyle = '#1B1F1A'; g.font = F(28, 700); g.fillText(firm, W - M, M + 30);
+  g.font = F(22); g.fillStyle = '#555';
+  [st.startAddress, st.firmIco ? 'IČO ' + st.firmIco : '', st.firmPhone ? 'tel. ' + st.firmPhone : ''].filter(Boolean).forEach((t, i) => g.fillText(t, W - M, M + 64 + i * 30));
+  g.textAlign = 'left';
+  g.fillStyle = '#2F6B3A'; g.fillRect(M, M + 150, W - 2 * M, 5);
+  const loads = +j.loads || 0, rows = [
+    ['Zákazník', (j.customer || '—') + (j.customerIco ? ', IČO ' + j.customerIco : '')],
+    ['Místo práce', j.place || '—'],
+    ['Datum', longDate(j.date).toLowerCase() + ' ' + j.date.slice(0, 4)],
+    ['Čas', `${j.from}–${j.to} (${fmtDur(jobMinutes(j))})`],
+    ['Štěpka', `${fmtLoads(loads)} ${loadsWord(loads)} · ${num(m3(loads))} m³`],
+    ['Ujeto', kmRound(j) ? `${num(kmRound(j))} km (${trips(loads) === 1 ? '1 cesta tam a zpět' : trips(loads) + '× tam a zpět'})` : '—'],
+    ['Odvoz štěpky', `${num(m3(loads))} m³ × ${money(jobPrice(j))} = ${money(revenue(j))}`]
+  ];
+  let y = M + 220;
+  rows.forEach(([k, v], i) => {
+    if (i % 2 === 0) { g.fillStyle = '#F4F6F2'; g.fillRect(M, y - 38, W - 2 * M, 56); }
+    g.fillStyle = '#666'; g.font = F(26); g.fillText(k, M + 16, y);
+    g.fillStyle = '#1B1F1A'; g.font = F(26, i === 4 || i === 6 ? 700 : 400); y = wrapText(g, v, M + 330, y, W - 2 * M - 350, 34) + 22;
+  });
+  if (j.note) { y += 10; g.fillStyle = '#1B1F1A'; g.font = F(26, 700); g.fillText('Poznámka', M, y); y += 38; g.font = F(26); y = wrapText(g, j.note, M, y, W - 2 * M, 36); }
+  const ps = (j.photos || []).slice(0, 6);
+  if (ps.length) {
+    y += 30; g.fillStyle = '#1B1F1A'; g.font = F(26, 700); g.fillText('Fotky', M, y); y += 20;
+    const cols = 3, gap = 16, cw = (W - 2 * M - gap * (cols - 1)) / cols, ch = Math.min(300, (H - 160 - y) / Math.ceil(ps.length / cols) - gap);
+    for (let i = 0; i < ps.length; i++) {
+      const src = await loadPhoto(ps[i]); const im = src && await loadImg(src); if (!im) continue;
+      const x = M + (i % cols) * (cw + gap), yy = y + Math.floor(i / cols) * (ch + gap);
+      const k = Math.max(cw / im.width, ch / im.height), sw = cw / k, sh = ch / k;
+      g.save(); g.beginPath(); g.rect(x, yy, cw, ch); g.clip(); g.drawImage(im, (im.width - sw) / 2, (im.height - sh) / 2, sw, sh, x, yy, cw, ch); g.restore();
+    }
+  }
+  g.fillStyle = '#888'; g.font = F(20);
+  const made = new Date(j.finished || Date.now());
+  g.fillText(`Vytvořeno v aplikaci Štěpkovač ${made.getDate()}. ${made.getMonth() + 1}. ${made.getFullYear()} ${made.getHours()}:${pad(made.getMinutes())}`, M, H - 70);
+  g.textAlign = 'right'; g.fillText('1/1', W - M, H - 70); g.textAlign = 'left';
+  return c;
+}
+// jednostránkové PDF s jedním obrázkem JPEG (A4)
+function pdfFromJpeg(jpeg, w, h) {
+  const enc = new TextEncoder(), parts = [], offs = []; let len = 0;
+  const push = (x) => { const b = typeof x === 'string' ? enc.encode(x) : x; parts.push(b); len += b.length; };
+  const obj = (n, body, stream) => { offs[n] = len; push(`${n} 0 obj\n${body}\n`); if (stream) { push('stream\n'); push(stream); push('\nendstream\n'); } push('endobj\n'); };
+  const PW = 595.28, PH = 841.89, content = `q ${PW} 0 0 ${PH} 0 0 cm /Im0 Do Q`;
+  push('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n'.replace(/[\u0080-ÿ]/g, 'x'));
+  obj(1, '<< /Type /Catalog /Pages 2 0 R >>');
+  obj(2, '<< /Type /Pages /Kids [3 0 R] /Count 1 >>');
+  obj(3, `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PW} ${PH}] /Resources << /XObject << /Im0 5 0 R >> >> /Contents 4 0 R >>`);
+  obj(4, `<< /Length ${content.length} >>`, enc.encode(content));
+  obj(5, `<< /Type /XObject /Subtype /Image /Width ${w} /Height ${h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpeg.length} >>`, jpeg);
+  const x = len;
+  push(`xref\n0 6\n0000000000 65535 f \n${[1, 2, 3, 4, 5].map(n => String(offs[n]).padStart(10, '0') + ' 00000 n \n').join('')}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${x}\n%%EOF`);
+  return new Blob(parts, { type: 'application/pdf' });
+}
+async function makeVykaz(j) {
+  const c = await renderVykaz(j), url = c.toDataURL('image/jpeg', 0.85);
+  const bin = atob(url.split(',')[1]), bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const name = `vykaz-${j.vykazNo}-${(fold(j.customer || 'zakaznik').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'zakaznik').slice(0, 30)}.pdf`;
+  return { url, blob: pdfFromJpeg(bytes, c.width, c.height), name };
+}
+async function openVykaz(id) {
+  const j = DB.jobs.find(x => x.id === id); if (!j) return;
+  if (isOpen(j)) { toast('Výkaz se vytvoří po dokončení zakázky'); return; }
+  toast('Vytvářím výkaz…');
+  const v = await makeVykaz(Object.assign({}, j));
+  closeSheet();
+  FORM = { kind: 'vykaz', v, j };
+  openSheet('', `<div class="between"><b style="font-size:18px">Výkaz · ${esc(j.customer || j.place || 'zakázka')}</b><span class="sub">č. ${esc(j.vykazNo)}</span></div>
+    <div class="vprev"><img src="${v.url}" alt="Náhled výkazu"></div>`,
+    `<button class="btn o" data-act="b-pdf-dl" style="flex:0 0 auto">Stáhnout</button><button class="btn" data-act="b-pdf-share">${BI.share.replace('<svg', '<svg width="18" height="18" style="vertical-align:-3px;margin-right:6px"')}Poslat</button>`, 'Výkaz');
+}
+async function shareVykaz(id) {
+  let v = FORM && FORM.kind === 'vykaz' ? FORM.v : null;
+  if (!v) { const j = DB.jobs.find(x => x.id === id); if (!j || isOpen(j)) return; v = await makeVykaz(Object.assign({}, j)); }
+  const file = new File([v.blob], v.name, { type: 'application/pdf' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], title: v.name }); } catch (e) {} }
+  else dlBlob(v.blob, v.name);
+}
+function dlBlob(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); }
+
+/* ---------- Karta zakázky v Deníku (testovací verze) ---------- */
+function jobCardB(j) {
+  const done = !isOpen(j);
+  return `<div class="jobw${isOpen(j) ? ' open' : ''}${isOrder(j) ? ' ord' : ''}">${jobCard(j).replace('<button class="card', '<button class="card in')
+    .replace('<div class="chips">', `<div class="chips">${isOrder(j) ? `<span class="chip ordc">objednávka${j.estLoads ? ' · ≈ ' + num(m3(j.estLoads)) + ' m³' : ''}</span>` : ''}${j.callBefore && isOpen(j) ? `<span class="chip ordc">${telIc()} zavolat den předem</span>` : ''}`)
+    .replace('<span class="chip">' + fmtDur(jobMinutes(j)), (done ? `<span class="chip g">výnos ${money(revenue(j))}</span>` : '') + '<span class="chip">' + fmtDur(jobMinutes(j)))
+    .replace(/<span class="chip op">Otevřená · ([^<]*)<\/span>/, isOrder(j) ? '' : '$&')}
+    ${(j.photos || []).length || done ? `<div class="jobw-x">${thumbs(j, true)}${done ? `<div class="row" style="gap:8px"><button class="ib" data-act="b-pdf" data-id="${j.id}">${BI.pdf}Výkaz PDF</button><button class="ib" data-act="b-pdf-share-id" data-id="${j.id}">${BI.share}Poslat</button></div>` : ''}</div>` : ''}
+  </div>`;
+}
+
+/* ---------- Objednávka ve formuláři zakázky ---------- */
+function orderBox(j) {
+  return `<div class="f"><span class="lb">Odhad štěpky (objednávka)</span><div class="quick q4">${[0.5, 1, 1.5, 2].map(v => `<button type="button" data-act="b-est" data-v="${v}" class="${+j.estLoads === v ? 'on' : ''}">${fmtLoads(v)}</button>`).join('')}</div></div>
+    <label class="tgl"><span><b>Zavolat zákazníkovi den předem</b><small>připomenutí v ${FINISH_HOUR}:00 den před zakázkou</small></span><input type="checkbox" id="j-call"${j.callBefore ? ' checked' : ''}><i></i></label>`;
+}
+
+/* ---------- Nastavení výkazu a výnosu ---------- */
+function betaSettings() {
+  const st = DB.settings;
+  return `<div class="setting">
+    <h2>Výkaz a výnos <span class="chip" style="vertical-align:2px">test</span></h2>
+    <div class="f"><label for="s-price">Cena odvozu štěpky (Kč za m³)</label><input class="in" id="s-price" type="number" inputmode="decimal" min="0" value="${esc(priceM3())}"></div>
+    <div class="f"><label for="s-firm">Název firmy na výkazu</label><input class="in" id="s-firm" value="${esc(st.firmName || '')}" placeholder="např. Pávek – štěpkování"></div>
+    <div class="g2"><div class="f"><label for="s-fico">IČO</label><input class="in" id="s-fico" inputmode="numeric" value="${esc(st.firmIco || '')}"></div><div class="f"><label for="s-ftel">Telefon</label><input class="in" id="s-ftel" type="tel" value="${esc(st.firmPhone || '')}"></div></div>
+    <div class="note">Adresa na výkazu je startovní adresa (základna). Cena za m³ se při dokončení zakázky uloží k zakázce, pozdější změna ceny staré zakázky nepřepočítá.</div>
+    <button class="btn" data-act="save-settings">Uložit nastavení</button>
+  </div>`;
+}
+
+/* ---------- Události testovacích funkcí ---------- */
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-act^="b-"]'); if (!el) return;
+  const id = el.dataset.id;
+  switch (el.dataset.act) {
+    case 'b-seg': UI.pseg = el.dataset.v; render(); window.scrollTo(0, 0); break;
+    case 'b-svc-go': UI.pseg = 'servis'; go('prehled'); break;
+    case 'b-svc': openSvc(id); break;
+    case 'b-svc-new': openSvc(null, el.dataset.v); break;
+    case 'b-svc-save': saveSvc(false); break;
+    case 'b-svc-done': saveSvc(true); break;
+    case 'b-svc-del': if (confirm('Smazat tento úkon i s historií?')) { svcPersist(svcItems().filter(i => i.id !== FORM.it.id)); closeSheet(); render(); toast('Smazáno'); } break;
+    case 'b-cust': openCust(el.dataset.k); break;
+    case 'b-cust-new': openCust(null); break;
+    case 'b-cust-save': { const o = saveCust(); if (o) { closeSheet(); render(); toast('Zákazník uložen'); } break; }
+    case 'b-cust-del': delCust(); break;
+    case 'b-cust-newjob': { const o = saveCust(); if (!o) break; closeSheet(); JOB_PRESET = { customer: o.name, customerId: o.id, customerIco: o.ico || '', place: o.place || '', kmOneWay: o.kmOneWay || '', lat: o.lat, lon: o.lon, date: todayIso() < UI.day ? UI.day : addDays(todayIso(), 1) }; openJob(); break; }
+    case 'b-cust-job': closeSheet(); openJob(id); break;
+    case 'b-pdf': openVykaz(id); break;
+    case 'b-pdf-dl': if (FORM && FORM.v) dlBlob(FORM.v.blob, FORM.v.name); break;
+    case 'b-pdf-share': shareVykaz(FORM && FORM.j && FORM.j.id); break;
+    case 'b-pdf-share-id': shareVykaz(id); break;
+    case 'b-photo-add': photoTarget = id; photoInput().click(); break;
+    case 'b-photo': viewPhoto(el.dataset.pid, id); break;
+    case 'b-est': if (FORM && FORM.j) { FORM.j.estLoads = +FORM.j.estLoads === +el.dataset.v ? null : +el.dataset.v; document.querySelectorAll('[data-act="b-est"]').forEach(b => b.classList.toggle('on', +b.dataset.v === +FORM.j.estLoads)); } break;
+  }
+});
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'cust-q') { UI.custQ = e.target.value; const q = custKey(UI.custQ); const box = $('#cust-list'); if (box) box.innerHTML = custRows(q ? custList().filter(c => custKey([c.name, c.place, c.phone, c.ico].join(' ')).includes(q)) : custList()); }
+});
+
 render();
 /* ===== Start: úvodní obrazovka min. 3 s, mezitím přihlášení ===== */
 (function boot() {
   const sp = $('#splash'), t0 = Date.now();
+  $('#sp-ver').textContent = 'verze ' + APP_VERSION;
   const minShow = matchMedia('(prefers-reduced-motion: reduce)').matches ? 600 : 3000;
   const ready = CLOUD_ON ? cloudInit().catch(() => { CLOUD.failed = true; toast('Firebase se nepodařilo načíst – zobrazuji uložená data'); }) : Promise.resolve();
   let gone = false;
