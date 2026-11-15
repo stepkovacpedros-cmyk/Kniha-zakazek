@@ -596,7 +596,7 @@ function viewDenik() {
   ${(() => { const due = dueJobs(); return due.length ? `<button class="duebar" data-act="finish-next"><i></i><span><b>${due.length} ${due.length === 1 ? 'otevřená zakázka čeká' : due.length < 5 ? 'otevřené zakázky čekají' : 'otevřených zakázek čeká'}</b> na dokončení</span><b class="go">Dokončit ›</b></button>` : ''; })()}
   <div class="label">Záznamy</div>
   <div class="list">${items.length ? items.map(i => i.h).join('') : '<div class="empty">Na tento den zatím nic není.<br>Přidejte zakázku nebo tankování.</div>'}</div>
-  ${d !== todayIso() ? '<div style="text-align:center;margin-top:16px"><button class="btn o" data-act="today" style="height:44px">Zpět na dnešek</button></div>' : ''}`;
+  ${d !== todayIso() && !beta() ? '<div style="text-align:center;margin-top:16px"><button class="btn o" data-act="today" style="height:44px">Zpět na dnešek</button></div>' : ''}`;
 }
 
 /* ===== Dny – časová osa ===== */
@@ -895,8 +895,9 @@ function viewStat() {
 
 
 /* ===== Přehled změn (nejnovější nahoře) ===== */
-const APP_VERSION = '2.20';
+const APP_VERSION = '2.21';
 const CHANGELOG = [
+  ['2.21', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.20', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.19', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.18', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
@@ -1617,7 +1618,7 @@ function csvFuel() {
 /* ===== Události ===== */
 document.addEventListener('click', (e) => {
   const tab = e.target.closest('[data-tab]');
-  if (tab) { go(tab.dataset.tab); return; }
+  if (tab) { if (beta() && tab.dataset.tab === 'denik') UI.day = todayIso(); go(tab.dataset.tab); return; }
   const el = e.target.closest('[data-act]');
   if (!(el && el.dataset.act === 'tip')) document.querySelectorAll('.tipbox').forEach(t => t.remove());
   if (FORM && FORM.kind === 'job' && !(el && el.dataset.act === 'pick-sugg') && e.target.id !== 'j-place') hideSugg();
