@@ -270,6 +270,7 @@ textarea.in{height:76px;padding:10px 12px;resize:vertical}
 .kpi b.m{font-size:22px}
 
 /* testovací funkce (admin) */
+.vehline{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;background:#F5F6F3;border:none;border-radius:10px;padding:8px 12px;margin:2px 0 6px;text-align:left;font-size:13px;color:var(--mut)}.vehline b{font-size:15px;color:var(--tx);letter-spacing:.04em}
 .repbtn{display:flex;align-items:center;gap:12px;width:100%;margin-top:16px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-align:left;color:var(--tx)}
 .repbtn svg{width:26px;height:26px;color:var(--g);flex:none}.repbtn span{flex:1;display:flex;flex-direction:column;gap:2px}
 .repbtn b{font-size:15px}.repbtn small{font-size:12px;color:var(--mut)}.repbtn i{font-style:normal;font-size:22px;color:var(--mut)}
@@ -894,8 +895,9 @@ function viewStat() {
 
 
 /* ===== Přehled změn (nejnovější nahoře) ===== */
-const APP_VERSION = '2.18';
+const APP_VERSION = '2.19';
 const CHANGELOG = [
+  ['2.19', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.18', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.17', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.16', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
@@ -1763,7 +1765,7 @@ function startSync() {
     const a = {}; snap.docs.forEach(d => { const x = d.data(); if (x.pikr) a[d.id] = x.pikr; }); DB.avail = a; softRender();
   }, (e) => { if (e.code !== 'permission-denied') toast('Načtení dostupnosti selhalo: ' + (e.code || e.message)); else toast('Doplňte pravidla Firestore pro „dostupnost“'); }));
   CLOUD.unsubs.push(fs.onSnapshot(fs.doc(CLOUD.db, 'nastaveni', 'adresar'), (d) => { DB.cust = d.exists() ? (d.data().items || {}) : {}; softRender(); }, () => {}));
-  CLOUD.unsubs.push(fs.onSnapshot(fs.doc(CLOUD.db, 'nastaveni', 'servis'), (d) => { DB.svc = d.exists() ? { items: d.data().items || {} } : { items: {} }; softRender(); }, () => {}));
+  CLOUD.unsubs.push(fs.onSnapshot(fs.doc(CLOUD.db, 'nastaveni', 'servis'), (d) => { DB.svc = d.exists() ? { items: d.data().items || {}, vehicles: d.data().vehicles || {} } : { items: {}, vehicles: {} }; softRender(); }, () => {}));
   CLOUD.unsubs.push(fs.onSnapshot(fs.doc(CLOUD.db, 'nastaveni', 'firma'), (d) => {
     if (d.exists()) { const x = d.data(); delete x.upravil; delete x.upraveno; DB.settings = Object.assign({}, DEFAULT_SETTINGS, DB.settings, x); softRender(); }
   }, () => {}));
@@ -2085,8 +2087,9 @@ function svcStatus(it) {
     const cur = Math.max(curOdo(it.veh), +it.lastOdo), rem = +it.lastOdo + every - cur;
     out.push({ pct: (cur - it.lastOdo) / every, rem, u, warn: SVC_WARN[u], txt: rem < 0 ? `přetaženo o ${num(-rem, 0)} ${u}` : `za ${num(rem, 0)} ${u}`, info: `každých ${num(every, 0)} ${u} · naposledy ${num(+it.lastOdo, u === 'km' ? 0 : 1)} ${u}` });
   }
-  if (+it.everyMonths > 0 && it.lastDate) {
-    const due = addMonths(it.lastDate, +it.everyMonths), rem = daysBetween(t, due), tot = Math.max(1, daysBetween(it.lastDate, due));
+  if (it.validUntil || (+it.everyMonths > 0 && it.lastDate)) {
+    const due = it.validUntil || addMonths(it.lastDate, +it.everyMonths), from = it.lastDate && it.lastDate < due ? it.lastDate : addMonths(due, -(+it.everyMonths || 24));
+    const rem = daysBetween(t, due), tot = Math.max(1, daysBetween(from, due));
     out.push({ pct: (tot - rem) / tot, rem, u: 'd', warn: SVC_WARN.d, txt: rem < 0 ? `po termínu ${plural(-rem, 'den', 'dny', 'dní')}` : rem === 0 ? 'dnes' : `za ${plural(rem, 'den', 'dny', 'dní')}`, info: `platí do ${dmY(due)}` });
   }
   if (!out.length) return { lvl: 'n', pct: 0, txt: 'zadat', info: (it.everyMth || it.everyKm) && !ODO[it.veh] ? 'pila nemá počítadlo – hlídá se podle data' : 'zatím nezadané poslední provedení' };
@@ -2106,11 +2109,31 @@ function viewServis() {
   return Object.keys(VEH).map(v => {
     const its = items.filter(i => i.veh === v); const o = ODO[v];
     return `<div class="box" style="gap:2px;padding:12px 16px 6px">
-      <div class="between" style="margin-bottom:4px"><b style="font-size:16px;color:${VCOL[v]}">${VEH[v]}</b><span class="sub">${o ? (curOdo(v) ? num(curOdo(v), v === 'auto' ? 0 : 1) + ' ' + o.u : 'stav ' + o.u + ' zatím nezadán') : 'podle data'}</span></div>
+      <div class="between" style="margin-bottom:4px"><b style="font-size:16px;color:${VCOL[v]}">${VEH[v]}${v === 'stepkovac' ? ' <span class="sub" style="font-weight:400">(vozík)</span>' : ''}</b><span class="sub">${o ? (curOdo(v) ? num(curOdo(v), v === 'auto' ? 0 : 1) + ' ' + o.u : 'stav ' + o.u + ' zatím nezadán') : 'podle data'}</span></div>
+      ${vehLine(v)}
       ${its.map(it => { const s = svcStatus(it); return `<button class="svc" data-act="b-svc" data-id="${esc(it.id)}"><span class="between"><span class="t">${esc(it.name)}</span><span class="badge ${s.lvl}">${esc(s.txt)}</span></span>${s.lvl !== 'n' ? `<span class="pbar ${s.lvl}"><i style="width:${Math.max(3, Math.min(100, s.pct * 100))}%"></i></span>` : ''}<span class="m">${esc(s.info)}</span></button>`; }).join('') || '<span class="sub" style="font-weight:400;padding:8px 0">Žádné úkony.</span>'}
-      <button class="linkbtn" style="align-self:flex-start;min-height:40px" data-act="b-svc-new" data-v="${v}">+ Přidat úkon</button>
+      <div class="row" style="gap:18px"><button class="linkbtn" style="min-height:40px" data-act="b-svc-new" data-v="${v}">+ Přidat úkon</button>${v !== 'pila' ? `<button class="linkbtn" style="min-height:40px" data-act="b-veh" data-v="${v}">Údaje vozidla</button>` : ''}</div>
     </div>`;
   }).join('') + `<p class="note">Stav km a motohodin se bere z nejvyššího zapsaného stavu u tankování nebo zakázky. Upozornění v Deníku se objeví ${SVC_WARN.mth} mth / ${num(SVC_WARN.km, 0)} km / ${SVC_WARN.d} dní předem.</p>`;
+}
+const VEH_F = [['rz', 'RZ (SPZ)'], ['vin', 'VIN (identifikační číslo)'], ['tp', 'Číslo technického průkazu'], ['orv', 'Číslo osvědčení o registraci'], ['color', 'Barva'], ['note', 'Poznámka']];
+function vehLine(v) {
+  const d = svcVehicles()[v]; if (!d || !(d.rz || d.vin)) return '';
+  return `<button class="vehline" data-act="b-veh" data-v="${v}">${d.rz ? `<b>${esc(d.rz)}</b>` : ''}${d.vin ? `<span>VIN ${esc(d.vin)}</span>` : ''}${d.color ? `<span>${esc(d.color.toLowerCase())}</span>` : ''}</button>`;
+}
+function openVeh(v) {
+  const d = svcVehicles()[v] || {};
+  FORM = { kind: 'veh', v };
+  openSheet('', `<div><b style="font-size:20px">${VEH[v]}${v === 'stepkovac' ? ' (vozík)' : ''}</b><div class="sub" style="font-weight:400">údaje z technického průkazu</div></div>
+    ${VEH_F.map(([k, l]) => `<div class="f"><label for="vh-${k}">${l}</label><input class="in" id="vh-${k}" value="${esc(d[k] || '')}" autocomplete="off" autocapitalize="characters" spellcheck="false"></div>`).join('')}
+    <div class="note">Konec platnosti TK zadejte u úkonu „Technická prohlídka“ (pole Platí do).</div>`,
+    `<button class="btn" data-act="b-veh-save">Uložit</button>`, VEH[v]);
+}
+function saveVeh() {
+  const v = FORM.v, o = {};
+  VEH_F.forEach(([k]) => { const x = $('#vh-' + k).value.trim(); if (x) o[k] = k === 'note' || k === 'color' ? x : x.toUpperCase().replace(/\s+/g, ''); });
+  const all = Object.assign({}, svcVehicles(), { [v]: o });
+  svcPersist(svcItems(), all); closeSheet(); render(); toast('Údaje vozidla uloženy');
 }
 function openSvc(id, newVeh) {
   const ex = id ? svcItems().find(i => i.id === id) : null;
@@ -2124,6 +2147,7 @@ function openSvc(id, newVeh) {
       ${o ? `<div class="f"><label for="v-every">Interval (${o.u})</label><input class="in" id="v-every" type="number" inputmode="decimal" min="0" value="${esc(every || '')}" placeholder="—"></div>` : ''}
       <div class="f"><label for="v-months">Interval (měsíce)</label><input class="in" id="v-months" type="number" inputmode="numeric" min="0" value="${esc(it.everyMonths || '')}" placeholder="—"></div>
     </div>
+    <div class="f"><label for="v-valid">Platí do (např. konec platnosti TK)</label><input class="in" id="v-valid" type="date" value="${esc(it.validUntil || '')}"><div class="note">Když je vyplněno, hlídá se toto datum. Po zapsání provedení se posune o interval v měsících.</div></div>
     <div class="label" style="margin:4px 0 -4px">Provedení</div>
     <div class="g2">
       <div class="f"><label for="v-date">Datum</label><input class="in" id="v-date" type="date" value="${esc(todayIso())}"></div>
@@ -2137,9 +2161,10 @@ function openSvc(id, newVeh) {
       : (ex && (ex.lastDate || ex.lastOdo) ? `<div class="note">Naposledy: ${ex.lastDate ? dmY(ex.lastDate) : ''}${ex.lastOdo ? ' · ' + num(ex.lastOdo) + ' ' + (o ? o.u : '') : ''}</div>` : '<div class="note">Zapište, kdy se úkon dělal naposledy – od toho se počítá další termín. U STK zadejte datum poslední prohlídky.</div>')}
   `, `${ex ? '<button class="btn red" data-act="b-svc-del" style="flex:0 0 auto">Smazat</button>' : ''}<button class="btn o" data-act="b-svc-save" style="flex:0 0 auto">Uložit</button><button class="btn" data-act="b-svc-done">Zapsat provedení</button>`, it.name || 'Servis');
 }
-function svcPersist(items) {
-  DB.svc = { items: Object.fromEntries(items.map(i => [i.id, i])) }; saveData();
-  if (cloudReady()) { const { fs } = CLOUD.m; fs.setDoc(fs.doc(CLOUD.db, 'nastaveni', 'servis'), clean({ items: DB.svc.items, upravil: CLOUD.user.email, upraveno: Date.now() })).catch(e => toast('Uložení servisu selhalo: ' + (e.code || e.message))); }
+const svcVehicles = () => (DB.svc && DB.svc.vehicles) || {};
+function svcPersist(items, vehicles) {
+  DB.svc = { items: Object.fromEntries(items.map(i => [i.id, i])), vehicles: vehicles || svcVehicles() }; saveData();
+  if (cloudReady()) { const { fs } = CLOUD.m; fs.setDoc(fs.doc(CLOUD.db, 'nastaveni', 'servis'), clean({ items: DB.svc.items, vehicles: DB.svc.vehicles, upravil: CLOUD.user.email, upraveno: Date.now() })).catch(e => toast('Uložení servisu selhalo: ' + (e.code || e.message))); }
 }
 function saveSvc(done) {
   const it = FORM.it, name = $('#v-name').value.trim();
@@ -2148,11 +2173,12 @@ function saveSvc(done) {
   it.name = name;
   const ev = n('v-every'); if (it.veh === 'auto') it.everyKm = ev; else it.everyMth = ev;
   it.everyMonths = n('v-months');
-  if (!ev && !it.everyMonths) { toast('Zadejte interval (km / mth nebo měsíce)'); return; }
+  it.validUntil = ($('#v-valid') && $('#v-valid').value) || null;
+  if (!ev && !it.everyMonths && !it.validUntil) { toast('Zadejte interval (km / mth nebo měsíce) nebo datum platnosti'); return; }
   if (done) {
     const d = $('#v-date').value || todayIso(), odo = n('v-odo'), price = n('v-price'), note = $('#v-note').value.trim();
     it.log = it.log || []; it.log.push({ date: d, odo, price, note });
-    if (!it.lastDate || d >= it.lastDate) { it.lastDate = d; if (odo) it.lastOdo = odo; }
+    if (!it.lastDate || d >= it.lastDate) { it.lastDate = d; if (odo) it.lastOdo = odo; if (+it.everyMonths > 0) it.validUntil = addMonths(d, +it.everyMonths); }
   }
   if (!it.id) it.id = uid();
   const items = svcItems().filter(i => i.id !== it.id); items.push(it);
@@ -2536,6 +2562,8 @@ document.addEventListener('click', (e) => {
     case 'b-svc-go': UI.pseg = 'servis'; go('prehled'); break;
     case 'b-svc': openSvc(id); break;
     case 'b-svc-new': openSvc(null, el.dataset.v); break;
+    case 'b-veh': openVeh(el.dataset.v); break;
+    case 'b-veh-save': saveVeh(); break;
     case 'b-svc-save': saveSvc(false); break;
     case 'b-svc-done': saveSvc(true); break;
     case 'b-svc-del': if (confirm('Smazat tento úkon i s historií?')) { svcPersist(svcItems().filter(i => i.id !== FORM.it.id)); closeSheet(); render(); toast('Smazáno'); } break;
