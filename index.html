@@ -272,6 +272,7 @@ textarea.in{height:76px;padding:10px 12px;resize:vertical}
 .kpi b.m{font-size:22px}
 
 /* testovací funkce (admin) */
+.logdel{width:36px;height:36px;border:none;background:none;color:var(--red);font-size:22px;line-height:1;flex:none}
 .vehline{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;background:#F5F6F3;border:none;border-radius:10px;padding:8px 12px;margin:2px 0 6px;text-align:left;font-size:13px;color:var(--mut)}.vehline b{font-size:15px;color:var(--tx);letter-spacing:.04em}
 .repbtn{display:flex;align-items:center;gap:12px;width:100%;margin-top:16px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-align:left;color:var(--tx)}
 .repbtn svg{width:26px;height:26px;color:var(--g);flex:none}.repbtn span{flex:1;display:flex;flex-direction:column;gap:2px}
@@ -904,8 +905,10 @@ function viewStat() {
 
 
 /* ===== Přehled změn (nejnovější nahoře) ===== */
-const APP_VERSION = '2.23';
+const APP_VERSION = '2.25';
 const CHANGELOG = [
+  ['2.25', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
+  ['2.24', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.23', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.22', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.21', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
@@ -2200,7 +2203,7 @@ function svcStatus(it) {
     out.push({ pct: (cur - it.lastOdo) / every, rem, u, warn: SVC_WARN[u], txt: rem < 0 ? `přetaženo o ${num(-rem, 0)} ${u}` : `za ${num(rem, 0)} ${u}`, info: `každých ${num(every, 0)} ${u} · naposledy ${num(+it.lastOdo, u === 'km' ? 0 : 1)} ${u}` });
   }
   if (it.validUntil || (+it.everyMonths > 0 && it.lastDate)) {
-    const due = it.validUntil || addMonths(it.lastDate, +it.everyMonths), from = it.lastDate && it.lastDate < due ? it.lastDate : addMonths(due, -(+it.everyMonths || 24));
+    const due = it.validUntil || addMonths(it.lastDate, +it.everyMonths), from = addMonths(due, -(+it.everyMonths || 24)); // průběh vždy za celý interval před termínem
     const rem = daysBetween(t, due), tot = Math.max(1, daysBetween(from, due));
     out.push({ pct: (tot - rem) / tot, rem, u: 'd', warn: SVC_WARN.d, txt: rem < 0 ? `po termínu ${plural(-rem, 'den', 'dny', 'dní')}` : rem === 0 ? 'dnes' : `za ${plural(rem, 'den', 'dny', 'dní')}`, info: `platí do ${dmY(due)}` });
   }
@@ -2269,7 +2272,7 @@ function openSvc(id, newVeh) {
       <div class="f"><label for="v-price">Cena (Kč)</label><input class="in" id="v-price" type="number" inputmode="decimal" min="0" placeholder="0"></div>
       <div class="f"><label for="v-note">Poznámka</label><input class="in" id="v-note" placeholder="kde, co…"></div>
     </div>
-    ${it.log && it.log.length ? `<div class="label" style="margin:4px 0 -6px">Historie</div><div>${it.log.slice().sort((a, b) => b.date.localeCompare(a.date)).map(l => `<div class="between sub" style="font-weight:400;padding:7px 0;border-top:1px solid var(--line)"><span>${dmY(l.date)}${l.odo ? ' · ' + num(l.odo, it.veh === 'auto' ? 0 : 1) + ' ' + (o ? o.u : '') : ''}${l.note ? ' · ' + esc(l.note) : ''}</span><span>${l.price ? money(l.price) : ''}</span></div>`).join('')}</div>`
+    ${it.log && it.log.length ? `<div class="label" style="margin:4px 0 -6px">Historie</div><div>${it.log.map((l, i) => ({ l, i })).sort((a, b) => b.l.date.localeCompare(a.l.date)).map(({ l, i }) => `<div class="between sub" style="font-weight:400;padding:4px 0;border-top:1px solid var(--line);gap:8px"><span style="flex:1">${dmY(l.date)}${l.odo ? ' · ' + num(l.odo, it.veh === 'auto' ? 0 : 1) + ' ' + (o ? o.u : '') : ''}${l.note ? ' · ' + esc(l.note) : ''}</span><span>${l.price ? money(l.price) : ''}</span><button class="logdel" data-act="b-svclog-del" data-i="${i}" aria-label="Smazat záznam ${dmY(l.date)}">×</button></div>`).join('')}</div>`
       : (ex && (ex.lastDate || ex.lastOdo) ? `<div class="note">Naposledy: ${ex.lastDate ? dmY(ex.lastDate) : ''}${ex.lastOdo ? ' · ' + num(ex.lastOdo) + ' ' + (o ? o.u : '') : ''}</div>` : '<div class="note">Zapište, kdy se úkon dělal naposledy – od toho se počítá další termín. U STK zadejte datum poslední prohlídky.</div>')}
   `, `${ex ? '<button class="btn red" data-act="b-svc-del" style="flex:0 0 auto">Smazat</button>' : ''}<button class="btn o" data-act="b-svc-save" style="flex:0 0 auto">Uložit</button><button class="btn" data-act="b-svc-done">Zapsat provedení</button>`, it.name || 'Servis');
 }
@@ -2674,6 +2677,12 @@ document.addEventListener('click', (e) => {
     case 'b-svc-go': UI.pseg = 'servis'; go('prehled'); break;
     case 'b-svc': openSvc(id); break;
     case 'b-svc-new': openSvc(null, el.dataset.v); break;
+    case 'b-svclog-del': if (FORM && FORM.it && confirm('Smazat tento záznam z historie?')) {
+      const it = FORM.it; it.log.splice(+el.dataset.i, 1);
+      const last = it.log.slice().sort((a, b) => b.date.localeCompare(a.date))[0];
+      it.lastDate = last ? last.date : null; it.lastOdo = last && last.odo ? last.odo : (last ? it.lastOdo : null);
+      const items = svcItems().filter(x => x.id !== it.id); items.push(it); svcPersist(items); openSvc(it.id); toast('Záznam smazán');
+    } break;
     case 'b-veh': openVeh(el.dataset.v); break;
     case 'b-veh-save': saveVeh(); break;
     case 'b-svc-save': saveSvc(false); break;
