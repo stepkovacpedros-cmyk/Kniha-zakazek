@@ -893,8 +893,9 @@ function viewStat() {
 
 
 /* ===== Přehled změn (nejnovější nahoře) ===== */
-const APP_VERSION = '2.16';
+const APP_VERSION = '2.17';
 const CHANGELOG = [
+  ['2.17', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.16', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.15', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.14', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
@@ -1869,33 +1870,23 @@ function placeTabInd(tab, drag) {
   ind.style.transform = `translateX(${b.offsetLeft + (b.offsetWidth - w) / 2}px)`;
 }
 window.addEventListener('resize', () => placeTabInd(UI.tab));
-(function tabScrub() {
-  const nav = $('nav.tabs'); let g = null, skipClick = false;
-  const btnAt = (x) => [...nav.querySelectorAll('button')].find(b => { const r = b.getBoundingClientRect(); return x >= r.left && x < r.right; });
+(function tabSwipe() {
+  // jeden swipe po liště = posun o jednu záložku ve směru pohybu prstu
+  const nav = $('nav.tabs'), order = [...nav.querySelectorAll('button')].map(b => b.dataset.tab);
+  let g = null, skipClick = false;
   nav.addEventListener('touchstart', (e) => {
-    if (!beta() || e.touches.length !== 1) { g = null; return; }
-    const b = btnAt(e.touches[0].clientX); g = { x: e.touches[0].clientX, tab: b ? b.dataset.tab : UI.tab, moved: false };
+    g = beta() && e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() } : null;
   }, { passive: true });
-  nav.addEventListener('touchmove', (e) => {
+  nav.addEventListener('touchmove', (e) => { if (g && Math.abs(e.touches[0].clientX - g.x) > 8) e.preventDefault(); }, { passive: false });
+  nav.addEventListener('touchend', (e) => {
     if (!g) return;
-    const x = e.touches[0].clientX; if (Math.abs(x - g.x) > 6) g.moved = true;
-    if (!g.moved) return;
-    e.preventDefault();
-    const b = btnAt(x); if (!b) return;
-    g.tab = b.dataset.tab;
-    nav.querySelectorAll('button').forEach(o => o.classList.toggle('hov', o === b));
-    placeTabInd(g.tab, true);
-  }, { passive: false });
-  const end = () => {
-    if (!g) return;
-    const { tab, moved } = g; g = null;
-    nav.querySelectorAll('button').forEach(o => o.classList.remove('hov'));
-    if (!moved) return;
+    const t = e.changedTouches[0], dx = t.clientX - g.x, dy = t.clientY - g.y; g = null;
+    if (Math.abs(dx) < 30 || Math.abs(dx) < Math.abs(dy)) return;
     skipClick = true; setTimeout(() => { skipClick = false; }, 400);
-    if (tab !== UI.tab) { if (navigator.vibrate) navigator.vibrate(8); go(tab); } else placeTabInd(UI.tab);
-  };
-  nav.addEventListener('touchend', end);
-  nav.addEventListener('touchcancel', end);
+    const i = order.indexOf(UI.tab), n = Math.max(0, Math.min(order.length - 1, i + (dx > 0 ? 1 : -1)));
+    if (n !== i) { if (navigator.vibrate) navigator.vibrate(8); go(order[n]); }
+  });
+  nav.addEventListener('touchcancel', () => { g = null; });
   nav.addEventListener('click', (e) => { if (skipClick) { e.stopPropagation(); e.preventDefault(); } }, true);
 })();
 
