@@ -895,8 +895,9 @@ function viewStat() {
 
 
 /* ===== Přehled změn (nejnovější nahoře) ===== */
-const APP_VERSION = '2.21';
+const APP_VERSION = '2.22';
 const CHANGELOG = [
+  ['2.22', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.21', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.20', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.19', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
@@ -1618,7 +1619,7 @@ function csvFuel() {
 /* ===== Události ===== */
 document.addEventListener('click', (e) => {
   const tab = e.target.closest('[data-tab]');
-  if (tab) { if (beta() && tab.dataset.tab === 'denik') UI.day = todayIso(); go(tab.dataset.tab); return; }
+  if (tab) { if (beta() && tab.dataset.tab === 'denik') { if (UI.tab === 'denik') { rollToToday(); return; } UI.day = todayIso(); } go(tab.dataset.tab); return; }
   const el = e.target.closest('[data-act]');
   if (!(el && el.dataset.act === 'tip')) document.querySelectorAll('.tipbox').forEach(t => t.remove());
   if (FORM && FORM.kind === 'job' && !(el && el.dataset.act === 'pick-sugg') && e.target.id !== 'j-place') hideSugg();
@@ -1644,7 +1645,7 @@ document.addEventListener('click', (e) => {
     case 'edit-job': openJob(el.dataset.id); break;
     case 'edit-fuel': openFuel(el.dataset.id); break;
     case 'overlay': case 'close': closeSheet(); break;
-    case 'day': shift(+el.dataset.n); break;
+    case 'day': if (beta()) { if (!PAGING) pageTo(+el.dataset.n); } else shift(+el.dataset.n); break;
     case 'today': UI.day = todayIso(); render(); break;
     case 'week': shift(+el.dataset.n / 7); break;
     case 'open-day': UI.day = el.dataset.d; go('denik'); break;
@@ -1835,20 +1836,83 @@ function toggleAdd(force) {
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') toggleAdd(false); });
 
 /* ===== Posun den / týden / měsíc (tlačítka i swipe) ===== */
-function shift(n) {
+function shiftState(n) {
   if (UI.tab === 'denik') UI.day = addDays(UI.day, n);
-  else if (UI.tab === 'dny') { const nw = addDays(UI.week, n * 7); if (UI.plan && nw < weekStart(todayIso())) return; UI.week = nw; }
-  else if (UI.tab === 'prehled') { let [y, m] = UI.month.split('-').map(Number); m += n; while (m < 1) { m += 12; y--; } while (m > 12) { m -= 12; y++; } UI.month = y + '-' + pad(m); }
+  else if (UI.tab === 'dny') { const nw = addDays(UI.week, n * 7); if (UI.plan && nw < weekStart(todayIso())) return false; UI.week = nw; }
+  else if (UI.tab === 'prehled') { if (beta() && (UI.pseg || 'mesic') !== 'mesic') return false; let [y, m] = UI.month.split('-').map(Number); m += n; while (m < 1) { m += 12; y--; } while (m > 12) { m -= 12; y++; } UI.month = y + '-' + pad(m); }
   else if (UI.tab === 'stat') UI.statOff += n;
-  else return;
+  else return false;
+  return true;
+}
+function shift(n) {
+  if (!shiftState(n)) return;
   render();
   const v = $('#view');
   v.classList.remove('inL', 'inR'); void v.offsetWidth; v.classList.add(n > 0 ? 'inL' : 'inR');
 }
+/* ===== Táhnutí stránky prstem (testovací verze): den se odtáhne a přijede nový ===== */
+const reduceMotion = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const anim = (el, frames, ms, easing = 'cubic-bezier(.2,.7,.3,1)') => new Promise(res => { const a = el.animate(frames, { duration: reduceMotion() ? 1 : ms, easing, fill: 'forwards' }); a.onfinish = () => { res(); }; a.oncancel = () => res(); });
+let PAGING = false;
+async function pageTo(n, fromX = 0) {
+  const v = $('#view'), W = window.innerWidth;
+  PAGING = true;
+  await anim(v, [{ transform: `translateX(${fromX}px)`, opacity: 1 - Math.min(Math.abs(fromX) / W, 1) * 0.4 }, { transform: `translateX(${n > 0 ? -W : W}px)`, opacity: 0.4 }], 170, 'cubic-bezier(.4,0,1,1)');
+  if (!shiftState(n)) { await anim(v, [{ transform: 'none', opacity: 1 }], 1); PAGING = false; return; }
+  render(); window.scrollTo(0, 0);
+  await anim(v, [{ transform: `translateX(${n > 0 ? W * 0.45 : -W * 0.45}px)`, opacity: 0.3 }, { transform: 'none', opacity: 1 }], 240);
+  v.getAnimations().forEach(a => a.cancel());
+  PAGING = false;
+}
+// rychlé „odrolování“ dní zpět na dnešek
+async function rollToToday() {
+  const t = todayIso(), diff = daysBetween(UI.day, t);
+  if (!diff || PAGING) return;
+  if (reduceMotion()) { UI.day = t; render(); return; }
+  const v = $('#view'), W = window.innerWidth, dir = diff > 0 ? 1 : -1, steps = Math.min(Math.abs(diff), 6);
+  PAGING = true;
+  for (let i = 1; i <= steps; i++) {
+    const last = i === steps, dur = last ? 260 : Math.max(60, 120 - i * 10);
+    await anim(v, [{ transform: 'none', opacity: 1 }, { transform: `translateX(${-dir * W * 0.35}px) scale(.96)`, opacity: 0.2 }], dur * 0.5, 'ease-in');
+    UI.day = last ? t : addDays(UI.day, Math.round(diff / steps) || dir);
+    render();
+    await anim(v, [{ transform: `translateX(${dir * W * 0.35}px) scale(.96)`, opacity: 0.2 }, { transform: 'none', opacity: 1 }], last ? 280 : dur * 0.5, last ? 'cubic-bezier(.2,.8,.3,1.1)' : 'ease-out');
+  }
+  v.getAnimations().forEach(a => a.cancel());
+  PAGING = false;
+}
+(function drag() {
+  const v = $('#view'); let g = null;
+  v.addEventListener('touchstart', (e) => {
+    g = null;
+    if (!beta() || PAGING || e.touches.length !== 1 || FORM || e.target.closest('input,textarea,select,.chart,nav')) return;
+    const x = e.touches[0].clientX; if (x < 18 || x > window.innerWidth - 18) return;
+    g = { x, y: e.touches[0].clientY, t: Date.now(), lock: null, dx: 0 };
+  }, { passive: true });
+  v.addEventListener('touchmove', (e) => {
+    if (!g) return;
+    const dx = e.touches[0].clientX - g.x, dy = e.touches[0].clientY - g.y;
+    if (g.lock === null && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) g.lock = Math.abs(dx) > Math.abs(dy) * 1.2 ? 'x' : 'y';
+    if (g.lock !== 'x') { if (g.lock === 'y') g = null; return; }
+    e.preventDefault();
+    g.dx = dx;
+    v.style.transform = `translateX(${dx}px)`; v.style.opacity = String(1 - Math.min(Math.abs(dx) / window.innerWidth, 1) * 0.4);
+  }, { passive: false });
+  const end = () => {
+    if (!g || g.lock !== 'x') { g = null; return; }
+    const { dx, t } = g; g = null;
+    v.style.transform = ''; v.style.opacity = '';
+    const fast = Math.abs(dx) / Math.max(1, Date.now() - t) > 0.5;
+    if (Math.abs(dx) > window.innerWidth * 0.28 || (fast && Math.abs(dx) > 40)) pageTo(dx < 0 ? 1 : -1, dx);
+    else anim(v, [{ transform: `translateX(${dx}px)` }, { transform: 'none' }], 200).then(() => v.getAnimations().forEach(a => a.cancel()));
+  };
+  v.addEventListener('touchend', end); v.addEventListener('touchcancel', end);
+})();
 (function swipe() {
   let sx = null, sy = 0, st = 0;
   const v = $('#view');
   v.addEventListener('touchstart', (e) => {
+    if (beta()) { sx = null; return; }
     if (e.touches.length !== 1 || FORM || e.target.closest('input,textarea,select')) { sx = null; return; }
     sx = e.touches[0].clientX; sy = e.touches[0].clientY; st = Date.now();
     if (sx < 24 || sx > window.innerWidth - 24) sx = null;
