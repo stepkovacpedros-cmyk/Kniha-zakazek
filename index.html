@@ -147,6 +147,8 @@ body{transition:background-color .2s}
 #view.inL{animation:inL .22s ease-out}
 #view.inR{animation:inR .22s ease-out}
 #view{touch-action:pan-y}
+#peek{display:none;position:fixed;top:0;left:0;width:100%;height:100vh;overflow:hidden;box-sizing:border-box;padding:calc(18px + var(--sat)) 18px 0;z-index:2;pointer-events:none;will-change:transform}
+body.beta #view{position:relative;z-index:3;will-change:transform}
 /* Přehled */
 .kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}
 .kpi{background:#fff;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
@@ -519,23 +521,30 @@ function render() {
   placeTabInd(UI.tab);
   $('#actions').classList.toggle('hidden', !(UI.tab === 'denik' || (UI.tab === 'dny' && !UI.plan)));
   const v = $('#view');
-  if (UI.tab === 'denik') v.innerHTML = viewDenik();
-  else if (UI.tab === 'dny') v.innerHTML = viewDny();
-  else if (UI.tab === 'prehled') v.innerHTML = viewPrehled();
-  else if (UI.tab === 'stat') v.innerHTML = viewStat();
-  else v.innerHTML = viewNastaveni();
+  v.innerHTML = viewHtml();
   updateBadge();
   if (beta()) hydratePhotos();
-  // podbarvení: aktuální = zelená, minulé = červená, budoucí = beze změny
+  const bg = viewTint();
+  document.body.style.setProperty('--bg', bg);
+  const tc = document.querySelector('meta[name="theme-color"]');
+  if (tc) tc.content = bg;
+}
+function viewHtml() {
+  if (UI.tab === 'denik') return viewDenik();
+  if (UI.tab === 'dny') return viewDny();
+  if (UI.tab === 'prehled') return viewPrehled();
+  if (UI.tab === 'stat') return viewStat();
+  return viewNastaveni();
+}
+// podbarvení: aktuální = zelená, minulé = červená, budoucí = beze změny
+function viewTint() {
   const t = todayIso(); let st = 0;
   if (UI.tab === 'denik') st = UI.day < t ? -1 : UI.day === t ? 0 : 1;
   else if (UI.tab === 'dny') { const w = weekStart(t); st = UI.week < w ? -1 : UI.week === w ? 0 : 1; }
   else if (UI.tab === 'prehled') { const m = t.slice(0, 7); st = UI.month < m ? -1 : UI.month === m ? 0 : 1; }
   else if (UI.tab === 'stat') st = UI.statOff < 0 ? -1 : UI.statOff === 0 ? 0 : 1;
   else st = 1;
-  document.body.style.setProperty('--bg', st === 0 ? '#E7F2E3' : st < 0 ? '#FBECEA' : '#F4F5F1');
-  const tc = document.querySelector('meta[name="theme-color"]');
-  if (tc) tc.content = st === 0 ? '#E7F2E3' : st < 0 ? '#FBECEA' : '#F4F5F1';
+  return st === 0 ? '#E7F2E3' : st < 0 ? '#FBECEA' : '#F4F5F1';
 }
 // číslo týdne podle ISO 8601
 function isoWeek(s) {
@@ -895,8 +904,9 @@ function viewStat() {
 
 
 /* ===== Přehled změn (nejnovější nahoře) ===== */
-const APP_VERSION = '2.22';
+const APP_VERSION = '2.23';
 const CHANGELOG = [
+  ['2.23', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.22', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.21', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.20', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
@@ -1854,14 +1864,41 @@ function shift(n) {
 const reduceMotion = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const anim = (el, frames, ms, easing = 'cubic-bezier(.2,.7,.3,1)') => new Promise(res => { const a = el.animate(frames, { duration: reduceMotion() ? 1 : ms, easing, fill: 'forwards' }); a.onfinish = () => { res(); }; a.oncancel = () => res(); });
 let PAGING = false;
+// vedlejší den/týden/měsíc, který se odkrývá vedle táhnuté stránky
+function peekEl() {
+  let p = $('#peek');
+  if (!p) { p = document.createElement('div'); p.id = 'peek'; p.setAttribute('aria-hidden', 'true'); document.body.appendChild(p); }
+  return p;
+}
+function preparePeek(n) {
+  const save = Object.assign({}, UI);
+  if (!shiftState(n)) { Object.assign(UI, save); return false; }
+  const html = viewHtml(), tint = viewTint();
+  Object.keys(UI).forEach(k => delete UI[k]); Object.assign(UI, save);
+  const p = peekEl(); p.innerHTML = html; p.style.background = tint; p.style.display = 'block'; p.dataset.n = n;
+  if (beta()) hydratePhotos();
+  return true;
+}
+function hidePeek() { const p = $('#peek'); if (p) { p.getAnimations().forEach(a => a.cancel()); p.style.display = 'none'; p.style.transform = ''; p.innerHTML = ''; } }
+function setDrag(dx) {
+  const v = $('#view'), p = $('#peek'), W = window.innerWidth;
+  v.style.transform = `translateX(${dx}px)`;
+  if (p && p.style.display === 'block') p.style.transform = `translateX(${dx + (+p.dataset.n > 0 ? W : -W)}px)`;
+}
 async function pageTo(n, fromX = 0) {
   const v = $('#view'), W = window.innerWidth;
+  if (PAGING) return;
+  if ($('#peek')?.dataset.n !== String(n) || $('#peek').style.display !== 'block') { if (!preparePeek(n)) { setDrag(0); hidePeek(); return; } }
   PAGING = true;
-  await anim(v, [{ transform: `translateX(${fromX}px)`, opacity: 1 - Math.min(Math.abs(fromX) / W, 1) * 0.4 }, { transform: `translateX(${n > 0 ? -W : W}px)`, opacity: 0.4 }], 170, 'cubic-bezier(.4,0,1,1)');
-  if (!shiftState(n)) { await anim(v, [{ transform: 'none', opacity: 1 }], 1); PAGING = false; return; }
-  render(); window.scrollTo(0, 0);
-  await anim(v, [{ transform: `translateX(${n > 0 ? W * 0.45 : -W * 0.45}px)`, opacity: 0.3 }, { transform: 'none', opacity: 1 }], 240);
-  v.getAnimations().forEach(a => a.cancel());
+  const p = $('#peek'), dur = Math.max(140, 260 * (1 - Math.abs(fromX) / W));
+  v.style.background = document.body.style.getPropertyValue('--bg');
+  await Promise.all([
+    anim(v, [{ transform: `translateX(${fromX}px)` }, { transform: `translateX(${n > 0 ? -W : W}px)` }], dur, 'cubic-bezier(.25,.8,.35,1)'),
+    anim(p, [{ transform: `translateX(${fromX + (n > 0 ? W : -W)}px)` }, { transform: 'translateX(0)' }], dur, 'cubic-bezier(.25,.8,.35,1)')
+  ]);
+  shiftState(n); render(); window.scrollTo(0, 0);
+  v.getAnimations().forEach(a => a.cancel()); v.style.transform = ''; v.style.background = '';
+  hidePeek();
   PAGING = false;
 }
 // rychlé „odrolování“ dní zpět na dnešek
@@ -1887,7 +1924,7 @@ async function rollToToday() {
     g = null;
     if (!beta() || PAGING || e.touches.length !== 1 || FORM || e.target.closest('input,textarea,select,.chart,nav')) return;
     const x = e.touches[0].clientX; if (x < 18 || x > window.innerWidth - 18) return;
-    g = { x, y: e.touches[0].clientY, t: Date.now(), lock: null, dx: 0 };
+    g = { x, y: e.touches[0].clientY, t: Date.now(), lock: null, dx: 0, dir: 0 };
   }, { passive: true });
   v.addEventListener('touchmove', (e) => {
     if (!g) return;
@@ -1895,16 +1932,25 @@ async function rollToToday() {
     if (g.lock === null && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) g.lock = Math.abs(dx) > Math.abs(dy) * 1.2 ? 'x' : 'y';
     if (g.lock !== 'x') { if (g.lock === 'y') g = null; return; }
     e.preventDefault();
-    g.dx = dx;
-    v.style.transform = `translateX(${dx}px)`; v.style.opacity = String(1 - Math.min(Math.abs(dx) / window.innerWidth, 1) * 0.4);
+    const dir = dx < 0 ? 1 : -1;
+    if (dir !== g.dir) {   // směr se změnil – připravit správný vedlejší den
+      g.dir = dir; g.ok = preparePeek(dir);
+      if (!g.ok) hidePeek();
+      v.style.background = document.body.style.getPropertyValue('--bg');
+    }
+    g.dx = g.ok ? dx : dx * 0.25;   // když dál nejde (plánování do minulosti), jen gumově pruží
+    setDrag(g.dx);
   }, { passive: false });
   const end = () => {
     if (!g || g.lock !== 'x') { g = null; return; }
-    const { dx, t } = g; g = null;
-    v.style.transform = ''; v.style.opacity = '';
+    const { dx, t, ok } = g; g = null;
     const fast = Math.abs(dx) / Math.max(1, Date.now() - t) > 0.5;
-    if (Math.abs(dx) > window.innerWidth * 0.28 || (fast && Math.abs(dx) > 40)) pageTo(dx < 0 ? 1 : -1, dx);
-    else anim(v, [{ transform: `translateX(${dx}px)` }, { transform: 'none' }], 200).then(() => v.getAnimations().forEach(a => a.cancel()));
+    if (ok && (Math.abs(dx) > window.innerWidth * 0.28 || (fast && Math.abs(dx) > 40))) { pageTo(dx < 0 ? 1 : -1, dx); return; }
+    const p = $('#peek'), W = window.innerWidth;
+    Promise.all([
+      anim(v, [{ transform: `translateX(${dx}px)` }, { transform: 'translateX(0)' }], 200),
+      p && p.style.display === 'block' ? anim(p, [{ transform: `translateX(${dx + (+p.dataset.n > 0 ? W : -W)}px)` }, { transform: `translateX(${+p.dataset.n > 0 ? W : -W}px)` }], 200) : null
+    ]).then(() => { v.getAnimations().forEach(a => a.cancel()); v.style.transform = ''; v.style.background = ''; hidePeek(); });
   };
   v.addEventListener('touchend', end); v.addEventListener('touchcancel', end);
 })();
