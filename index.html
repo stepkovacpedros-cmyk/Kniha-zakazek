@@ -274,8 +274,8 @@ textarea.in{height:76px;padding:10px 12px;resize:vertical}
 /* testovací funkce (admin) */
 .addmenu .am-b,.addmenu .am-sub{display:none}
 body.beta .addmenu .am-b{display:flex}
-body.beta .addmenu.svcmode>.am-item{display:none}
-body.beta .addmenu.svcmode .am-sub{display:flex;flex-direction:column}
+body.beta .addmenu.svcmode>.am-item,body.beta .addmenu.fuelmode>.am-item{display:none}
+body.beta .addmenu.svcmode .am-sub-svc,body.beta .addmenu.fuelmode .am-sub-fuel{display:flex;flex-direction:column}
 .am-more{margin-left:auto;font-size:24px;color:var(--mut);padding-left:8px}
 .am-back{align-self:flex-start;background:none;border:none;color:var(--g);font-weight:600;font-size:15px;min-height:40px;padding:0 8px}
 .am-subt{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);padding:2px 8px 6px}
@@ -344,11 +344,16 @@ body.beta .addmenu.svcmode .am-sub{display:flex;flex-direction:column}
     <div class="addmenu hidden" id="addmenu" role="menu" aria-label="Přidat záznam">
       <button type="button" class="am-item" data-act="new-job" role="menuitem"><span class="am-ic" style="background:#2F6B3A"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="7" cy="14" rx="3.5" ry="4.5"/><ellipse cx="7" cy="14" rx="1.2" ry="1.6"/><path d="M7 9.5h10.5c1.9 0 3.5 2 3.5 4.5s-1.6 4.5-3.5 4.5H7"/></svg></span><span class="am-tx"><b>Zakázka</b><small>nová práce se štěpkovačem</small></span></button>
       <button type="button" class="am-item am-b" data-act="b-am-cust" role="menuitem"><span class="am-ic" style="background:#4C7A56"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14a6.5 6.5 0 0 1 3.5 6"/></svg></span><span class="am-tx"><b>Zákazníci</b><small>seznam zákazníků</small></span></button>
-      <button type="button" class="am-item" data-act="new-fuel" data-v="auto" role="menuitem"><span class="am-ic" style="background:#C27A08"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5h7l4 4v11a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M9 5V3h4v2"/><path d="M14 5l2.5-2.5L19 5"/><path d="M9 12l5 5M14 12l-5 5"/></svg></span><span class="am-tx"><b>Auto</b><small>tankování · nafta</small></span></button>
-      <button type="button" class="am-item" data-act="new-fuel" data-v="stepkovac" role="menuitem"><span class="am-ic" style="background:#8E4A12"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5h7l4 4v11a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M9 5V3h4v2"/><path d="M14 5l2.5-2.5L19 5"/><path d="M9 12l5 5M14 12l-5 5"/></svg></span><span class="am-tx"><b>Štěpkovač</b><small>tankování · nafta</small></span></button>
-      <button type="button" class="am-item" data-act="new-fuel" data-v="pila" role="menuitem"><span class="am-ic" style="background:#2F6FB0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5h7l4 4v11a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M9 5V3h4v2"/><path d="M14 5l2.5-2.5L19 5"/><path d="M9 12l5 5M14 12l-5 5"/></svg></span><span class="am-tx"><b>Pila</b><small>tankování · benzín</small></span></button>
+      <button type="button" class="am-item" data-act="b-am-fuel" role="menuitem" aria-haspopup="true"><span class="am-ic" style="background:#A86A06"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5h7l4 4v11a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M9 5V3h4v2"/><path d="M14 5l2.5-2.5L19 5"/><path d="M9 12l5 5M14 12l-5 5"/></svg></span><span class="am-tx"><b>Tankování</b><small>auto, štěpkovač, pila</small></span><span class="am-more" aria-hidden="true">›</span></button>
       <button type="button" class="am-item am-b" data-act="b-am-svc" role="menuitem" aria-haspopup="true"><span class="am-ic" style="background:#5A6157"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3 17.8V21h3.2l6.3-6.3a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg></span><span class="am-tx"><b>Servis</b><small>zapsat úkon · auto, štěpkovač, pila</small></span><span class="am-more" aria-hidden="true">›</span></button>
-      <div class="am-sub">
+      <div class="am-sub am-sub-fuel">
+        <button type="button" class="am-back" data-act="b-am-back">‹ Zpět</button>
+        <span class="am-subt">Tankování – vyberte stroj</span>
+        <button type="button" class="am-item" data-act="new-fuel" data-v="auto" role="menuitem"><span class="am-ic" style="background:#C27A08"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5h7l4 4v11a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M9 5V3h4v2"/><path d="M14 5l2.5-2.5L19 5"/><path d="M9 12l5 5M14 12l-5 5"/></svg></span><span class="am-tx"><b>Auto</b><small>tankování · nafta</small></span></button>
+        <button type="button" class="am-item" data-act="new-fuel" data-v="stepkovac" role="menuitem"><span class="am-ic" style="background:#8E4A12"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5h7l4 4v11a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M9 5V3h4v2"/><path d="M14 5l2.5-2.5L19 5"/><path d="M9 12l5 5M14 12l-5 5"/></svg></span><span class="am-tx"><b>Štěpkovač</b><small>tankování · nafta</small></span></button>
+        <button type="button" class="am-item" data-act="new-fuel" data-v="pila" role="menuitem"><span class="am-ic" style="background:#2F6FB0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5h7l4 4v11a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M9 5V3h4v2"/><path d="M14 5l2.5-2.5L19 5"/><path d="M9 12l5 5M14 12l-5 5"/></svg></span><span class="am-tx"><b>Pila</b><small>tankování · benzín</small></span></button>
+      </div>
+      <div class="am-sub am-sub-svc">
         <button type="button" class="am-back" data-act="b-am-back">‹ Zpět</button>
         <span class="am-subt">Servis – vyberte stroj</span>
         <button type="button" class="am-item" data-act="b-am-svcv" data-v="auto" role="menuitem"><span class="am-ic" style="background:#C27A08"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 16V8h11v8M14 11h4l3 3v2h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg></span><span class="am-tx"><b>Auto</b><small>nový servisní úkon</small></span></button>
@@ -922,26 +927,10 @@ function viewStat() {
 
 
 /* ===== Přehled změn (nejnovější nahoře) ===== */
-const APP_VERSION = '2.29';
+const APP_VERSION = '3.1';
 const CHANGELOG = [
-  ['2.29', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
-  ['2.28', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
-  ['2.27', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
-  ['2.26', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
-  ['2.25', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
-  ['2.24', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
-  ['2.23', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
-  ['2.22', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
-  ['2.21', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
-  ['2.20', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
-  ['2.19', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
-  ['2.18', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
-  ['2.17', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
-  ['2.16', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
-  ['2.15', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
-  ['2.14', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
-  ['2.13', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
-  ['2.12', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
+  ['3.1', ['Tlačítko +: tankování v jedné položce s výběrem stroje.']],
+  ['3.0', ['Všechny nové funkce pro všechny uživatele:', 'Servis strojů (STK, olej, nože…) s upozorněním, údaje vozidel', 'Adresář zákazníků s voláním, SMS a navigací', 'Objednávky dopředu a připomínka „zavolat den předem“ ve 12:00', 'Fotky u zakázek, výkaz PDF a PDF souhrn týdne a měsíce', 'Výnos 500 Kč/m³, stav km a motohodin u zakázky', 'Státní svátky a jmeniny', 'Nová spodní lišta, swipování stránek s animací, návrat na dnešek klepnutím na Deník']],
   ['2.11', ['Úvodní obrazovka ukazuje pod čarou průběhu číslo načítané verze.']],
   ['2.10', ['Dny: tankování má vlastní řádek pod zakázkou, jméno zákazníka už nepřekrývá.', 'U tečky tankování jsou litry a cena; když je málo místa, jen litry.']],
   ['2.9', ['Množství štěpky: „1 fůra“, od 5 výš „fůr“, ostatní „fůry“ (½ fůry, 1½ fůry, 4½ fůry).']],
@@ -1865,7 +1854,7 @@ window.addEventListener('offline', () => { CLOUD.online = false; if (UI.tab === 
 function toggleAdd(force) {
   const m = $('#addmenu'), open = force === undefined ? m.classList.contains('hidden') : force;
   m.classList.toggle('hidden', !open); $('#addback').classList.toggle('hidden', !open);
-  if (!open) m.classList.remove('svcmode');
+  if (!open) m.classList.remove('svcmode', 'fuelmode');
   $('#fab').classList.toggle('open', open); $('#fab').setAttribute('aria-expanded', open);
 }
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') toggleAdd(false); });
@@ -2077,7 +2066,8 @@ let JOB_PRESET = null;
 /* ===== Testovací funkce (zatím jen pro účet admin) =====
    adresář zákazníků, servis strojů, objednávky, fotky, výkaz PDF, výnos */
 const BETA_EMAILS = ['admin@stepkovac.cz'];
-const beta = () => !!(CLOUD_ON && CLOUD.user && BETA_EMAILS.includes(String(CLOUD.user.email || '').toLowerCase()));
+// od verze 3.0 jsou všechny funkce pro všechny uživatele (dříve jen admin)
+const beta = () => true;
 const priceM3 = () => (+DB.settings.priceM3 > 0 ? +DB.settings.priceM3 : 500);
 const jobPrice = (j) => (+j.priceM3 > 0 ? +j.priceM3 : priceM3());
 const revenue = (j) => (isOpen(j) ? 0 : m3(j.loads) * jobPrice(j));
@@ -2726,7 +2716,8 @@ document.addEventListener('click', (e) => {
     case 'b-veh': openVeh(el.dataset.v); break;
     case 'b-am-cust': toggleAdd(false); UI.pseg = 'zak'; go('prehled'); break;
     case 'b-am-svc': $('#addmenu').classList.add('svcmode'); break;
-    case 'b-am-back': $('#addmenu').classList.remove('svcmode'); break;
+    case 'b-am-back': $('#addmenu').classList.remove('svcmode', 'fuelmode'); break;
+    case 'b-am-fuel': $('#addmenu').classList.add('fuelmode'); break;
     case 'b-am-svcv': toggleAdd(false); openSvc(null, el.dataset.v); break;
     case 'b-veh-save': saveVeh(); break;
     case 'b-svc-save': saveSvc(false); break;
