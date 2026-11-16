@@ -284,6 +284,8 @@ body.beta .addmenu.svcmode .am-sub-svc,body.beta .addmenu.fuelmode .am-sub-fuel{
 .jobw.insp{border:1.5px solid #B8AEDB;background:#FBFAFE}
 .insp-ic{width:30px;height:30px;border-radius:15px;background:#6B5CA5;color:#fff;display:flex;align-items:center;justify-content:center;flex:none}.insp-ic svg{width:17px;height:17px}
 .chip.insp{background:#ECE8F7;color:#4A3D85}.chip.st-pl{background:#F1F2EE;color:var(--mut)}.chip.st-wt{background:#FFF1D9;color:#7A5206}.chip.st-ok{background:var(--gl);color:var(--g2)}.chip.st-no{background:#FBE3E1;color:#9C2621}
+.realbox{display:flex;flex-direction:column;gap:10px;background:var(--gl);border:1px solid #CFE0CB;border-radius:14px;padding:14px}.realbox.hidden{display:none}
+.jobw.insp.closed{opacity:.6}.blk.insp.closed{opacity:.5}
 .quick.q2{grid-template-columns:repeat(2,minmax(0,1fr))}
 .blk.insp{background:#ECE8F7;border:1.5px solid #8F82C4;color:#4A3D85;top:6px;bottom:6px}
 .vehline{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;background:#F5F6F3;border:none;border-radius:10px;padding:8px 12px;margin:2px 0 6px;text-align:left;font-size:13px;color:var(--mut)}.vehline b{font-size:15px;color:var(--tx);letter-spacing:.04em}
@@ -665,7 +667,7 @@ function viewDny() {
     }).join('') + inspOn(d).map(o => {
       const a = toMin(o.from), b = toMin(o.to); if (a == null) return '';
       const l = pos(a), w = Math.max(pos(b != null && b > a ? b : a + 60) - l, 1);
-      return `<span class="blk insp" style="left:${l}%;width:${w}%">${w > 9 ? esc(o.customer || 'obhlídka') : ''}</span>`;
+      return `<span class="blk insp${o.closed ? ' closed' : ''}" style="left:${l}%;width:${w}%">${w > 9 ? esc(o.customer || 'obhlídka') : ''}</span>`;
     }).join('');
     const fpos = fs.map(f => ({ f, t: toMin(f.time) })).filter(o => o.t != null).map(o => ({ f: o.f, x: pos(o.t) })).sort((a, b) => a.x - b.x);
     let usedTo = -100; // kam až (v %) sahá předchozí popisek – popisky se nepřekrývají
@@ -938,8 +940,10 @@ function viewStat() {
 
 
 /* ===== Přehled změn (nejnovější nahoře) ===== */
-const APP_VERSION = '3.2';
+const APP_VERSION = '3.4';
 const CHANGELOG = [
+  ['3.4', ['Fotky jdou přidat i k nové obhlídce ještě před uložením, do zakázky se přenesou.']],
+  ['3.3', ['Obhlídka: „Domluveno“ + termín realizace vytvoří zakázku a obhlídku uzavře.', 'Připomínka obhlídky v 6:30 a hodinu předem (u obhlídek po 8:00).']],
   ['3.2', ['Obhlídka – prohlídka místa a nacenění: stav, odhad štěpky, nabídnutá cena, fotky a jedním tlačítkem „Vytvořit zakázku“.']],
   ['3.1', ['Tlačítko +: tankování v jedné položce s výběrem stroje.']],
   ['3.0', ['Všechny nové funkce pro všechny uživatele:', 'Servis strojů (STK, olej, nože…) s upozorněním, údaje vozidel', 'Adresář zákazníků s voláním, SMS a navigací', 'Objednávky dopředu a připomínka „zavolat den předem“ ve 12:00', 'Fotky u zakázek, výkaz PDF a PDF souhrn týdne a měsíce', 'Výnos 500 Kč/m³, stav km a motohodin u zakázky', 'Státní svátky a jmeniny', 'Nová spodní lišta, swipování stránek s animací, návrat na dnešek klepnutím na Deník']],
@@ -1262,6 +1266,7 @@ function openJob(id) {
   const j = ex ? Object.assign({ customer: '' }, ex) : Object.assign({ id: null, date: UI.day, from: '07:00', to: '14:00', customer: '', place: '', kmOneWay: '', loads: null, status: 'open', note: '' }, JOB_PRESET || {});
   JOB_PRESET = null;
   const insp = isInsp(j);
+  if (insp && !j.id) j.id = uid();   // nová obhlídka má id hned, aby šly přidat fotky ještě před uložením
   FORM = { kind: 'job', j, coords: null, sugg: [], csugg: [], insp };
   const open = isOpen(j);
   openSheet('', `
@@ -1269,7 +1274,7 @@ function openJob(id) {
       <div class="sugg"><input class="in" id="j-cust" value="${esc(j.customer)}" placeholder="jméno, firma nebo IČO" autocomplete="off" autocorrect="off"><div class="sugg-list hidden" id="j-csugg"></div></div>
       <div class="note" id="j-cico">${j.customerIco ? 'IČO ' + esc(j.customerIco) : ''}</div>
     </div>
-    ${insp ? `<div class="openinfo" style="background:#F3F0FB;border-color:#D9D2EF;color:#4A3D85"><span class="insp-ic">${INSP_IC}</span><span><b>Obhlídka</b> – prohlídka místa a nacenění. Do zakázek ani výnosu se nepočítá. Po domluvě z ní jedním tlačítkem vytvoříte zakázku.</span></div>` : ''}
+    ${insp ? `<div class="openinfo" style="background:#F3F0FB;border-color:#D9D2EF;color:#4A3D85"><span class="insp-ic">${INSP_IC}</span><span><b>Obhlídka</b> – prohlídka místa a nacenění. Do zakázek ani výnosu se nepočítá. Po domluvě zvolte <b>Domluveno</b> a termín – vytvoří se zakázka. Ráno v 6:30 a hodinu předem (od 8:00) přijde připomínka.</span></div>` : ''}
     <div class="f"><label for="j-place">${insp ? 'Místo obhlídky' : 'Místo práce'}</label>
       <div class="inrow"><div class="sugg" style="flex:1"><input class="in" id="j-place" value="${esc(j.place)}" placeholder="${mapyKey() ? 'začněte psát ulici nebo obec' : 'obec, ulice'}" autocomplete="off" autocorrect="off"><div class="sugg-list hidden" id="j-sugg"></div></div>
       <button class="icon-btn" style="height:48px;width:48px" aria-label="Použít moji polohu" data-act="geo">${ICON.pin}</button></div>
@@ -1295,7 +1300,7 @@ function openJob(id) {
     ${beta() && open ? orderBox(j) : ''}`}
     ${beta() ? formPhotos(j) : ''}
     <div class="f"><label for="j-note">Poznámka</label><textarea class="in" id="j-note" placeholder="${insp ? 'co je potřeba, dohoda, termín…' : 'druh dřeva, poznámky…'}">${esc(j.note)}</textarea></div>
-  `, insp ? `${ex ? '<button class="btn red" data-act="b-insp-del" style="flex:0 0 auto">Smazat</button>' : ''}${!j.jobId ? '<button class="btn o" data-act="b-insp-job" style="flex:0 0 auto">Vytvořit zakázku</button>' : ''}<button class="btn" data-act="save-job">Uložit</button>`
+  `, insp ? `${ex ? '<button class="btn red" data-act="b-insp-del" style="flex:0 0 auto">Smazat</button>' : ''}<button class="btn" data-act="save-job">Uložit</button>`
     : `${ex ? '<button class="btn red" data-act="del-job" style="flex:0 0 auto">Smazat</button>' : ''}${ex && open ? '<button class="btn o" data-act="finish-this" style="flex:0 0 auto">Dokončit</button>' : ''}<button class="btn" data-act="save-job">Uložit</button>`, insp ? (ex ? 'Obhlídka' : 'Nová obhlídka') : ex ? 'Upravit zakázku' : 'Nová zakázka');
   updJobCalc();
   // u uložené zakázky rovnou ukázat trasu
@@ -2360,7 +2365,14 @@ function shrink(file, max = 1280) {
 }
 async function addPhotos(jobId, files) {
   if (!cloudReady()) { toast('Fotky jdou ukládat jen po přihlášení'); return; }
-  const j = recById(jobId); if (!j) return;
+  let j = recById(jobId);
+  if (!j && FORM && FORM.insp && FORM.j && FORM.j.id === jobId) {   // nová obhlídka – uložit rozpracovanou, ať fotky mají kam patřit
+    j = FORM.j; j.kind = 'obhlidka'; j.status = j.status || 'plan'; j.created = j.created || Date.now();
+    j.customer = ($('#j-cust') || {}).value?.trim() || j.customer || ''; j.place = ($('#j-place') || {}).value?.trim() || j.place || '';
+    j.date = ($('#j-date') || {}).value || j.date; j.from = ($('#j-from') || {}).value || j.from; j.to = ($('#j-to') || {}).value || j.to;
+    inspPersist(j);
+  }
+  if (!j) return;
   const { fs } = CLOUD.m; toast('Ukládám ' + plural(files.length, 'fotku', 'fotky', 'fotek') + '…');
   for (const f of files) {
     try {
@@ -2407,7 +2419,7 @@ function delPhoto(pid, jobId) {
   if (cloudReady()) { const { fs } = CLOUD.m; fs.deleteDoc(fs.doc(CLOUD.db, 'fotky', pid)).catch(() => {}); }
   PHOTO.delete(pid); if (!FORM) render(); toast('Fotka smazána');
 }
-const formPhotos = (j) => j.id ? `<div class="f"><span class="lb">Fotky z místa</span><div id="form-photos">${thumbs(j, true)}</div><div class="note">Fotka se zmenší a uloží k zakázce, uvidí ji oba účty.</div></div>` : '';
+const formPhotos = (j) => j.id ? `<div class="f"><span class="lb">Fotky z místa</span><div id="form-photos">${thumbs(j, true)}</div><div class="note">${isInsp(j) ? 'Fotky z obhlídky se při vytvoření zakázky přenesou i do ní.' : 'Fotka se zmenší a uloží k zakázce, uvidí ji oba účty.'}</div></div>` : '';
 
 /* ---------- Výkaz PDF (vykreslí se v telefonu, nic se nikam neposílá) ---------- */
 function nextVykazNo(y) {
@@ -2738,10 +2750,10 @@ function inspDelete(id) {
 }
 function inspCard(o) {
   const st = INSP_ST[o.status || 'plan'] || INSP_ST.plan, job = o.jobId && DB.jobs.find(j => j.id === o.jobId);
-  return `<div class="jobw insp"><button class="card cin" data-act="edit-job" data-id="${o.id}">
+  return `<div class="jobw insp${o.closed ? ' closed' : ''}"><button class="card cin" data-act="edit-job" data-id="${o.id}">
     <span class="between" style="gap:10px"><span class="row" style="gap:10px;min-width:0"><span class="insp-ic">${INSP_IC}</span><b style="font-size:17px;min-width:0">${esc(o.customer || 'Obhlídka')}</b></span><span class="sub" style="font-weight:500;white-space:nowrap">${esc(o.from || '')}${o.to ? '–' + esc(o.to) : ''}</span></span>
     ${o.place ? `<span class="sub" style="font-weight:400">${esc(o.place)}</span>` : ''}
-    <span class="chips"><span class="chip insp">obhlídka · nacenění</span><span class="chip st-${st[1]}">${st[0]}</span>${o.estLoads ? `<span class="chip">odhad ≈ ${num(m3(o.estLoads))} m³</span>` : ''}${+o.offer ? `<span class="chip">nabídka ${money(o.offer)}</span>` : ''}${job ? `<span class="chip g">zakázka ${shortDate(job.date)}</span>` : ''}</span>
+    <span class="chips"><span class="chip insp">obhlídka · nacenění</span><span class="chip st-${st[1]}">${st[0]}</span>${o.estLoads ? `<span class="chip">odhad ≈ ${num(m3(o.estLoads))} m³</span>` : ''}${+o.offer ? `<span class="chip">nabídka ${money(o.offer)}</span>` : ''}${job ? `<span class="chip g">zakázka ${shortDate(job.date)}</span>` : ''}${o.closed ? '<span class="chip">uzavřená</span>' : ''}</span>
     ${o.note ? `<span class="sub" style="font-weight:400">${esc(o.note)}</span>` : ''}
   </button>${(o.photos || []).length ? `<div class="jobw-x">${thumbs(o, true)}</div>` : ''}</div>`;
 }
@@ -2749,15 +2761,39 @@ function inspBox(j) {
   const st = j.status || 'plan';
   return `<div class="f"><span class="lb">Stav obhlídky</span><div class="quick q2">${Object.entries(INSP_ST).map(([k, [l]]) => `<button type="button" data-act="b-insp-st" data-v="${k}" class="${st === k ? 'on' : ''}">${l}</button>`).join('')}</div></div>
     <div class="f"><span class="lb">Odhad štěpky</span><div class="quick q4">${[0.5, 1, 1.5, 2].map(v => `<button type="button" data-act="b-est" data-v="${v}" class="${+j.estLoads === v ? 'on' : ''}">${fmtLoads(v)}</button>`).join('')}</div></div>
-    <div class="f"><label for="i-offer">Nabídnutá cena (Kč)</label><input class="in" id="i-offer" type="number" inputmode="decimal" min="0" value="${esc(j.offer || '')}" placeholder="nepovinné"></div>`;
+    <div class="f"><label for="i-offer">Nabídnutá cena (Kč)</label><input class="in" id="i-offer" type="number" inputmode="decimal" min="0" value="${esc(j.offer || '')}" placeholder="nepovinné"></div>
+    ${j.jobId ? '' : `<div id="i-real" class="realbox${st === 'ok' ? '' : ' hidden'}">
+      <b style="font-size:15px">Kdy bude zakázka realizována?</b>
+      <div class="g3">
+        <div class="f"><label for="i-rdate">Datum</label><input class="in" id="i-rdate" type="date" value="${esc(nextWorkDay(j.date > todayIso() ? j.date : todayIso()))}"></div>
+        <div class="f"><label for="i-rfrom">Od</label><input class="in" id="i-rfrom" type="time" step="300" value="07:00"></div>
+        <div class="f"><label for="i-rto">Do</label><input class="in" id="i-rto" type="time" step="300" value="14:00"></div>
+      </div>
+      <span class="note">Po uložení se vytvoří zakázka v tomto termínu a obhlídka se uzavře.</span>
+    </div>`}`;
 }
+function nextWorkDay(d) { let x = addDays(d, 1); while (parseIso(x).getDay() % 6 === 0 || holiday(x)) x = addDays(x, 1); return x; }
 function saveInsp(j) {
   const o = parseFloat(($('#i-offer').value || '').replace(/\s/g, '').replace(',', '.'));
   j.offer = o > 0 ? o : null; j.kind = 'obhlidka'; j.status = j.status || 'plan';
   if (!j.estLoads) delete j.estLoads;
   delete j.loads;
-  if (!j.id) { j.id = uid(); j.created = Date.now(); }
+  if (!j.id) j.id = uid();
+  if (!j.created) j.created = Date.now();
   const cur = DB.insp && DB.insp[j.id]; if (cur && cur.photos) j.photos = cur.photos;
+  // domluveno → vytvořit zakázku ve vybraném termínu a obhlídku uzavřít
+  if (j.status === 'ok' && !j.jobId && $('#i-rdate')) {
+    const rd = $('#i-rdate').value, rf = $('#i-rfrom').value || '07:00', rt = $('#i-rto').value || '14:00';
+    if (!rd) { toast('Vyberte datum realizace zakázky'); return; }
+    const job = { id: uid(), created: Date.now(), date: rd, from: rf, to: rt, customer: j.customer || '', customerId: j.customerId, customerIco: j.customerIco || '', place: j.place || '', lat: j.lat, lon: j.lon, kmOneWay: j.kmOneWay || null, loads: null, status: 'open', estLoads: j.estLoads, photos: (j.photos || []).slice(), fromInsp: j.id, note: [j.note, +j.offer ? 'nabídka ' + money(j.offer) : ''].filter(Boolean).join(' · ') };
+    Object.keys(job).forEach(k => job[k] === undefined && delete job[k]);
+    DB.jobs.push(job); saveData(); cloudPut('jobs', job);
+    j.jobId = job.id; j.closed = Date.now();
+    inspPersist(j); UI.day = rd; closeSheet(); render();
+    toast(`Zakázka vytvořena na ${DAYS_LONG[parseIso(rd).getDay()].toLowerCase()} ${dmY(rd)}, obhlídka uzavřena`);
+    return;
+  }
+  if (j.status === 'no') j.closed = j.closed || Date.now(); else if (!j.jobId) delete j.closed;
   inspPersist(j); UI.day = j.date; closeSheet(); render(); toast('Obhlídka uložena');
 }
 
@@ -2782,7 +2818,7 @@ document.addEventListener('click', (e) => {
     case 'b-am-back': $('#addmenu').classList.remove('svcmode', 'fuelmode'); break;
     case 'b-am-fuel': $('#addmenu').classList.add('fuelmode'); break;
     case 'b-am-insp': toggleAdd(false); JOB_PRESET = { kind: 'obhlidka', status: 'plan', from: '15:00', to: '16:00' }; openJob(); break;
-    case 'b-insp-st': if (FORM && FORM.j) { FORM.j.status = el.dataset.v; document.querySelectorAll('[data-act="b-insp-st"]').forEach(b => b.classList.toggle('on', b.dataset.v === FORM.j.status)); } break;
+    case 'b-insp-st': if (FORM && FORM.j) { FORM.j.status = el.dataset.v; document.querySelectorAll('[data-act="b-insp-st"]').forEach(b => b.classList.toggle('on', b.dataset.v === FORM.j.status)); const r = $('#i-real'); if (r) { r.classList.toggle('hidden', FORM.j.status !== 'ok'); if (FORM.j.status === 'ok') setTimeout(() => r.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50); } } break;
     case 'b-insp-del': if (FORM && FORM.j && confirm('Opravdu smazat tuto obhlídku?')) { inspDelete(FORM.j.id); closeSheet(); render(); toast('Obhlídka smazána'); } break;
     case 'b-insp-job': if (FORM && FORM.j) {
       const o = FORM.j; o.status = 'ok';
