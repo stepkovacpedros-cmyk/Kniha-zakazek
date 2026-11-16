@@ -281,6 +281,11 @@ body.beta .addmenu.svcmode .am-sub-svc,body.beta .addmenu.fuelmode .am-sub-fuel{
 .am-subt{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);padding:2px 8px 6px}
 .nmday{color:var(--g2);font-weight:500}
 .logdel{width:36px;height:36px;border:none;background:none;color:var(--red);font-size:22px;line-height:1;flex:none}
+.jobw.insp{border:1.5px solid #B8AEDB;background:#FBFAFE}
+.insp-ic{width:30px;height:30px;border-radius:15px;background:#6B5CA5;color:#fff;display:flex;align-items:center;justify-content:center;flex:none}.insp-ic svg{width:17px;height:17px}
+.chip.insp{background:#ECE8F7;color:#4A3D85}.chip.st-pl{background:#F1F2EE;color:var(--mut)}.chip.st-wt{background:#FFF1D9;color:#7A5206}.chip.st-ok{background:var(--gl);color:var(--g2)}.chip.st-no{background:#FBE3E1;color:#9C2621}
+.quick.q2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.blk.insp{background:#ECE8F7;border:1.5px solid #8F82C4;color:#4A3D85;top:6px;bottom:6px}
 .vehline{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;background:#F5F6F3;border:none;border-radius:10px;padding:8px 12px;margin:2px 0 6px;text-align:left;font-size:13px;color:var(--mut)}.vehline b{font-size:15px;color:var(--tx);letter-spacing:.04em}
 .repbtn{display:flex;align-items:center;gap:12px;width:100%;margin-top:16px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-align:left;color:var(--tx)}
 .repbtn svg{width:26px;height:26px;color:var(--g);flex:none}.repbtn span{flex:1;display:flex;flex-direction:column;gap:2px}
@@ -343,6 +348,7 @@ body.beta .addmenu.svcmode .am-sub-svc,body.beta .addmenu.fuelmode .am-sub-fuel{
   <div class="actions" id="actions">
     <div class="addmenu hidden" id="addmenu" role="menu" aria-label="Přidat záznam">
       <button type="button" class="am-item" data-act="new-job" role="menuitem"><span class="am-ic" style="background:#2F6B3A"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="7" cy="14" rx="3.5" ry="4.5"/><ellipse cx="7" cy="14" rx="1.2" ry="1.6"/><path d="M7 9.5h10.5c1.9 0 3.5 2 3.5 4.5s-1.6 4.5-3.5 4.5H7"/></svg></span><span class="am-tx"><b>Zakázka</b><small>nová práce se štěpkovačem</small></span></button>
+      <button type="button" class="am-item am-b" data-act="b-am-insp" role="menuitem"><span class="am-ic" style="background:#6B5CA5"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M20 20l-5-5"/><path d="M8 10.5h5M10.5 8v5"/></svg></span><span class="am-tx"><b>Obhlídka</b><small>prohlídka místa a nacenění</small></span></button>
       <button type="button" class="am-item am-b" data-act="b-am-cust" role="menuitem"><span class="am-ic" style="background:#4C7A56"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14a6.5 6.5 0 0 1 3.5 6"/></svg></span><span class="am-tx"><b>Zákazníci</b><small>seznam zákazníků</small></span></button>
       <button type="button" class="am-item" data-act="b-am-fuel" role="menuitem" aria-haspopup="true"><span class="am-ic" style="background:#A86A06"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5h7l4 4v11a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M9 5V3h4v2"/><path d="M14 5l2.5-2.5L19 5"/><path d="M9 12l5 5M14 12l-5 5"/></svg></span><span class="am-tx"><b>Tankování</b><small>auto, štěpkovač, pila</small></span><span class="am-more" aria-hidden="true">›</span></button>
       <button type="button" class="am-item am-b" data-act="b-am-svc" role="menuitem" aria-haspopup="true"><span class="am-ic" style="background:#5A6157"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3 17.8V21h3.2l6.3-6.3a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg></span><span class="am-tx"><b>Servis</b><small>zapsat úkon · auto, štěpkovač, pila</small></span><span class="am-more" aria-hidden="true">›</span></button>
@@ -602,7 +608,7 @@ function fuelCard(f) {
 }
 function viewDenik() {
   const d = UI.day, jobs = jobsOn(d), fuel = fuelOn(d), s = sumJobs(jobs);
-  const items = [...jobs.map(j => ({ t: j.from || '', h: beta() ? jobCardB(j) : jobCard(j) })), ...fuel.map(f => ({ t: f.time || '', h: fuelCard(f) }))].sort((a, b) => a.t.localeCompare(b.t));
+  const items = [...jobs.map(j => ({ t: j.from || '', h: beta() ? jobCardB(j) : jobCard(j) })), ...inspOn(d).map(o => ({ t: o.from || '', h: inspCard(o) })), ...fuel.map(f => ({ t: f.time || '', h: fuelCard(f) }))].sort((a, b) => a.t.localeCompare(b.t));
   return `
   <div class="between">
     <div style="display:flex;flex-direction:column;gap:2px">
@@ -642,12 +648,13 @@ function viewDny() {
       if (b != null) maxH = Math.max(maxH, b < a ? 24 : Math.ceil(b / 60));
     });
     fuelOn(d).forEach(f => { const t = toMin(f.time); if (t != null) { minH = Math.min(minH, Math.floor(t / 60)); maxH = Math.max(maxH, Math.ceil(t / 60)); } });
+    inspOn(d).forEach(o => { const t = toMin(o.from), e = toMin(o.to); if (t != null) { minH = Math.min(minH, Math.floor(t / 60)); maxH = Math.max(maxH, Math.ceil((e != null && e > t ? e : t + 60) / 60)); } });
   });
   if ((maxH - minH) % 2) maxH < 24 ? maxH++ : minH--;
   const span = (maxH - minH) * 60, pos = (m) => Math.max(0, Math.min(100, (m - minH * 60) / span * 100));
   const ticks = []; for (let h = minH; h <= maxH; h += 2) ticks.push(h);
   const today = todayIso();
-  const shown = days.filter((d, i) => i < 5 || jobsOn(d).length || fuelOn(d).length || pikrOf(d));
+  const shown = days.filter((d, i) => i < 5 || jobsOn(d).length || fuelOn(d).length || inspOn(d).length || pikrOf(d));
   const rows = shown.map(d => {
     const js = jobsOn(d), fs = fuelOn(d), s = sumJobs(js), dt = parseIso(d);
     const blocks = js.map(j => {
@@ -655,6 +662,10 @@ function viewDny() {
       const end = b < a ? 24 * 60 : b, l = pos(a), w = Math.max(pos(end) - l, 1);
       const ord = beta() && isOrder(j);
       return `<span class="blk${ord ? ' ord' : isOpen(j) ? ' open' : ''}" style="left:${l}%;width:${w}%">${w > 9 ? (ord && j.callBefore ? telIc(11) : '') + esc(j.customer || (j.place || '').split(',')[0]) : ''}</span>`;
+    }).join('') + inspOn(d).map(o => {
+      const a = toMin(o.from), b = toMin(o.to); if (a == null) return '';
+      const l = pos(a), w = Math.max(pos(b != null && b > a ? b : a + 60) - l, 1);
+      return `<span class="blk insp" style="left:${l}%;width:${w}%">${w > 9 ? esc(o.customer || 'obhlídka') : ''}</span>`;
     }).join('');
     const fpos = fs.map(f => ({ f, t: toMin(f.time) })).filter(o => o.t != null).map(o => ({ f: o.f, x: pos(o.t) })).sort((a, b) => a.x - b.x);
     let usedTo = -100; // kam až (v %) sahá předchozí popisek – popisky se nepřekrývají
@@ -674,9 +685,9 @@ function viewDny() {
     const allOrd = beta() && js.length && js.every(isOrder), est = js.reduce((t, j) => t + (+j.estLoads || 0), 0);
     const sum = allOrd ? `objednáno${est ? ' · ≈ ' + num(m3(est)) + ' m³' : ''}` : s.n ? `${fmtDur(s.min)} · ${num(m3(s.loads))} m³ · ${num(s.km)} km` : (fs.length ? 'jen tankování' : '—');
     const pk = d >= today ? pikrOf(d) : '', hol = holiday(d);
-    return `<button class="day${d === today ? ' today' : d < today ? ' past' : ''}${hol && !js.length ? ' hol' : pk === 'ok' ? ' pk-ok' : pk === 'no' ? ' pk-no' : ''}" data-act="open-day" data-d="${d}">
+    return `<button class="day${d === today ? ' today' : d < today ? ' past' : ''}${hol && !js.length && !inspOn(d).length ? ' hol' : pk === 'ok' ? ' pk-ok' : pk === 'no' ? ' pk-no' : ''}" data-act="open-day" data-d="${d}">
       <div class="between"><span class="row" style="gap:8px;flex-wrap:wrap"><span style="font-size:15px;font-weight:600">${DAYS[dt.getDay()]} ${shortDate(d)}</span>${holChip(d)}${pikrChip(d)}</span><span class="sub" style="font-weight:400;font-size:12px;white-space:nowrap">${sum}</span></div>
-      <div class="bar"><div class="grid">${ticks.slice(1).map(() => '<span></span>').join('')}</div>${blocks}${!js.length && !fs.length ? `<span class="none">${hol ? esc(hol) : 'bez záznamu'}</span>` : ''}</div>${dots ? `<div class="flane">${dots}</div>` : ''}
+      <div class="bar"><div class="grid">${ticks.slice(1).map(() => '<span></span>').join('')}</div>${blocks}${!js.length && !fs.length && !inspOn(d).length ? `<span class="none">${hol ? esc(hol) : 'bez záznamu'}</span>` : ''}</div>${dots ? `<div class="flane">${dots}</div>` : ''}
     </button>`;
   }).join('');
   const all = sumJobs(days.flatMap(jobsOn));
@@ -696,7 +707,7 @@ function viewDny() {
   <div class="sumbar"><span class="sub">Za týden · ${all.n} ${all.n === 1 ? 'zakázka' : all.n > 1 && all.n < 5 ? 'zakázky' : 'zakázek'}${pkOk ? ` · píkr ${pkOk} ${pkOk === 1 ? 'den' : pkOk < 5 ? 'dny' : 'dní'}` : ''}${(() => { const h = days.filter(d => holiday(d) && parseIso(d).getDay() % 6).length; return h ? ` · ${h} ${h === 1 ? 'svátek' : h < 5 ? 'svátky' : 'svátků'}` : ''; })()}</span><div style="font-size:15px;font-weight:700;margin-top:2px">${fmtDur(all.min)} · ${num(m3(all.loads))} m³ · ${num(all.km)} km</div></div>
   <div class="axis" aria-hidden="true">${ticks.map(h => `<span>${h}</span>`).join('')}</div>
   <div class="list">${rows}</div>
-  <div class="legend" style="margin-top:14px"><span><i></i>práce</span>${beta() ? '<span><i style="background:#fff;border:1.5px dashed var(--g)"></i>objednávka</span>' : ''}<span><i class="f"></i>tankování auto</span><span><i class="s"></i>tankování štěpkovač</span><span><i class="p"></i>tankování pila</span></div>
+  <div class="legend" style="margin-top:14px"><span><i></i>práce</span>${beta() ? '<span><i style="background:#fff;border:1.5px dashed var(--g)"></i>objednávka</span><span><i style="background:#ECE8F7;border:1.5px solid #8F82C4"></i>obhlídka</span>' : ''}<span><i class="f"></i>tankování auto</span><span><i class="s"></i>tankování štěpkovač</span><span><i class="p"></i>tankování pila</span></div>
   ${reportBtn('week', ws)}`;
 }
 
@@ -927,8 +938,9 @@ function viewStat() {
 
 
 /* ===== Přehled změn (nejnovější nahoře) ===== */
-const APP_VERSION = '3.1';
+const APP_VERSION = '3.2';
 const CHANGELOG = [
+  ['3.2', ['Obhlídka – prohlídka místa a nacenění: stav, odhad štěpky, nabídnutá cena, fotky a jedním tlačítkem „Vytvořit zakázku“.']],
   ['3.1', ['Tlačítko +: tankování v jedné položce s výběrem stroje.']],
   ['3.0', ['Všechny nové funkce pro všechny uživatele:', 'Servis strojů (STK, olej, nože…) s upozorněním, údaje vozidel', 'Adresář zákazníků s voláním, SMS a navigací', 'Objednávky dopředu a připomínka „zavolat den předem“ ve 12:00', 'Fotky u zakázek, výkaz PDF a PDF souhrn týdne a měsíce', 'Výnos 500 Kč/m³, stav km a motohodin u zakázky', 'Státní svátky a jmeniny', 'Nová spodní lišta, swipování stránek s animací, návrat na dnešek klepnutím na Deník']],
   ['2.11', ['Úvodní obrazovka ukazuje pod čarou průběhu číslo načítané verze.']],
@@ -1246,17 +1258,19 @@ let FORM = null;
 function nowRounded() { const d = new Date(); let m = Math.round((d.getHours() * 60 + d.getMinutes()) / 15) * 15; m = Math.min(m, 23 * 60 + 45); return pad(Math.floor(m / 60)) + ':' + pad(m % 60); }
 
 function openJob(id) {
-  const ex = id ? DB.jobs.find(j => j.id === id) : null;
+  const ex = id ? recById(id) : null;
   const j = ex ? Object.assign({ customer: '' }, ex) : Object.assign({ id: null, date: UI.day, from: '07:00', to: '14:00', customer: '', place: '', kmOneWay: '', loads: null, status: 'open', note: '' }, JOB_PRESET || {});
   JOB_PRESET = null;
-  FORM = { kind: 'job', j, coords: null, sugg: [], csugg: [] };
+  const insp = isInsp(j);
+  FORM = { kind: 'job', j, coords: null, sugg: [], csugg: [], insp };
   const open = isOpen(j);
   openSheet('', `
     <div class="f"><label for="j-cust">Zákazník</label>
       <div class="sugg"><input class="in" id="j-cust" value="${esc(j.customer)}" placeholder="jméno, firma nebo IČO" autocomplete="off" autocorrect="off"><div class="sugg-list hidden" id="j-csugg"></div></div>
       <div class="note" id="j-cico">${j.customerIco ? 'IČO ' + esc(j.customerIco) : ''}</div>
     </div>
-    <div class="f"><label for="j-place">Místo práce</label>
+    ${insp ? `<div class="openinfo" style="background:#F3F0FB;border-color:#D9D2EF;color:#4A3D85"><span class="insp-ic">${INSP_IC}</span><span><b>Obhlídka</b> – prohlídka místa a nacenění. Do zakázek ani výnosu se nepočítá. Po domluvě z ní jedním tlačítkem vytvoříte zakázku.</span></div>` : ''}
+    <div class="f"><label for="j-place">${insp ? 'Místo obhlídky' : 'Místo práce'}</label>
       <div class="inrow"><div class="sugg" style="flex:1"><input class="in" id="j-place" value="${esc(j.place)}" placeholder="${mapyKey() ? 'začněte psát ulici nebo obec' : 'obec, ulice'}" autocomplete="off" autocorrect="off"><div class="sugg-list hidden" id="j-sugg"></div></div>
       <button class="icon-btn" style="height:48px;width:48px" aria-label="Použít moji polohu" data-act="geo">${ICON.pin}</button></div>
       ${mapyKey() ? '' : '<div class="note">Našeptávač ulic zapnete vložením API klíče Mapy.com v Nastavení.</div>'}
@@ -1275,13 +1289,14 @@ function openJob(id) {
       <div class="f"><label for="j-from">Od</label><input class="in" id="j-from" type="time" step="300" value="${esc(j.from)}"></div>
       <div class="f"><label for="j-to">Do</label><input class="in" id="j-to" type="time" step="300" value="${esc(j.to)}"></div>
     </div>
-    <div class="calc"><span>Doba práce</span><strong id="j-dur">–</strong></div>
-    ${beta() ? odoFields(j) : ''}
+    <div class="calc"><span>${insp ? 'Doba' : 'Doba práce'}</span><strong id="j-dur">–</strong></div>
+    ${insp ? inspBox(j) : `${beta() ? odoFields(j) : ''}
     ${open ? `<div class="openinfo">${CLOCK_IC}<span><b>Množství štěpky se zadává až při dokončení.</b> Zakázka zůstane otevřená a v den realizace v ${FINISH_HOUR}:00 vás aplikace vyzve k dokončení.</span></div>` : loadPicker()}
-    ${beta() && open ? orderBox(j) : ''}
+    ${beta() && open ? orderBox(j) : ''}`}
     ${beta() ? formPhotos(j) : ''}
-    <div class="f"><label for="j-note">Poznámka</label><textarea class="in" id="j-note" placeholder="druh dřeva, poznámky…">${esc(j.note)}</textarea></div>
-  `, `${ex ? '<button class="btn red" data-act="del-job" style="flex:0 0 auto">Smazat</button>' : ''}${ex && open ? '<button class="btn o" data-act="finish-this" style="flex:0 0 auto">Dokončit</button>' : ''}<button class="btn" data-act="save-job">Uložit</button>`, ex ? 'Upravit zakázku' : 'Nová zakázka');
+    <div class="f"><label for="j-note">Poznámka</label><textarea class="in" id="j-note" placeholder="${insp ? 'co je potřeba, dohoda, termín…' : 'druh dřeva, poznámky…'}">${esc(j.note)}</textarea></div>
+  `, insp ? `${ex ? '<button class="btn red" data-act="b-insp-del" style="flex:0 0 auto">Smazat</button>' : ''}${!j.jobId ? '<button class="btn o" data-act="b-insp-job" style="flex:0 0 auto">Vytvořit zakázku</button>' : ''}<button class="btn" data-act="save-job">Uložit</button>`
+    : `${ex ? '<button class="btn red" data-act="del-job" style="flex:0 0 auto">Smazat</button>' : ''}${ex && open ? '<button class="btn o" data-act="finish-this" style="flex:0 0 auto">Dokončit</button>' : ''}<button class="btn" data-act="save-job">Uložit</button>`, insp ? (ex ? 'Obhlídka' : 'Nová obhlídka') : ex ? 'Upravit zakázku' : 'Nová zakázka');
   updJobCalc();
   // u uložené zakázky rovnou ukázat trasu
   if (ex) {
@@ -1362,6 +1377,7 @@ function saveJob() {
   j.from = $('#j-from').value; j.to = $('#j-to').value;
   j.note = $('#j-note').value.trim();
   if (!j.from || !j.to) { toast('Vyplňte čas od a do'); return; }
+  if (FORM.insp) { if (j.customer && !j.customerId) { const c = Object.values(DB.cust || {}).find(c => custKey(c.name) === custKey(j.customer)); if (c) j.customerId = c.id; } saveInsp(j); return; }
   if (isOpen(j)) j.loads = null; else if (!(j.loads >= 0)) j.loads = 0;
   readOdo(j);
   if ($('#j-call')) { j.callBefore = $('#j-call').checked; if (!j.estLoads) delete j.estLoads; }
@@ -1369,6 +1385,7 @@ function saveJob() {
   if (j.customerId && DB.cust && DB.cust[j.customerId] && custKey(DB.cust[j.customerId].name) !== custKey(j.customer)) delete j.customerId;
   if (j.id) { const i = DB.jobs.findIndex(x => x.id === j.id); const cur = DB.jobs[i]; if (cur && cur.photos) j.photos = cur.photos; DB.jobs[i] = j; }
   else { j.id = uid(); j.created = Date.now(); DB.jobs.push(j); }
+  if (j.fromInsp && DB.insp && DB.insp[j.fromInsp] && !DB.insp[j.fromInsp].jobId) { const o = DB.insp[j.fromInsp]; o.jobId = j.id; o.status = 'ok'; inspPersist(o); }
   saveData(); cloudPut('jobs', j); UI.day = j.date; closeSheet(); render(); toast('Zakázka uložena');
 }
 
@@ -1791,6 +1808,7 @@ function startSync() {
     const a = {}; snap.docs.forEach(d => { const x = d.data(); if (x.pikr) a[d.id] = x.pikr; }); DB.avail = a; softRender();
   }, (e) => { if (e.code !== 'permission-denied') toast('Načtení dostupnosti selhalo: ' + (e.code || e.message)); else toast('Doplňte pravidla Firestore pro „dostupnost“'); }));
   CLOUD.unsubs.push(fs.onSnapshot(fs.doc(CLOUD.db, 'nastaveni', 'adresar'), (d) => { DB.cust = d.exists() ? (d.data().items || {}) : {}; softRender(); }, () => {}));
+  CLOUD.unsubs.push(fs.onSnapshot(fs.doc(CLOUD.db, 'nastaveni', 'obhlidky'), (d) => { DB.insp = d.exists() ? (d.data().items || {}) : {}; softRender(); }, () => {}));
   CLOUD.unsubs.push(fs.onSnapshot(fs.doc(CLOUD.db, 'nastaveni', 'servis'), (d) => { DB.svc = d.exists() ? { items: d.data().items || {}, vehicles: d.data().vehicles || {} } : { items: {}, vehicles: {} }; softRender(); }, () => {}));
   CLOUD.unsubs.push(fs.onSnapshot(fs.doc(CLOUD.db, 'nastaveni', 'firma'), (d) => {
     if (d.exists()) { const x = d.data(); delete x.upravil; delete x.upraveno; DB.settings = Object.assign({}, DEFAULT_SETTINGS, DB.settings, x); softRender(); }
@@ -2342,7 +2360,7 @@ function shrink(file, max = 1280) {
 }
 async function addPhotos(jobId, files) {
   if (!cloudReady()) { toast('Fotky jdou ukládat jen po přihlášení'); return; }
-  const j = DB.jobs.find(x => x.id === jobId); if (!j) return;
+  const j = recById(jobId); if (!j) return;
   const { fs } = CLOUD.m; toast('Ukládám ' + plural(files.length, 'fotku', 'fotky', 'fotek') + '…');
   for (const f of files) {
     try {
@@ -2353,7 +2371,7 @@ async function addPhotos(jobId, files) {
       if (FORM && FORM.j && FORM.j.id === jobId) FORM.j.photos = j.photos.slice();
     } catch (e) { toast(e.code === 'permission-denied' ? 'Doplňte pravidla Firestore pro „fotky“' : 'Fotku se nepodařilo uložit'); return; }
   }
-  saveData(); cloudPut('jobs', j);
+  persistRec(j);
   const box = $('#form-photos'); if (box && FORM && FORM.j && FORM.j.id === jobId) box.innerHTML = thumbs(j, true);
   if (!FORM) render();
   hydratePhotos(); toast('Fotky uloženy');
@@ -2383,8 +2401,8 @@ async function viewPhoto(pid, jobId) {
   document.body.appendChild(d);
 }
 function delPhoto(pid, jobId) {
-  const j = DB.jobs.find(x => x.id === jobId); if (!j) return;
-  j.photos = (j.photos || []).filter(p => p !== pid); saveData(); cloudPut('jobs', j);
+  const j = recById(jobId); if (!j) return;
+  j.photos = (j.photos || []).filter(p => p !== pid); persistRec(j);
   if (FORM && FORM.j && FORM.j.id === jobId) { FORM.j.photos = j.photos.slice(); const box = $('#form-photos'); if (box) box.innerHTML = thumbs(j, true); hydratePhotos(); }
   if (cloudReady()) { const { fs } = CLOUD.m; fs.deleteDoc(fs.doc(CLOUD.db, 'fotky', pid)).catch(() => {}); }
   PHOTO.delete(pid); if (!FORM) render(); toast('Fotka smazána');
@@ -2698,6 +2716,51 @@ const holiday = (d) => (beta() && d ? holidays(+d.slice(0, 4))[d] || '' : '');
 const FLAG_IC = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>';
 const holChip = (d) => holiday(d) ? `<span class="pk hol" title="${esc(holiday(d))}">${FLAG_IC}státní svátek</span>` : '';
 
+
+/* ---------- Obhlídka (prohlídka místa a nacenění) – Firestore nastaveni/obhlidky ---------- */
+const INSP_ST = { plan: ['Naplánovaná', 'pl'], wait: ['Čeká na odpověď', 'wt'], ok: ['Domluveno', 'ok'], no: ['Nedomluveno', 'no'] };
+const INSP_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M20 20l-5-5"/><path d="M8 10.5h5M10.5 8v5"/></svg>';
+const inspAll = () => Object.values(DB.insp || {});
+const inspOn = (d) => inspAll().filter(o => o.date === d).sort((a, b) => (a.from || '').localeCompare(b.from || ''));
+const isInsp = (o) => !!o && o.kind === 'obhlidka';
+const recById = (id) => DB.jobs.find(x => x.id === id) || (DB.insp || {})[id];
+function persistRec(j) {
+  if (isInsp(j)) return inspPersist(j);
+  saveData(); cloudPut('jobs', j);
+}
+function inspPersist(o) {
+  DB.insp = DB.insp || {}; DB.insp[o.id] = o; saveData();
+  if (cloudReady()) { const { fs } = CLOUD.m; fs.setDoc(fs.doc(CLOUD.db, 'nastaveni', 'obhlidky'), { items: { [o.id]: clean(o) }, upravil: CLOUD.user.email, upraveno: Date.now() }, { merge: true }).catch(e => toast('Uložení obhlídky selhalo: ' + (e.code || e.message))); }
+}
+function inspDelete(id) {
+  delete DB.insp[id]; saveData();
+  if (cloudReady()) { const { fs } = CLOUD.m; fs.updateDoc(fs.doc(CLOUD.db, 'nastaveni', 'obhlidky'), { ['items.' + id]: fs.deleteField() }).catch(() => {}); }
+}
+function inspCard(o) {
+  const st = INSP_ST[o.status || 'plan'] || INSP_ST.plan, job = o.jobId && DB.jobs.find(j => j.id === o.jobId);
+  return `<div class="jobw insp"><button class="card cin" data-act="edit-job" data-id="${o.id}">
+    <span class="between" style="gap:10px"><span class="row" style="gap:10px;min-width:0"><span class="insp-ic">${INSP_IC}</span><b style="font-size:17px;min-width:0">${esc(o.customer || 'Obhlídka')}</b></span><span class="sub" style="font-weight:500;white-space:nowrap">${esc(o.from || '')}${o.to ? '–' + esc(o.to) : ''}</span></span>
+    ${o.place ? `<span class="sub" style="font-weight:400">${esc(o.place)}</span>` : ''}
+    <span class="chips"><span class="chip insp">obhlídka · nacenění</span><span class="chip st-${st[1]}">${st[0]}</span>${o.estLoads ? `<span class="chip">odhad ≈ ${num(m3(o.estLoads))} m³</span>` : ''}${+o.offer ? `<span class="chip">nabídka ${money(o.offer)}</span>` : ''}${job ? `<span class="chip g">zakázka ${shortDate(job.date)}</span>` : ''}</span>
+    ${o.note ? `<span class="sub" style="font-weight:400">${esc(o.note)}</span>` : ''}
+  </button>${(o.photos || []).length ? `<div class="jobw-x">${thumbs(o, true)}</div>` : ''}</div>`;
+}
+function inspBox(j) {
+  const st = j.status || 'plan';
+  return `<div class="f"><span class="lb">Stav obhlídky</span><div class="quick q2">${Object.entries(INSP_ST).map(([k, [l]]) => `<button type="button" data-act="b-insp-st" data-v="${k}" class="${st === k ? 'on' : ''}">${l}</button>`).join('')}</div></div>
+    <div class="f"><span class="lb">Odhad štěpky</span><div class="quick q4">${[0.5, 1, 1.5, 2].map(v => `<button type="button" data-act="b-est" data-v="${v}" class="${+j.estLoads === v ? 'on' : ''}">${fmtLoads(v)}</button>`).join('')}</div></div>
+    <div class="f"><label for="i-offer">Nabídnutá cena (Kč)</label><input class="in" id="i-offer" type="number" inputmode="decimal" min="0" value="${esc(j.offer || '')}" placeholder="nepovinné"></div>`;
+}
+function saveInsp(j) {
+  const o = parseFloat(($('#i-offer').value || '').replace(/\s/g, '').replace(',', '.'));
+  j.offer = o > 0 ? o : null; j.kind = 'obhlidka'; j.status = j.status || 'plan';
+  if (!j.estLoads) delete j.estLoads;
+  delete j.loads;
+  if (!j.id) { j.id = uid(); j.created = Date.now(); }
+  const cur = DB.insp && DB.insp[j.id]; if (cur && cur.photos) j.photos = cur.photos;
+  inspPersist(j); UI.day = j.date; closeSheet(); render(); toast('Obhlídka uložena');
+}
+
 /* ---------- Události testovacích funkcí ---------- */
 document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-act^="b-"]'); if (!el) return;
@@ -2718,6 +2781,21 @@ document.addEventListener('click', (e) => {
     case 'b-am-svc': $('#addmenu').classList.add('svcmode'); break;
     case 'b-am-back': $('#addmenu').classList.remove('svcmode', 'fuelmode'); break;
     case 'b-am-fuel': $('#addmenu').classList.add('fuelmode'); break;
+    case 'b-am-insp': toggleAdd(false); JOB_PRESET = { kind: 'obhlidka', status: 'plan', from: '15:00', to: '16:00' }; openJob(); break;
+    case 'b-insp-st': if (FORM && FORM.j) { FORM.j.status = el.dataset.v; document.querySelectorAll('[data-act="b-insp-st"]').forEach(b => b.classList.toggle('on', b.dataset.v === FORM.j.status)); } break;
+    case 'b-insp-del': if (FORM && FORM.j && confirm('Opravdu smazat tuto obhlídku?')) { inspDelete(FORM.j.id); closeSheet(); render(); toast('Obhlídka smazána'); } break;
+    case 'b-insp-job': if (FORM && FORM.j) {
+      const o = FORM.j; o.status = 'ok';
+      const offer = parseFloat(($('#i-offer').value || '').replace(/\s/g, '').replace(',', '.')); o.offer = offer > 0 ? offer : null;
+      o.place = $('#j-place').value.trim(); o.customer = $('#j-cust').value.trim(); o.note = $('#j-note').value.trim();
+      const kmv = parseFloat(($('#j-km').value || '').replace(',', '.')); o.kmOneWay = kmv > 0 ? kmv : null;
+      if (FORM.coords) { o.lat = FORM.coords.lat; o.lon = FORM.coords.lon; }
+      if (!o.id) { o.id = uid(); o.created = Date.now(); }
+      inspPersist(o); closeSheet();
+      let d = addDays(todayIso(), 1); while (parseIso(d).getDay() % 6 === 0 || holiday(d)) d = addDays(d, 1);
+      JOB_PRESET = { customer: o.customer, customerId: o.customerId, customerIco: o.customerIco || '', place: o.place, lat: o.lat, lon: o.lon, kmOneWay: o.kmOneWay || '', estLoads: o.estLoads, photos: (o.photos || []).slice(), fromInsp: o.id, date: d, note: [o.note, +o.offer ? 'nabídka ' + money(o.offer) : ''].filter(Boolean).join(' · ') };
+      openJob(); toast('Doplňte termín zakázky');
+    } break;
     case 'b-am-svcv': toggleAdd(false); openSvc(null, el.dataset.v); break;
     case 'b-veh-save': saveVeh(); break;
     case 'b-svc-save': saveSvc(false); break;
