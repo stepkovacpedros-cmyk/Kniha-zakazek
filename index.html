@@ -272,6 +272,13 @@ textarea.in{height:76px;padding:10px 12px;resize:vertical}
 .kpi b.m{font-size:22px}
 
 /* testovací funkce (admin) */
+.addmenu .am-b,.addmenu .am-sub{display:none}
+body.beta .addmenu .am-b{display:flex}
+body.beta .addmenu.svcmode>.am-item{display:none}
+body.beta .addmenu.svcmode .am-sub{display:flex;flex-direction:column}
+.am-more{margin-left:auto;font-size:24px;color:var(--mut);padding-left:8px}
+.am-back{align-self:flex-start;background:none;border:none;color:var(--g);font-weight:600;font-size:15px;min-height:40px;padding:0 8px}
+.am-subt{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);padding:2px 8px 6px}
 .nmday{color:var(--g2);font-weight:500}
 .logdel{width:36px;height:36px;border:none;background:none;color:var(--red);font-size:22px;line-height:1;flex:none}
 .vehline{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;background:#F5F6F3;border:none;border-radius:10px;padding:8px 12px;margin:2px 0 6px;text-align:left;font-size:13px;color:var(--mut)}.vehline b{font-size:15px;color:var(--tx);letter-spacing:.04em}
@@ -336,9 +343,18 @@ textarea.in{height:76px;padding:10px 12px;resize:vertical}
   <div class="actions" id="actions">
     <div class="addmenu hidden" id="addmenu" role="menu" aria-label="Přidat záznam">
       <button type="button" class="am-item" data-act="new-job" role="menuitem"><span class="am-ic" style="background:#2F6B3A"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="7" cy="14" rx="3.5" ry="4.5"/><ellipse cx="7" cy="14" rx="1.2" ry="1.6"/><path d="M7 9.5h10.5c1.9 0 3.5 2 3.5 4.5s-1.6 4.5-3.5 4.5H7"/></svg></span><span class="am-tx"><b>Zakázka</b><small>nová práce se štěpkovačem</small></span></button>
+      <button type="button" class="am-item am-b" data-act="b-am-cust" role="menuitem"><span class="am-ic" style="background:#4C7A56"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14a6.5 6.5 0 0 1 3.5 6"/></svg></span><span class="am-tx"><b>Zákazníci</b><small>seznam zákazníků</small></span></button>
       <button type="button" class="am-item" data-act="new-fuel" data-v="auto" role="menuitem"><span class="am-ic" style="background:#C27A08"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5h7l4 4v11a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M9 5V3h4v2"/><path d="M14 5l2.5-2.5L19 5"/><path d="M9 12l5 5M14 12l-5 5"/></svg></span><span class="am-tx"><b>Auto</b><small>tankování · nafta</small></span></button>
       <button type="button" class="am-item" data-act="new-fuel" data-v="stepkovac" role="menuitem"><span class="am-ic" style="background:#8E4A12"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5h7l4 4v11a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M9 5V3h4v2"/><path d="M14 5l2.5-2.5L19 5"/><path d="M9 12l5 5M14 12l-5 5"/></svg></span><span class="am-tx"><b>Štěpkovač</b><small>tankování · nafta</small></span></button>
       <button type="button" class="am-item" data-act="new-fuel" data-v="pila" role="menuitem"><span class="am-ic" style="background:#2F6FB0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 5h7l4 4v11a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M9 5V3h4v2"/><path d="M14 5l2.5-2.5L19 5"/><path d="M9 12l5 5M14 12l-5 5"/></svg></span><span class="am-tx"><b>Pila</b><small>tankování · benzín</small></span></button>
+      <button type="button" class="am-item am-b" data-act="b-am-svc" role="menuitem" aria-haspopup="true"><span class="am-ic" style="background:#5A6157"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3 17.8V21h3.2l6.3-6.3a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg></span><span class="am-tx"><b>Servis</b><small>zapsat úkon · auto, štěpkovač, pila</small></span><span class="am-more" aria-hidden="true">›</span></button>
+      <div class="am-sub">
+        <button type="button" class="am-back" data-act="b-am-back">‹ Zpět</button>
+        <span class="am-subt">Servis – vyberte stroj</span>
+        <button type="button" class="am-item" data-act="b-am-svcv" data-v="auto" role="menuitem"><span class="am-ic" style="background:#C27A08"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 16V8h11v8M14 11h4l3 3v2h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg></span><span class="am-tx"><b>Auto</b><small>nový servisní úkon</small></span></button>
+        <button type="button" class="am-item" data-act="b-am-svcv" data-v="stepkovac" role="menuitem"><span class="am-ic" style="background:#8E4A12"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="7" cy="14" rx="3.5" ry="4.5"/><ellipse cx="7" cy="14" rx="1.2" ry="1.6"/><path d="M7 9.5h10.5c1.9 0 3.5 2 3.5 4.5s-1.6 4.5-3.5 4.5H7"/></svg></span><span class="am-tx"><b>Štěpkovač</b><small>nový servisní úkon</small></span></button>
+        <button type="button" class="am-item" data-act="b-am-svcv" data-v="pila" role="menuitem"><span class="am-ic" style="background:#2F6FB0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 15h12l5-4-5-4H3z"/><path d="M6 15v3M10 15v3"/></svg></span><span class="am-tx"><b>Pila</b><small>nový servisní úkon</small></span></button>
+      </div>
     </div>
     <button class="fab" id="fab" data-act="add-toggle" aria-label="Přidat záznam" aria-haspopup="menu" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
@@ -668,8 +684,8 @@ function viewDny() {
     <div style="display:flex;flex-direction:column;gap:2px"><h1>${isoWeek(ws)}. týden</h1><span class="sub" style="font-size:15px">${range}</span></div>
     <div class="row" style="gap:6px">
       ${addDays(ws, 6) >= today ? `<button class="icon-btn" aria-label="Plánovat dostupnost píkra" title="Plánovat" data-act="plan-on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M9 15.5l2 2 4-4"/></svg></button>` : ''}
-      <button class="icon-btn" aria-label="Předchozí týden" data-act="week" data-n="-7">${ICON.left}</button>
-      <button class="icon-btn" aria-label="Další týden" data-act="week" data-n="7">${ICON.right}</button>
+      ${beta() ? '' : `<button class="icon-btn" aria-label="Předchozí týden" data-act="week" data-n="-7">${ICON.left}</button>`}
+      ${beta() ? '' : `<button class="icon-btn" aria-label="Další týden" data-act="week" data-n="7">${ICON.right}</button>`}
     </div>
   </div>
   <div class="sumbar"><span class="sub">Za týden · ${all.n} ${all.n === 1 ? 'zakázka' : all.n > 1 && all.n < 5 ? 'zakázky' : 'zakázek'}${pkOk ? ` · píkr ${pkOk} ${pkOk === 1 ? 'den' : pkOk < 5 ? 'dny' : 'dní'}` : ''}${(() => { const h = days.filter(d => holiday(d) && parseIso(d).getDay() % 6).length; return h ? ` · ${h} ${h === 1 ? 'svátek' : h < 5 ? 'svátky' : 'svátků'}` : ''; })()}</span><div style="font-size:15px;font-weight:700;margin-top:2px">${fmtDur(all.min)} · ${num(m3(all.loads))} m³ · ${num(all.km)} km</div></div>
@@ -700,8 +716,8 @@ function viewPlan(ws, days, range) {
   <div class="between">
     <div style="display:flex;flex-direction:column;gap:2px"><h1>${isoWeek(ws)}. týden</h1><span class="sub" style="font-size:15px">${range}</span></div>
     <div class="row" style="gap:6px">
-      <button class="icon-btn" aria-label="Předchozí týden" data-act="week" data-n="-7"${ws <= weekStart(today) ? ' disabled style="opacity:.35"' : ''}>${ICON.left}</button>
-      <button class="icon-btn" aria-label="Další týden" data-act="week" data-n="7">${ICON.right}</button>
+      ${beta() ? '' : `<button class="icon-btn" aria-label="Předchozí týden" data-act="week" data-n="-7"${ws <= weekStart(today) ? ' disabled style="opacity:.35"' : ''}>${ICON.left}</button>`}
+      ${beta() ? '' : `<button class="icon-btn" aria-label="Další týden" data-act="week" data-n="7">${ICON.right}</button>`}
       <button class="btn sm" data-act="plan-off">Hotovo</button>
     </div>
   </div>
@@ -730,9 +746,9 @@ function viewPrehledM() {
   const MN = MONTHS[m - 1];
   return `
   <div class="between">
-    <button class="icon-btn" aria-label="Předchozí měsíc" data-act="month" data-n="-1">${ICON.left}</button>
+    ${beta() ? '<span></span>' : `<button class="icon-btn" aria-label="Předchozí měsíc" data-act="month" data-n="-1">${ICON.left}</button>`}
     <h1 style="font-size:22px">${MN.charAt(0).toUpperCase() + MN.slice(1)} ${y}</h1>
-    <button class="icon-btn" aria-label="Další měsíc" data-act="month" data-n="1">${ICON.right}</button>
+    ${beta() ? '<span></span>' : `<button class="icon-btn" aria-label="Další měsíc" data-act="month" data-n="1">${ICON.right}</button>`}
   </div>
   <div class="kpis">
     <div class="kpi"><span>Zakázky</span><b>${s.n}</b></div>
@@ -878,9 +894,9 @@ function viewStat() {
   <h1>Statistiky</h1>
   <div class="seg" role="group" aria-label="Období" style="margin:14px 0 10px">${[['dny', 'Dny'], ['tydny', 'Týdny'], ['mesice', 'Měsíce']].map(([v, l]) => `<button type="button" data-act="stat-mode" data-v="${v}" aria-pressed="${UI.statMode === v}" class="${UI.statMode === v ? 'on' : ''}" style="height:44px">${l}</button>`).join('')}</div>
   <div class="between" style="margin-bottom:12px">
-    <button class="icon-btn" aria-label="Dříve" data-act="stat-nav" data-n="-1">${ICON.left}</button>
+    ${beta() ? '<span></span>' : `<button class="icon-btn" aria-label="Dříve" data-act="stat-nav" data-n="-1">${ICON.left}</button>`}
     <span style="font-size:15px;font-weight:600;text-align:center">${esc(range)}</span>
-    <button class="icon-btn" aria-label="Později" data-act="stat-nav" data-n="1">${ICON.right}</button>
+    ${beta() ? '<span></span>' : `<button class="icon-btn" aria-label="Později" data-act="stat-nav" data-n="1">${ICON.right}</button>`}
   </div>
   ${beta() ? revKpis(jobs, totK) : ''}
   <div class="kpis" style="margin-top:0">
@@ -906,8 +922,11 @@ function viewStat() {
 
 
 /* ===== Přehled změn (nejnovější nahoře) ===== */
-const APP_VERSION = '2.26';
+const APP_VERSION = '2.29';
 const CHANGELOG = [
+  ['2.29', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
+  ['2.28', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
+  ['2.27', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.26', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.25', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
   ['2.24', ['Příprava nových funkcí – zatím je vidí jen účet admin.']],
@@ -1846,6 +1865,7 @@ window.addEventListener('offline', () => { CLOUD.online = false; if (UI.tab === 
 function toggleAdd(force) {
   const m = $('#addmenu'), open = force === undefined ? m.classList.contains('hidden') : force;
   m.classList.toggle('hidden', !open); $('#addback').classList.toggle('hidden', !open);
+  if (!open) m.classList.remove('svcmode');
   $('#fab').classList.toggle('open', open); $('#fab').setAttribute('aria-expanded', open);
 }
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') toggleAdd(false); });
@@ -2209,6 +2229,7 @@ function svcStatus(it) {
     const rem = daysBetween(t, due), tot = Math.max(1, daysBetween(from, due));
     out.push({ pct: (tot - rem) / tot, rem, u: 'd', warn: SVC_WARN.d, txt: rem < 0 ? `po termínu ${plural(-rem, 'den', 'dny', 'dní')}` : rem === 0 ? 'dnes' : `za ${plural(rem, 'den', 'dny', 'dní')}`, info: `platí do ${dmY(due)}` });
   }
+  if (!out.length && it.log && it.log.length && !every && !+it.everyMonths && !it.validUntil) { const l = it.log.slice().sort((a, b) => b.date.localeCompare(a.date))[0]; return { lvl: 'n', pct: 0, txt: 'bez intervalu', info: `naposledy ${dmY(l.date)} ${l.date.slice(0, 4)}${l.price ? ' · ' + money(l.price) : ''}` }; }
   if (!out.length) return { lvl: 'n', pct: 0, txt: 'zadat', info: (it.everyMth || it.everyKm) && !ODO[it.veh] ? 'pila nemá počítadlo – hlídá se podle data' : 'zatím nezadané poslední provedení' };
   const s = out.sort((a, b) => b.pct - a.pct)[0];
   s.lvl = s.rem <= s.warn || s.pct >= 1 ? 'r' : s.pct >= 0.75 ? 'w' : '';
@@ -2291,7 +2312,7 @@ function saveSvc(done) {
   const ev = n('v-every'); if (it.veh === 'auto') it.everyKm = ev; else it.everyMth = ev;
   it.everyMonths = n('v-months');
   it.validUntil = ($('#v-valid') && $('#v-valid').value) || null;
-  if (!ev && !it.everyMonths && !it.validUntil) { toast('Zadejte interval (km / mth nebo měsíce) nebo datum platnosti'); return; }
+  if (!ev && !it.everyMonths && !it.validUntil && !done) { toast('Zadejte interval (km / mth nebo měsíce), datum platnosti, nebo rovnou zapište provedení'); return; }
   if (done) {
     const d = $('#v-date').value || todayIso(), odo = n('v-odo'), price = n('v-price'), note = $('#v-note').value.trim();
     it.log = it.log || []; it.log.push({ date: d, odo, price, note });
@@ -2703,6 +2724,10 @@ document.addEventListener('click', (e) => {
       const items = svcItems().filter(x => x.id !== it.id); items.push(it); svcPersist(items); openSvc(it.id); toast('Záznam smazán');
     } break;
     case 'b-veh': openVeh(el.dataset.v); break;
+    case 'b-am-cust': toggleAdd(false); UI.pseg = 'zak'; go('prehled'); break;
+    case 'b-am-svc': $('#addmenu').classList.add('svcmode'); break;
+    case 'b-am-back': $('#addmenu').classList.remove('svcmode'); break;
+    case 'b-am-svcv': toggleAdd(false); openSvc(null, el.dataset.v); break;
     case 'b-veh-save': saveVeh(); break;
     case 'b-svc-save': saveSvc(false); break;
     case 'b-svc-done': saveSvc(true); break;
