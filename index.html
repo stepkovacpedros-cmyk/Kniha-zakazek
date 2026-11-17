@@ -284,6 +284,7 @@ body.beta .addmenu.svcmode .am-sub-svc,body.beta .addmenu.fuelmode .am-sub-fuel{
 .jobw.insp{border:1.5px solid #B8AEDB;background:#FBFAFE}
 .insp-ic{width:30px;height:30px;border-radius:15px;background:#6B5CA5;color:#fff;display:flex;align-items:center;justify-content:center;flex:none}.insp-ic svg{width:17px;height:17px}
 .chip.insp{background:#ECE8F7;color:#4A3D85}.chip.st-pl{background:#F1F2EE;color:var(--mut)}.chip.st-wt{background:#FFF1D9;color:#7A5206}.chip.st-ok{background:var(--gl);color:var(--g2)}.chip.st-no{background:#FBE3E1;color:#9C2621}
+.realbox input{min-width:0;width:100%;box-sizing:border-box}
 .realbox{display:flex;flex-direction:column;gap:10px;background:var(--gl);border:1px solid #CFE0CB;border-radius:14px;padding:14px}.realbox.hidden{display:none}
 .jobw.insp.closed{opacity:.6}.blk.insp.closed{opacity:.5}
 .quick.q2{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -940,8 +941,9 @@ function viewStat() {
 
 
 /* ===== Přehled změn (nejnovější nahoře) ===== */
-const APP_VERSION = '3.4';
+const APP_VERSION = '3.5';
 const CHANGELOG = [
+  ['3.5', ['Obhlídka: datum realizace na celou šířku, nevyjíždí z okna.']],
   ['3.4', ['Fotky jdou přidat i k nové obhlídce ještě před uložením, do zakázky se přenesou.']],
   ['3.3', ['Obhlídka: „Domluveno“ + termín realizace vytvoří zakázku a obhlídku uzavře.', 'Připomínka obhlídky v 6:30 a hodinu předem (u obhlídek po 8:00).']],
   ['3.2', ['Obhlídka – prohlídka místa a nacenění: stav, odhad štěpky, nabídnutá cena, fotky a jedním tlačítkem „Vytvořit zakázku“.']],
@@ -2764,8 +2766,8 @@ function inspBox(j) {
     <div class="f"><label for="i-offer">Nabídnutá cena (Kč)</label><input class="in" id="i-offer" type="number" inputmode="decimal" min="0" value="${esc(j.offer || '')}" placeholder="nepovinné"></div>
     ${j.jobId ? '' : `<div id="i-real" class="realbox${st === 'ok' ? '' : ' hidden'}">
       <b style="font-size:15px">Kdy bude zakázka realizována?</b>
-      <div class="g3">
-        <div class="f"><label for="i-rdate">Datum</label><input class="in" id="i-rdate" type="date" value="${esc(nextWorkDay(j.date > todayIso() ? j.date : todayIso()))}"></div>
+      <div class="f"><label for="i-rdate">Datum</label><input class="in" id="i-rdate" type="date" value="${esc(nextWorkDay(j.date > todayIso() ? j.date : todayIso()))}"></div>
+      <div class="g2">
         <div class="f"><label for="i-rfrom">Od</label><input class="in" id="i-rfrom" type="time" step="300" value="07:00"></div>
         <div class="f"><label for="i-rto">Do</label><input class="in" id="i-rto" type="time" step="300" value="14:00"></div>
       </div>
