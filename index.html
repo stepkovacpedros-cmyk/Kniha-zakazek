@@ -941,8 +941,9 @@ function viewStat() {
 
 
 /* ===== Přehled změn (nejnovější nahoře) ===== */
-const APP_VERSION = '3.5';
+const APP_VERSION = '3.6';
 const CHANGELOG = [
+  ['3.6', ['Admin dostává upozornění, když druhý účet přidá zakázku, obhlídku, tankování, servis nebo zákazníka, dokončí zakázku nebo změní obhlídku.']],
   ['3.5', ['Obhlídka: datum realizace na celou šířku, nevyjíždí z okna.']],
   ['3.4', ['Fotky jdou přidat i k nové obhlídce ještě před uložením, do zakázky se přenesou.']],
   ['3.3', ['Obhlídka: „Domluveno“ + termín realizace vytvoří zakázku a obhlídku uzavře.', 'Připomínka obhlídky v 6:30 a hodinu předem (u obhlídek po 8:00).']],
@@ -1269,7 +1270,7 @@ function openJob(id) {
   JOB_PRESET = null;
   const insp = isInsp(j);
   if (insp && !j.id) j.id = uid();   // nová obhlídka má id hned, aby šly přidat fotky ještě před uložením
-  FORM = { kind: 'job', j, coords: null, sugg: [], csugg: [], insp };
+  FORM = { kind: 'job', j, coords: null, sugg: [], csugg: [], insp, newRec: !ex };
   const open = isOpen(j);
   openSheet('', `
     <div class="f"><label for="j-cust">Zákazník</label>
@@ -1391,7 +1392,7 @@ function saveJob() {
   if (beta() && j.customer && !j.customerId) { const c = Object.values(DB.cust || {}).find(c => custKey(c.name) === custKey(j.customer)); if (c) j.customerId = c.id; }
   if (j.customerId && DB.cust && DB.cust[j.customerId] && custKey(DB.cust[j.customerId].name) !== custKey(j.customer)) delete j.customerId;
   if (j.id) { const i = DB.jobs.findIndex(x => x.id === j.id); const cur = DB.jobs[i]; if (cur && cur.photos) j.photos = cur.photos; DB.jobs[i] = j; }
-  else { j.id = uid(); j.created = Date.now(); DB.jobs.push(j); }
+  else { j.id = uid(); j.created = Date.now(); DB.jobs.push(j); if (!j.fromInsp) notifyAdmin(`Nová zakázka (${who()})`, jobLine(j)); }
   if (j.fromInsp && DB.insp && DB.insp[j.fromInsp] && !DB.insp[j.fromInsp].jobId) { const o = DB.insp[j.fromInsp]; o.jobId = j.id; o.status = 'ok'; inspPersist(o); }
   saveData(); cloudPut('jobs', j); UI.day = j.date; closeSheet(); render(); toast('Zakázka uložena');
 }
@@ -1428,6 +1429,7 @@ function saveFinish() {
   const i = DB.jobs.findIndex(x => x.id === j.id); if (i >= 0) { if (DB.jobs[i].photos) j.photos = DB.jobs[i].photos; DB.jobs[i] = j; }
   if (beta()) { j.priceM3 = priceM3(); if (!j.vykazNo) j.vykazNo = nextVykazNo(j.date.slice(0, 4)); delete j.callBefore; }
   saveData(); cloudPut('jobs', j); closeSheet(); render(); toast(beta() ? 'Zakázka dokončena · výkaz č. ' + j.vykazNo : 'Zakázka dokončena');
+  notifyAdmin(`Zakázka dokončena (${who()})`, `${j.customer || j.place || 'zakázka'} · ${fmtLoads(+j.loads)} ${loadsWord(+j.loads)} · ${num(m3(j.loads))} m³ · ${shortDate(j.date)} ${j.from}–${j.to}`);
   const next = dueJobs()[0]; if (next) setTimeout(() => openFinish(next.id), 350);
 }
 // výzva k dokončení po spuštění / návratu do aplikace (jednou za otevření)
@@ -1637,7 +1639,7 @@ function saveFuel() {
   f.price = pnum('f-p') || Math.round(pnum('f-l') * pnum('f-ppl') * 100) / 100;
   if (!f.liters) { toast('Vyplňte počet litrů'); return; }
   if (f.id) { const i = DB.fuel.findIndex(x => x.id === f.id); DB.fuel[i] = f; }
-  else { f.id = uid(); f.created = Date.now(); DB.fuel.push(f); }
+  else { f.id = uid(); f.created = Date.now(); DB.fuel.push(f); notifyAdmin(`Tankování ${VEH[f.vehicle].toLowerCase()} (${who()})`, `${num(f.liters)} l · ${money(f.price)}${f.place ? ' · ' + f.place : ''} · ${shortDate(f.date)} ${f.time || ''}`); }
   saveData(); cloudPut('fuel', f); UI.day = f.date; closeSheet(); render(); toast('Tankování uloženo');
 }
 
@@ -1857,6 +1859,7 @@ async function cloudInit() {
   return new Promise((res) => {
     auth.onAuthStateChanged(CLOUD.auth, async (u) => {
       CLOUD.user = u;
+      if (u) setTimeout(flushNotify, 3000);
       if (u) { showLogin(false); startSync(); render(); offerMigration(); refreshPush(); }
       else { stopSync(); showLogin(true); }
       res();
@@ -2179,6 +2182,7 @@ function openCust(key) {
 function saveCust() {
   const c = FORM.c, name = $('#c-name').value.trim();
   if (!name) { toast('Vyplňte jméno'); return null; }
+  if (!c.id) notifyAdmin(`Nový zákazník (${who()})`, [name, $('#c-tel').value.trim(), $('#c-place').value.trim()].filter(Boolean).join(' · '));
   const o = { id: c.id || uid(), name, phone: $('#c-tel').value.trim(), ico: $('#c-ico').value.replace(/\s/g, ''), place: $('#c-place').value.trim(), note: $('#c-note').value.trim() };
   if (o.place && o.place === c.place) { if (c.lat != null) { o.lat = c.lat; o.lon = c.lon; } if (c.kmOneWay) o.kmOneWay = c.kmOneWay; }
   DB.cust = DB.cust || {}; DB.cust[o.id] = o;
@@ -2333,9 +2337,12 @@ function saveSvc(done) {
     it.log = it.log || []; it.log.push({ date: d, odo, price, note });
     if (!it.lastDate || d >= it.lastDate) { it.lastDate = d; if (odo) it.lastOdo = odo; if (+it.everyMonths > 0) it.validUntil = addMonths(d, +it.everyMonths); }
   }
+  const isNewSvc = !it.id;
   if (!it.id) it.id = uid();
   const items = svcItems().filter(i => i.id !== it.id); items.push(it);
   svcPersist(items); closeSheet(); render(); toast(done ? 'Provedení zapsáno' : 'Uloženo');
+  if (done) { const l = it.log[it.log.length - 1]; notifyAdmin(`Servis ${VEH[it.veh].toLowerCase()} (${who()})`, `${it.name} · ${shortDate(l.date)}${l.odo ? ' · ' + num(l.odo) + (it.veh === 'auto' ? ' km' : ' mth') : ''}${l.price ? ' · ' + money(l.price) : ''}${l.note ? ' · ' + l.note : ''}`); }
+  else if (isNewSvc) notifyAdmin(`Nový servisní úkon (${who()})`, `${it.name} · ${VEH[it.veh].toLowerCase()}`);
 }
 
 /* ---------- Fotky (Firestore kolekce fotky, zmenšené JPEG) ---------- */
@@ -2792,12 +2799,52 @@ function saveInsp(j) {
     DB.jobs.push(job); saveData(); cloudPut('jobs', job);
     j.jobId = job.id; j.closed = Date.now();
     inspPersist(j); UI.day = rd; closeSheet(); render();
+    notifyAdmin(`Obhlídka domluvena (${who()})`, `${j.customer || j.place || 'obhlídka'} → zakázka ${DAYS[parseIso(rd).getDay()]} ${shortDate(rd)} ${rf}–${rt}${+j.offer ? ' · nabídka ' + money(j.offer) : ''}`);
     toast(`Zakázka vytvořena na ${DAYS_LONG[parseIso(rd).getDay()].toLowerCase()} ${dmY(rd)}, obhlídka uzavřena`);
     return;
   }
   if (j.status === 'no') j.closed = j.closed || Date.now(); else if (!j.jobId) delete j.closed;
+  { const was = FORM && FORM.newRec ? null : cur, st = (INSP_ST[j.status] || INSP_ST.plan)[0];
+    if (!was) notifyAdmin(`Nová obhlídka (${who()})`, jobLine(j));
+    else if (was.status !== j.status) notifyAdmin(`Obhlídka: ${st.toLowerCase()} (${who()})`, jobLine(j) + (+j.offer ? ' · nabídka ' + money(j.offer) : ''));
+    else if (['date', 'from', 'to', 'place', 'customer', 'offer', 'estLoads', 'note'].some(k => String(was[k] ?? '') !== String(j[k] ?? ''))) notifyAdmin(`Obhlídka upravena (${who()})`, jobLine(j) + ` · ${st.toLowerCase()}`);
+  }
   inspPersist(j); UI.day = j.date; closeSheet(); render(); toast('Obhlídka uložena');
 }
+
+
+/* ---------- Oznámení pro admina o změnách od ostatních (cloudová funkce oznameniAdmin) ---------- */
+const ADMIN_EMAIL = 'admin@stepkovac.cz';
+const NOTIFY_URL = 'https://europe-west3-stepkovac-ba81f.cloudfunctions.net/oznameniAdmin';
+const NQ_KEY = 'stepkovac.notifyQueue';
+function notifyAdmin(title, body) {
+  if (!CLOUD_ON || !CLOUD.user || String(CLOUD.user.email || '').toLowerCase() === ADMIN_EMAIL) return;
+  let q = []; try { q = JSON.parse(localStorage.getItem(NQ_KEY) || '[]'); } catch (e) {}
+  q.push({ title: String(title).slice(0, 80), body: String(body || '').slice(0, 300), by: CLOUD.user.email, t: Date.now() });
+  try { localStorage.setItem(NQ_KEY, JSON.stringify(q.slice(-30))); } catch (e) {}
+  flushNotify();
+}
+let NQ_BUSY = false;
+async function flushNotify() {
+  if (NQ_BUSY || !CLOUD.user || !navigator.onLine) return;
+  let q = []; try { q = JSON.parse(localStorage.getItem(NQ_KEY) || '[]'); } catch (e) {}
+  if (!q.length) return;
+  NQ_BUSY = true;
+  try {
+    const token = await CLOUD.user.getIdToken();
+    while (q.length) {
+      const m = q[0];
+      if (Date.now() - m.t > 3 * 864e5) { q.shift(); continue; }   // staré (3 dny+) zahodit
+      const r = await fetch(NOTIFY_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: JSON.stringify(m) });
+      if (!r.ok && r.status >= 500) break;   // server nedostupný – zkusit později
+      q.shift();
+      localStorage.setItem(NQ_KEY, JSON.stringify(q));
+    }
+  } catch (e) {} finally { NQ_BUSY = false; }
+}
+window.addEventListener('online', flushNotify);
+const who = () => { const e = String((CLOUD.user && CLOUD.user.email) || ''); return e ? e.split('@')[0] : ''; };
+const jobLine = (j) => [j.customer, `${DAYS[parseIso(j.date).getDay()]} ${shortDate(j.date)} ${j.from || ''}${j.to ? '–' + j.to : ''}`, j.place].filter(Boolean).join(' · ');
 
 /* ---------- Události testovacích funkcí ---------- */
 document.addEventListener('click', (e) => {
