@@ -284,6 +284,8 @@ body.beta .addmenu.svcmode .am-sub-svc,body.beta .addmenu.fuelmode .am-sub-fuel{
 .jobw.insp{border:1.5px solid #B8AEDB;background:#FBFAFE}
 .insp-ic{width:30px;height:30px;border-radius:15px;background:#6B5CA5;color:#fff;display:flex;align-items:center;justify-content:center;flex:none}.insp-ic svg{width:17px;height:17px}
 .chip.insp{background:#ECE8F7;color:#4A3D85}.chip.st-pl{background:#F1F2EE;color:var(--mut)}.chip.st-wt{background:#FFF1D9;color:#7A5206}.chip.st-ok{background:var(--gl);color:var(--g2)}.chip.st-no{background:#FBE3E1;color:#9C2621}
+.chip.firma{background:#E8EEF3;color:#2E4A63}
+.tgl.firma{margin-bottom:2px}
 .realbox input{min-width:0;width:100%;box-sizing:border-box}
 .realbox{display:flex;flex-direction:column;gap:10px;background:var(--gl);border:1px solid #CFE0CB;border-radius:14px;padding:14px}.realbox.hidden{display:none}
 .jobw.insp.closed{opacity:.6}.blk.insp.closed{opacity:.5}
@@ -941,8 +943,9 @@ function viewStat() {
 
 
 /* ===== Přehled změn (nejnovější nahoře) ===== */
-const APP_VERSION = '3.6';
+const APP_VERSION = '3.7';
 const CHANGELOG = [
+  ['3.7', ['Zakázka: zaškrtávátko „Práce na firmě“ – doplní 6:00–14:00 a základnu, fůra je nepovinná.']],
   ['3.6', ['Admin dostává upozornění, když druhý účet přidá zakázku, obhlídku, tankování, servis nebo zákazníka, dokončí zakázku nebo změní obhlídku.']],
   ['3.5', ['Obhlídka: datum realizace na celou šířku, nevyjíždí z okna.']],
   ['3.4', ['Fotky jdou přidat i k nové obhlídce ještě před uložením, do zakázky se přenesou.']],
@@ -1273,6 +1276,7 @@ function openJob(id) {
   FORM = { kind: 'job', j, coords: null, sugg: [], csugg: [], insp, newRec: !ex };
   const open = isOpen(j);
   openSheet('', `
+    ${insp ? '' : `<label class="tgl firma"><span><b>Práce na firmě</b><small>údržba strojů, práce na základně · fůra nepovinná</small></span><input type="checkbox" id="j-firma"${j.firma ? ' checked' : ''}><i></i></label>`}
     <div class="f"><label for="j-cust">Zákazník</label>
       <div class="sugg"><input class="in" id="j-cust" value="${esc(j.customer)}" placeholder="jméno, firma nebo IČO" autocomplete="off" autocorrect="off"><div class="sugg-list hidden" id="j-csugg"></div></div>
       <div class="note" id="j-cico">${j.customerIco ? 'IČO ' + esc(j.customerIco) : ''}</div>
@@ -1299,8 +1303,11 @@ function openJob(id) {
     </div>
     <div class="calc"><span>${insp ? 'Doba' : 'Doba práce'}</span><strong id="j-dur">–</strong></div>
     ${insp ? inspBox(j) : `${beta() ? odoFields(j) : ''}
-    ${open ? `<div class="openinfo">${CLOCK_IC}<span><b>Množství štěpky se zadává až při dokončení.</b> Zakázka zůstane otevřená a v den realizace v ${FINISH_HOUR}:00 vás aplikace vyzve k dokončení.</span></div>` : loadPicker()}
-    ${beta() && open ? orderBox(j) : ''}`}
+    <div id="j-firma-loads" class="${j.firma ? '' : 'hidden'}">${open || j.firma ? loadPicker().replace('Množství štěpky (', 'Množství štěpky – nepovinné (') : ''}</div>
+    <div id="j-std" class="${j.firma ? 'hidden' : ''}">
+    ${open ? `<div class="openinfo">${CLOCK_IC}<span><b>Množství štěpky se zadává až při dokončení.</b> Zakázka zůstane otevřená a v den realizace v ${FINISH_HOUR}:00 vás aplikace vyzve k dokončení.</span></div>` : j.firma ? '' : loadPicker()}
+    ${beta() && open ? orderBox(j) : ''}
+    </div>`}
     ${beta() ? formPhotos(j) : ''}
     <div class="f"><label for="j-note">Poznámka</label><textarea class="in" id="j-note" placeholder="${insp ? 'co je potřeba, dohoda, termín…' : 'druh dřeva, poznámky…'}">${esc(j.note)}</textarea></div>
   `, insp ? `${ex ? '<button class="btn red" data-act="b-insp-del" style="flex:0 0 auto">Smazat</button>' : ''}<button class="btn" data-act="save-job">Uložit</button>`
@@ -1385,7 +1392,13 @@ function saveJob() {
   j.from = $('#j-from').value; j.to = $('#j-to').value;
   j.note = $('#j-note').value.trim();
   if (!j.from || !j.to) { toast('Vyplňte čas od a do'); return; }
+  if ($('#j-firma')) {
+    j.firma = $('#j-firma').checked;
+    if (j.firma) { j.status = 'done'; j.loads = +j.loads > 0 ? +j.loads : 0; j.finished = j.finished || Date.now(); delete j.callBefore; delete j.estLoads; }
+    else { delete j.firma; }
+  }
   if (FORM.insp) { if (j.customer && !j.customerId) { const c = Object.values(DB.cust || {}).find(c => custKey(c.name) === custKey(j.customer)); if (c) j.customerId = c.id; } saveInsp(j); return; }
+  if (!j.firma && FORM.newRec && !(+j.loads > 0)) j.status = 'open';
   if (isOpen(j)) j.loads = null; else if (!(j.loads >= 0)) j.loads = 0;
   readOdo(j);
   if ($('#j-call')) { j.callBefore = $('#j-call').checked; if (!j.estLoads) delete j.estLoads; }
@@ -2128,6 +2141,7 @@ function custList() {
   Object.values(DB.cust || {}).forEach(c => map.set('id:' + c.id, Object.assign({ key: c.id, jobs: [] }, c)));
   const byName = new Map([...map.values()].map(c => [custKey(c.name), c]));
   DB.jobs.forEach(j => {
+    if (j.firma) return;
     let c = (j.customerId && map.get('id:' + j.customerId)) || (j.customer && byName.get(custKey(j.customer)));
     if (!c && j.customer) { c = { key: 'n:' + j.customer, name: j.customer, ico: j.customerIco || '', jobs: [] }; map.set(c.key, c); byName.set(custKey(j.customer), c); }
     if (c) c.jobs.push(j);
@@ -2540,9 +2554,11 @@ function jobCardB(j) {
   const done = !isOpen(j);
   return `<div class="jobw${isOpen(j) ? ' open' : ''}${isOrder(j) ? ' ord' : ''}">${jobCard(j).replace('<button class="card', '<button class="card cin')
     .replace('<div class="chips">', `<div class="chips">${isOrder(j) ? `<span class="chip ordc">objednávka${j.estLoads ? ' · ≈ ' + num(m3(j.estLoads)) + ' m³' : ''}</span>` : ''}${j.callBefore && isOpen(j) ? `<span class="chip ordc">${telIc()} zavolat den předem</span>` : ''}`)
-    .replace('<span class="chip">' + fmtDur(jobMinutes(j)), (done ? `<span class="chip g">výnos ${money(revenue(j))}</span>` : '') + '<span class="chip">' + fmtDur(jobMinutes(j)))
-    .replace(/<span class="chip op">Otevřená · ([^<]*)<\/span>/, isOrder(j) ? '' : '$&')}
-    ${(j.photos || []).length || done ? `<div class="jobw-x">${thumbs(j, true)}${done ? `<div class="row" style="gap:8px"><button class="ib" data-act="b-pdf" data-id="${j.id}">${BI.pdf}Výkaz PDF</button><button class="ib" data-act="b-pdf-share-id" data-id="${j.id}">${BI.share}Poslat</button></div>` : ''}</div>` : ''}
+    .replace('<span class="chip">' + fmtDur(jobMinutes(j)), (done && !(j.firma && !+j.loads) ? `<span class="chip g">výnos ${money(revenue(j))}</span>` : '') + '<span class="chip">' + fmtDur(jobMinutes(j)))
+    .replace(/<span class="chip op">Otevřená · ([^<]*)<\/span>/, isOrder(j) ? '' : '$&')
+    .replace('<div class="chips">', j.firma ? '<div class="chips"><span class="chip firma">práce na firmě</span>' : '<div class="chips">')
+    .replace(j.firma && !+j.loads ? /<span class="chip g">[^<]*m³<\/span>/ : /^\b$/, '')}
+    ${(j.photos || []).length || done ? `<div class="jobw-x">${thumbs(j, true)}${done && !j.firma ? `<div class="row" style="gap:8px"><button class="ib" data-act="b-pdf" data-id="${j.id}">${BI.pdf}Výkaz PDF</button><button class="ib" data-act="b-pdf-share-id" data-id="${j.id}">${BI.share}Poslat</button></div>` : ''}</div>` : ''}
   </div>`;
 }
 
@@ -2845,6 +2861,25 @@ async function flushNotify() {
 window.addEventListener('online', flushNotify);
 const who = () => { const e = String((CLOUD.user && CLOUD.user.email) || ''); return e ? e.split('@')[0] : ''; };
 const jobLine = (j) => [j.customer, `${DAYS[parseIso(j.date).getDay()]} ${shortDate(j.date)} ${j.from || ''}${j.to ? '–' + j.to : ''}`, j.place].filter(Boolean).join(' · ');
+
+document.addEventListener('change', (e) => {
+  if (e.target.id !== 'j-firma' || !FORM || FORM.kind !== 'job') return;
+  const on = e.target.checked, st = DB.settings;
+  $('#j-firma-loads').classList.toggle('hidden', !on && (FORM.newRec || isOpen(FORM.j))); $('#j-std').classList.toggle('hidden', on);
+  if (on) {
+    if (!$('#j-firma-loads').innerHTML.trim()) $('#j-firma-loads').innerHTML = loadPicker().replace('Množství štěpky (', 'Množství štěpky – nepovinné (');
+    FORM.prevCust = $('#j-cust').value; FORM.prevPlace = $('#j-place').value;
+    $('#j-cust').value = 'Práce na firmě'; $('#j-place').value = st.startAddress || '';
+    $('#j-km').value = '0'; $('#j-from').value = '06:00'; $('#j-to').value = '14:00';
+    FORM.coords = st.startLat != null ? { lat: st.startLat, lon: st.startLon } : null;
+    if (!(+FORM.j.loads > 0)) FORM.j.loads = 0;
+  } else {
+    if ($('#j-cust').value === 'Práce na firmě') $('#j-cust').value = FORM.prevCust || '';
+    if ($('#j-place').value === (st.startAddress || '')) $('#j-place').value = FORM.prevPlace || '';
+    $('#j-from').value = '07:00'; $('#j-to').value = '14:00';
+  }
+  updJobCalc();
+});
 
 /* ---------- Události testovacích funkcí ---------- */
 document.addEventListener('click', (e) => {
